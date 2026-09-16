@@ -1,9 +1,22 @@
 # isnotreal-server
 
-Scaffolding for the backend/API and public site at **https://isnotreal.click**.
-Companion repository: https://github.com/Clickabl/isnotreal.
+Backend, public data model, publication compiler and public routing foundations for **https://isnotreal.click**.
+Companion extension repository: https://github.com/Clickabl/isnotreal.
 
-**Status:** architecture, TypeScript contracts and development tooling only. No running API/site, production database, datasets, evidence collection, hosting or DNS changes.
+## Current status
+
+Implemented foundations now include:
+
+- PostgreSQL schema and first migration in `db/migrations/0001_core.sql`.
+- Canonical entities with stable public IDs, aliases, unlimited external identifiers and assignment history.
+- Assertions, reusable source documents/captures, campaigns, reason definitions, policy revisions and reviewed list decisions.
+- Community submissions/corrections, alternatives and publication metadata.
+- A compiler projection that strips server data to `[identifier, publicEntityId, reasonCodes]` tuples.
+- Typed persistence adapters over a small `SqlExecutor` boundary.
+- Transport-neutral API routing for search, entity profiles, alternatives, submissions and list delivery.
+- Public route resolution for `/{publicId} -> /{slug}` and `/go-to-alt/{publicId}`.
+
+There is still no production database provisioned, HTTP server/framework binding, source-fetching worker, object-storage publisher, signing/TUF implementation, admin UI, public page renderer or deployment configuration.
 
 ## Local development
 
@@ -14,25 +27,28 @@ npm ci
 npm run check
 ```
 
-`check` runs formatting, lint, typecheck, scaffold tests and TypeScript build. `build` emits workspace JS/declarations into each dist directory; it does not start or deploy an application. `typecheck` uses TypeScript project references and may emit declaration files into ignored dist directories. `npm run format` applies formatting. No environment values are needed for these commands. `.env.example` documents production defaults; runtime env loading is intentionally absent.
+`check` runs formatting, lint, typecheck, build and tests.
 
-## Structure
+## Architecture
 
 ```text
 apps/
-  api/                  HTTP composition boundary
-  web/                  Public site and Why page boundary
+  api/                  transport-neutral API router
+  web/                  canonical entity and alternative redirect resolver
 packages/
-  config/               Production defaults
-  protocol/             Authoritative IDs-only public wire contracts
-  domain/               Entities, accounts, reasons, sources, reviews, disputes
-  application/          Application ports
-  persistence/          Future infrastructure adapters
-docs/                  Architecture and protocol semantics
-tests/                 Scaffold tests; integration foundations
-.github/workflows/     CI
+  config/               production defaults
+  protocol/             minimized extension publication contract
+  domain/               canonical facts/editorial types
+  application/          ports, public projections and compiler
+  persistence/          SQL-backed repository adapters over SqlExecutor
+db/
+  migrations/           authoritative PostgreSQL schema
+  README.md              migration/runtime notes
+docs/
+  architecture.md
+  data-model.md
+  protocol.md
+tests/
 ```
 
-Server evidence data stays here. The extension gets only stable platform account IDs plus minimal synchronization metadata. Multiple platform accounts can belong to one canonical entity. Reasons must describe sourced actions, statements or affiliations; an editorial inclusion decision is separate from the factual evidence record.
-
-Read [architecture](docs/architecture.md), [protocol](docs/protocol.md) and [test boundaries](tests/README.md) before implementation. All packages are private pending a deliberate publishing/license decision. CI performs validation only and has read-only repository permissions. Work directly on main without overwriting another work chat's changes.
+PostgreSQL is the source of truth. The extension never receives names, biographies, evidence or source URLs in normal list synchronization. Compiled publications contain only the stable platform/domain identifier, stable public entity ID and short display reason codes. The website/API can resolve the public entity ID into the complete public record.

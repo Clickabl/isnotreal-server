@@ -1,18 +1,27 @@
-# Public protocol v1 (design contract; no routes implemented)
+# Extension publication protocol
 
-Production origin: https://isnotreal.click. The server owns packages/protocol. The extension carries a pinned source snapshot so each repository builds independently without a third repository, package registry, or authenticated dependency download. Update the server contract first, then explicitly sync and review the extension snapshot. Incompatible changes require a new schema/API version; never silently change v1 semantics.
+Protocol schema version: **2**.
 
-| Planned route                                        | Purpose                                     | User gesture required         |
-| ---------------------------------------------------- | ------------------------------------------- | ----------------------------- |
-| GET /api/v1/blocklists/:platform/manifest            | Current opaque platform version             | No                            |
-| GET /api/v1/blocklists/:platform/full                | IDs-only snapshot plus version envelope     | No                            |
-| GET /api/v1/blocklists/:platform/delta?from=:version | Added/removed IDs plus base/target versions | No                            |
-| GET /why/:platform/:accountId                        | Public explanation page                     | Yes, when opened by extension |
+Normal extension synchronization is privacy-preserving and contains no entity names, biographies, evidence text or source URLs.
 
-The platform route keys are x, tiktok, instagram, youtube. IDs are opaque strings, scoped by platform. Names and handles must never substitute for stable IDs. Version envelopes are synchronization control data; no canonical entity IDs, names, reasons, evidence, source URLs or per-account annotations are included in any blocklist response.
+A compiled entry is the tuple:
 
-Full snapshots identify exactly one immutable version. Delta added and removed sets are disjoint and duplicate-free. Apply only to the exact fromVersion, validate the complete response, then atomically replace IDs and version. Never update the cursor before committing the corresponding IDs. Gaps, expired delta retention, or incompatible local state require a full snapshot (planned HTTP 409 FULL_SYNC_REQUIRED for unavailable bases). Network failures retain the last valid snapshot. Unknown schemas must not be applied. Removals are first-class so corrections propagate. Versions are per-platform and never inferred from timestamps.
+```text
+[identifier, publicEntityId, reasonCodes]
+```
 
-Implement runtime validation and explicit field projection later: TypeScript interfaces alone do not prevent extra JSON fields or establish trust. Do not serialize domain objects directly. Design byte limits, pagination/chunking, integrity checks, delta retention, cache headers and rollback protection before large-scale distribution.
+Example only:
 
-Passive requests depend only on configured platform and stored version, never feed encounters. Do not record or upload content IDs, viewed accounts, page URLs or interaction logs. Why navigation is an explicit click, carries only platform and account ID, uses no referrer, and has no hover/prefetch/analytics path. The public site must also disable framework link prefetch and avoid leaking that identifier to third-party resources. No Why DTO is shipped to the extension in this scaffold; explicit Why opens the public page.
+```json
+["712345678901", "43212", ["P03"]]
+```
+
+The identifier is always an opaque string. Public entity IDs are also serialized as strings even though the database uses `bigint`, avoiding JavaScript integer assumptions and keeping URL construction simple.
+
+Supported publication channels currently are `x`, `tiktok`, `instagram`, `youtube` and `domain`. Each channel has independent `filter` and `highlight` lists.
+
+The extension can construct `https://isnotreal.click/{publicEntityId}` for an explicit Why/details action. The website resolves that stable ID to the current canonical slug. The extension does not need a reverse platform-ID lookup endpoint.
+
+Alternatives are intentionally online/dynamic. `/go-to-alt/{publicEntityId}` returns a temporary redirect to the current approved preferred alternative. Alternative lookup is opt-in behavior and is not part of passive feed matching.
+
+Full snapshots and deltas are immutable publication artifacts. The database schema records hashes, sizes and future signing metadata; production activation/signing is not implemented yet.

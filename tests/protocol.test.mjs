@@ -2,43 +2,23 @@ import { URL } from 'node:url';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import ts from 'typescript';
-test('public wire interfaces allow only IDs and synchronization fields', async () => {
-  const source = await readFile(
-    new URL('../packages/protocol/src/index.ts', import.meta.url),
-    'utf8',
-  );
-  const ast = ts.createSourceFile('protocol.ts', source, ts.ScriptTarget.Latest, true);
-  const allowed = new Set([
-    'platform',
-    'accountId',
-    'schemaVersion',
-    'version',
-    'ids',
-    'fromVersion',
-    'toVersion',
-    'added',
-    'removed',
-    'code',
-    'currentVersion',
-  ]);
-  const interfaces = ast.statements.filter(ts.isInterfaceDeclaration);
-  assert.equal(interfaces.length, 5);
-  for (const declaration of interfaces) {
-    for (const member of declaration.members) {
-      assert.ok(
-        ts.isPropertySignature(member),
-        'wire contracts cannot contain index signatures or methods',
-      );
-      assert.ok(
-        allowed.has(member.name.getText(ast)),
-        `unexpected public field ${member.name.getText(ast)}`,
-      );
-    }
+
+const source = await readFile(
+  new URL('../packages/protocol/src/index.ts', import.meta.url),
+  'utf8',
+);
+
+test('compiled entry is stripped to identifier, public entity id and reason codes', () => {
+  assert.match(source, /export type CompiledEntry = readonly \[/);
+  assert.match(source, /identifier: IdentifierValue/);
+  assert.match(source, /entityId: PublicEntityId/);
+  assert.match(source, /reasonCodes: readonly ReasonCode\[\]/);
+  for (const forbidden of ['displayName', 'canonicalName', 'evidenceIds', 'sourceIds', 'biography']) {
+    assert.equal(source.includes(forbidden), false, `protocol must not expose ${forbidden}`);
   }
-  assert.equal(
-    ast.statements.filter(ts.isImportDeclaration).length,
-    0,
-    'public contracts must not import domain data',
-  );
+});
+
+test('domains are a first-class publication channel and filter/highlight remain separate', () => {
+  assert.match(source, /PublicationChannel = Platform \| 'domain'/);
+  assert.match(source, /ListKind = 'filter' \| 'highlight'/);
 });
