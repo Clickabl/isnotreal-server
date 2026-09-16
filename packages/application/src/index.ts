@@ -1,4 +1,5 @@
 import type { EntityKind } from '@isnotreal/domain';
+export { PROTOCOL_SCHEMA_VERSION } from '@isnotreal/protocol';
 export type { ListKind, PublicationChannel, PublicEntityId } from '@isnotreal/protocol';
 import {
   PROTOCOL_SCHEMA_VERSION,
