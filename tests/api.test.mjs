@@ -52,7 +52,7 @@ const submissions = {
 const publications = {
   async manifest(channel, list) {
     return {
-      schemaVersion: 2,
+      schemaVersion: 3,
       channel,
       list,
       version: '1',
@@ -64,7 +64,7 @@ const publications = {
     return { ...(await this.manifest(channel, list)), entries: [] };
   },
   async delta(channel, list) {
-    return { schemaVersion: 2, code: 'FULL_SYNC_REQUIRED', channel, list, currentVersion: '1' };
+    return { schemaVersion: 3, code: 'FULL_SYNC_REQUIRED', channel, list, currentVersion: '1' };
   },
 };
 const route = createApiRouter({ entities, reasons, alternatives, submissions, publications });
@@ -79,6 +79,11 @@ test('entity, reason and list endpoints expose the public contracts', async () =
   const manifest = await route(request('GET', '/api/v1/lists/domain/filter/manifest'));
   assert.equal(manifest.status, 200);
   assert.equal(manifest.body.channel, 'domain');
+  const subtreeManifest = await route(
+    request('GET', '/api/v1/lists/domain-subdomains/filter/manifest'),
+  );
+  assert.equal(subtreeManifest.status, 200);
+  assert.equal(subtreeManifest.body.channel, 'domain-subdomains');
 });
 
 test('community submission endpoint validates before enqueueing', async () => {
