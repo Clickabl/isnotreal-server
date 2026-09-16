@@ -68,11 +68,16 @@ test('community submission endpoint validates before enqueueing', async () => {
   );
   assert.equal(invalid.status, 400);
   const accepted = await route(
-    request('POST', '/api/v1/submissions', {}, {
-      submissionType: 'add-evidence',
-      narrative: 'Documented update',
-      sourceUrls: ['https://example.org/source'],
-    }),
+    request(
+      'POST',
+      '/api/v1/submissions',
+      {},
+      {
+        submissionType: 'add-evidence',
+        narrative: 'Documented update',
+        sourceUrls: ['https://example.org/source'],
+      },
+    ),
   );
   assert.equal(accepted.status, 202);
 });
