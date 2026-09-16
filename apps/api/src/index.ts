@@ -34,7 +34,14 @@ export interface ApiDependencies {
 }
 
 const jsonHeaders = { 'content-type': 'application/json; charset=utf-8' } as const;
-const channels = new Set<PublicationChannel>(['x', 'tiktok', 'instagram', 'youtube', 'domain']);
+const channels = new Set<PublicationChannel>([
+  'x',
+  'tiktok',
+  'instagram',
+  'youtube',
+  'domain',
+  'domain-subdomains',
+]);
 const lists = new Set<ListKind>(['filter', 'highlight']);
 const submissionTypes = new Set<SubmissionInput['submissionType']>([
   'add-evidence',
