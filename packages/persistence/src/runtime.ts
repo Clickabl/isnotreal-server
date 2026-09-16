@@ -391,6 +391,7 @@ const publicationChannels: readonly PublicationChannel[] = [
   'instagram',
   'youtube',
   'domain',
+  'domain-subdomains',
 ];
 const publicationLists: readonly ListKind[] = ['filter', 'highlight'];
 
