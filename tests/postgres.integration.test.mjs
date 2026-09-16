@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import process from 'node:process';
 import test from 'node:test';
 import { PostgresPublicEntityDirectory } from '../packages/persistence/dist/index.js';
 import {
@@ -34,6 +35,7 @@ test(
         '0002_resolution_and_search.sql',
         '0003_identifier_aliases.sql',
         '0004_publication_provenance.sql',
+        '0005_domain_subtree_publications.sql',
       ]);
 
       const entity = await db.query(
@@ -107,12 +109,13 @@ test(
         expiresInMs: 60 * 60 * 1_000,
       });
       assert.equal(firstPublication.activated, true);
-      assert.equal(firstPublication.fullArtifactCount, 10);
+      assert.equal(firstPublication.fullArtifactCount, 12);
       assert.equal(firstPublication.deltaArtifactCount, 0);
 
       const published = new PostgresPublishedArtifactReader(db, store);
-      const firstFull = await published.full('domain', 'filter');
+      const firstFull = await published.full('domain-subdomains', 'filter');
       assert.deepEqual(firstFull.entries, [['example.com', publicId, ['C99']]]);
+      assert.deepEqual((await published.full('domain', 'filter')).entries, []);
 
       const directory = new PostgresPublicEntityDirectory(db);
       const profile = await directory.byPublicId(publicId);
@@ -138,17 +141,21 @@ test(
         expiresInMs: 60 * 60 * 1_000,
       });
       assert.equal(secondPublication.activated, true);
-      assert.equal(secondPublication.fullArtifactCount, 10);
-      assert.equal(secondPublication.deltaArtifactCount, 10);
+      assert.equal(secondPublication.fullArtifactCount, 12);
+      assert.equal(secondPublication.deltaArtifactCount, 12);
 
-      const delta = await published.delta('domain', 'filter', firstPublication.version);
+      const delta = await published.delta(
+        'domain-subdomains',
+        'filter',
+        firstPublication.version,
+      );
       assert.equal('code' in delta, false);
       assert.deepEqual(delta.added, [['example.com', publicId, ['C98', 'C99']]]);
       assert.deepEqual(delta.removed, []);
 
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
       assert.deepEqual(secondMigration.applied, []);
-      assert.equal(secondMigration.alreadyApplied.length, 4);
+      assert.equal(secondMigration.alreadyApplied.length, 5);
     } finally {
       await db.close();
       await rm(artifactRoot, { recursive: true, force: true });
