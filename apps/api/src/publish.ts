@@ -9,7 +9,8 @@ import {
 async function main(): Promise<void> {
   const databaseUrl = requiredEnv('DATABASE_URL');
   const compilerVersion = process.env.COMPILER_VERSION?.trim() || 'dev';
-  const sourceRevision = process.env.SOURCE_REVISION?.trim() || process.env.GITHUB_SHA?.trim() || 'manual';
+  const sourceRevision =
+    process.env.SOURCE_REVISION?.trim() || process.env.GITHUB_SHA?.trim() || 'manual';
   const artifactRoot = resolve(process.env.PUBLICATION_ROOT ?? '.local/publications');
   const ttlHours = parseTtlHours(process.env.PUBLICATION_TTL_HOURS);
 

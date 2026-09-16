@@ -11,7 +11,11 @@ import {
   type PublicationChannel,
   type PublicationReader,
 } from '@isnotreal/application';
-import { PostgresPublicationCandidateReader, type SqlExecutor, type SqlQueryResult } from './index.js';
+import {
+  PostgresPublicationCandidateReader,
+  type SqlExecutor,
+  type SqlQueryResult,
+} from './index.js';
 
 export interface PgRuntimeOptions {
   readonly connectionString: string;
@@ -323,12 +327,17 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
 
   private async readVerifiedBytes(metadata: ArtifactMetadataRow): Promise<Uint8Array> {
     const expectedSize = Number(metadata.byte_size);
-    if (!Number.isSafeInteger(expectedSize) || expectedSize < 0 || expectedSize > MAX_ARTIFACT_BYTES) {
+    if (
+      !Number.isSafeInteger(expectedSize) ||
+      expectedSize < 0 ||
+      expectedSize > MAX_ARTIFACT_BYTES
+    ) {
       throw new Error('publication artifact size is invalid');
     }
     const bytes = await this.store.get(metadata.storage_key);
     if (bytes.byteLength !== expectedSize) throw new Error('publication artifact size mismatch');
-    if (sha256(bytes) !== metadata.sha256) throw new Error('publication artifact checksum mismatch');
+    if (sha256(bytes) !== metadata.sha256)
+      throw new Error('publication artifact checksum mismatch');
     return bytes;
   }
 }
@@ -499,9 +508,10 @@ export async function publishCurrentState(
           ],
         );
       }
-      await tx.query("UPDATE publications SET state = 'ready' WHERE id = $1 AND state = 'building'", [
-        publication.id,
-      ]);
+      await tx.query(
+        "UPDATE publications SET state = 'ready' WHERE id = $1 AND state = 'building'",
+        [publication.id],
+      );
     });
 
     const activated = await activatePublication(db, publication.id, publication.sequence);
@@ -588,9 +598,10 @@ async function activatePublication(
        WHERE state IN ('building', 'ready', 'active')`,
     );
     if (latest.rows[0]?.max_sequence !== sequence) {
-      await tx.query("UPDATE publications SET state = 'retired' WHERE id = $1 AND state = 'ready'", [
-        publicationId,
-      ]);
+      await tx.query(
+        "UPDATE publications SET state = 'retired' WHERE id = $1 AND state = 'ready'",
+        [publicationId],
+      );
       return false;
     }
 
@@ -637,7 +648,11 @@ async function readVerifiedBytesFromStore(
   metadata: ArtifactMetadataRow,
 ): Promise<Uint8Array> {
   const expectedSize = Number(metadata.byte_size);
-  if (!Number.isSafeInteger(expectedSize) || expectedSize < 0 || expectedSize > MAX_ARTIFACT_BYTES) {
+  if (
+    !Number.isSafeInteger(expectedSize) ||
+    expectedSize < 0 ||
+    expectedSize > MAX_ARTIFACT_BYTES
+  ) {
     throw new Error('publication artifact size is invalid');
   }
   const bytes = await store.get(metadata.storage_key);

@@ -79,7 +79,9 @@ export async function startNodeApiRuntime(
         });
       }
       if (!response.writableEnded) {
-        response.end(JSON.stringify({ error: status === 500 ? 'internal_error' : 'invalid_request' }));
+        response.end(
+          JSON.stringify({ error: status === 500 ? 'internal_error' : 'invalid_request' }),
+        );
       }
     });
   });
@@ -188,7 +190,10 @@ async function readBody(request: IncomingMessage, maxBodyBytes: number): Promise
 
 function sendApiResponse(response: ServerResponse, request: ApiRequest, result: ApiResponse): void {
   const cacheControl = cachePolicy(request, result.status);
-  sendJson(response, result.status, result.body, { ...result.headers, 'cache-control': cacheControl });
+  sendJson(response, result.status, result.body, {
+    ...result.headers,
+    'cache-control': cacheControl,
+  });
 }
 
 function sendJson(
@@ -206,7 +211,8 @@ function sendJson(
 
 function cachePolicy(request: ApiRequest, status: number): string {
   if (request.method !== 'GET' || status !== 200) return 'no-store';
-  if (request.pathname === '/api/v1/reasons') return 'public, max-age=300, stale-while-revalidate=3600';
+  if (request.pathname === '/api/v1/reasons')
+    return 'public, max-age=300, stale-while-revalidate=3600';
   if (request.pathname.includes('/lists/')) return 'public, max-age=60, stale-while-revalidate=300';
   return 'public, max-age=60, stale-while-revalidate=300';
 }

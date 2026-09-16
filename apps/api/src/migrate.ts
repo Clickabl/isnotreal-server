@@ -12,7 +12,10 @@ async function main(): Promise<void> {
     applicationName: 'isnotreal-migrate',
   });
   try {
-    const result = await applySqlMigrations(db, resolve(process.env.MIGRATIONS_DIR ?? 'db/migrations'));
+    const result = await applySqlMigrations(
+      db,
+      resolve(process.env.MIGRATIONS_DIR ?? 'db/migrations'),
+    );
     console.log(
       JSON.stringify({ applied: result.applied, alreadyApplied: result.alreadyApplied }, null, 2),
     );
