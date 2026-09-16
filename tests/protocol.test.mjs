@@ -13,7 +13,13 @@ test('compiled entry is stripped to identifier, public entity id and reason code
   assert.match(source, /identifier: IdentifierValue/);
   assert.match(source, /entityId: PublicEntityId/);
   assert.match(source, /reasonCodes: readonly ReasonCode\[\]/);
-  for (const forbidden of ['displayName', 'canonicalName', 'evidenceIds', 'sourceIds', 'biography']) {
+  for (const forbidden of [
+    'displayName',
+    'canonicalName',
+    'evidenceIds',
+    'sourceIds',
+    'biography',
+  ]) {
     assert.equal(source.includes(forbidden), false, `protocol must not expose ${forbidden}`);
   }
 });

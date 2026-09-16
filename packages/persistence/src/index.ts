@@ -1,20 +1,20 @@
 import type {
   AlternativeDirectory,
   AlternativeOption,
+  ListKind,
   PublicAssertionDetail,
   PublicEntityDirectory,
   PublicEntityProfile,
   PublicEntitySummary,
-  PublicReasonDetail,
-  PublicSource,
   PublicationCandidate,
   PublicationCandidateReader,
+  PublicationChannel,
+  PublicEntityId,
+  PublicReasonDetail,
+  PublicSource,
   SubmissionInput,
   SubmissionReceipt,
   SubmissionWriter,
-  ListKind,
-  PublicationChannel,
-  PublicEntityId,
 } from '@isnotreal/application';
 
 export interface SqlQueryResult<Row> {
@@ -22,7 +22,10 @@ export interface SqlQueryResult<Row> {
 }
 
 export interface SqlExecutor {
-  query<Row extends object>(sql: string, params?: readonly unknown[]): Promise<SqlQueryResult<Row>>;
+  query<Row extends object>(
+    sql: string,
+    params?: readonly unknown[],
+  ): Promise<SqlQueryResult<Row>>;
   transaction<T>(work: (tx: SqlExecutor) => Promise<T>): Promise<T>;
 }
 
@@ -72,6 +75,18 @@ type CandidateRow = {
   reason_codes: readonly string[];
 };
 
+type MutableAssertion = {
+  summary: string;
+  occurredOn: string | null;
+  sources: PublicSource[];
+};
+
+type MutableReason = {
+  label: string;
+  description: string;
+  assertions: Map<string, MutableAssertion>;
+};
+
 const entitySelect = `
 SELECT
   resolved.id::text AS internal_id,
@@ -95,7 +110,9 @@ export class PostgresPublicEntityDirectory implements PublicEntityDirectory {
   constructor(private readonly db: SqlExecutor) {}
 
   async byPublicId(publicId: PublicEntityId): Promise<PublicEntityProfile | null> {
-    return this.load(`${entitySelect} WHERE requested.public_id = $1 GROUP BY resolved.id`, [publicId]);
+    return this.load(`${entitySelect} WHERE requested.public_id = $1 GROUP BY resolved.id`, [
+      publicId,
+    ]);
   }
 
   async bySlug(slug: string): Promise<PublicEntityProfile | null> {
@@ -124,7 +141,10 @@ export class PostgresPublicEntityDirectory implements PublicEntityDirectory {
     return result.rows.map((row) => this.toSummary(row));
   }
 
-  private async load(sql: string, params: readonly unknown[]): Promise<PublicEntityProfile | null> {
+  private async load(
+    sql: string,
+    params: readonly unknown[],
+  ): Promise<PublicEntityProfile | null> {
     const result = await this.db.query<EntityRow>(sql, params);
     const row = result.rows[0];
     if (!row) return null;
@@ -171,15 +191,7 @@ export class PostgresPublicEntityDirectory implements PublicEntityDirectory {
       [entityId],
     );
 
-    const reasons = new Map<string, {
-      label: string;
-      description: string;
-      assertions: Map<string, {
-        summary: string;
-        occurredOn: string | null;
-        sources: PublicSource[];
-      }>;
-    }>();
+    const reasons = new Map<string, MutableReason>();
 
     for (const row of result.rows) {
       let reason = reasons.get(row.reason_code);
@@ -191,6 +203,7 @@ export class PostgresPublicEntityDirectory implements PublicEntityDirectory {
         };
         reasons.set(row.reason_code, reason);
       }
+
       let assertion = reason.assertions.get(row.assertion_id);
       if (!assertion) {
         assertion = {
@@ -200,6 +213,7 @@ export class PostgresPublicEntityDirectory implements PublicEntityDirectory {
         };
         reason.assertions.set(row.assertion_id, assertion);
       }
+
       if (row.source_url && row.source_title && row.source_retrieved_at) {
         assertion.sources.push({
           url: row.source_url,
@@ -215,12 +229,14 @@ export class PostgresPublicEntityDirectory implements PublicEntityDirectory {
       code,
       label: reason.label,
       description: reason.description,
-      assertions: [...reason.assertions.entries()].map(([id, assertion]): PublicAssertionDetail => ({
-        id,
-        summary: assertion.summary,
-        occurredOn: assertion.occurredOn,
-        sources: assertion.sources,
-      })),
+      assertions: [...reason.assertions.entries()].map(
+        ([id, assertion]): PublicAssertionDetail => ({
+          id,
+          summary: assertion.summary,
+          occurredOn: assertion.occurredOn,
+          sources: assertion.sources,
+        }),
+      ),
     }));
   }
 }
@@ -336,10 +352,10 @@ export class PostgresSubmissionWriter implements SubmissionWriter {
       if (!row) throw new Error('submission insert did not return a row');
 
       for (const url of input.sourceUrls) {
-        await tx.query(
-          `INSERT INTO submission_sources (submission_id, url) VALUES ($1, $2)`,
-          [row.id, url],
-        );
+        await tx.query(`INSERT INTO submission_sources (submission_id, url) VALUES ($1, $2)`, [
+          row.id,
+          url,
+        ]);
       }
 
       return { id: row.id, submittedAt: row.submitted_at, state: 'pending' };

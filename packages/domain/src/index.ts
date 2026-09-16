@@ -105,7 +105,12 @@ export interface SourceCapture {
   readonly status: 'available' | 'missing' | 'blocked' | 'invalid';
 }
 
-export type AssertionState = 'draft' | 'under-review' | 'published' | 'withdrawn' | 'disputed';
+export type AssertionState =
+  | 'draft'
+  | 'under-review'
+  | 'published'
+  | 'withdrawn'
+  | 'disputed';
 
 export interface AssertionRecord {
   readonly id: RecordId;
@@ -149,11 +154,19 @@ export interface ReasonDefinition {
   readonly active: boolean;
 }
 
+export type EntityRelationshipType =
+  | 'owns'
+  | 'controls'
+  | 'brand-of'
+  | 'member-of'
+  | 'licenses'
+  | 'operates';
+
 export interface EntityRelationship {
   readonly id: RecordId;
   readonly fromEntityId: RecordId;
   readonly toEntityId: RecordId;
-  readonly relationshipType: 'owns' | 'controls' | 'brand-of' | 'member-of' | 'licenses' | 'operates';
+  readonly relationshipType: EntityRelationshipType;
   readonly ownershipPercent: number | null;
   readonly evidenceAssertionId: RecordId | null;
   readonly validFrom: Timestamp | null;
@@ -186,20 +199,22 @@ export interface MembershipDecisionReason {
   readonly assertionId: RecordId;
 }
 
+export type CommunitySubmissionType =
+  | 'add-evidence'
+  | 'incorrect-information'
+  | 'changed-position'
+  | 'wrong-identifier'
+  | 'missing-identifier'
+  | 'company-relationship'
+  | 'suggest-alternative'
+  | 'new-entity';
+
 export interface CommunitySubmission {
   readonly id: RecordId;
   readonly entityId: RecordId | null;
   readonly identifierKind: string | null;
   readonly identifierValue: string | null;
-  readonly submissionType:
-    | 'add-evidence'
-    | 'incorrect-information'
-    | 'changed-position'
-    | 'wrong-identifier'
-    | 'missing-identifier'
-    | 'company-relationship'
-    | 'suggest-alternative'
-    | 'new-entity';
+  readonly submissionType: CommunitySubmissionType;
   readonly proposedList: ListKind | null;
   readonly proposedReasonCode: ReasonCode | null;
   readonly narrative: string;
@@ -208,19 +223,21 @@ export interface CommunitySubmission {
   readonly submitterContactRef: string | null;
 }
 
+export type AlternativeRelationshipType =
+  | 'similar-creator'
+  | 'similar-service'
+  | 'direct-competitor'
+  | 'indie-alternative'
+  | 'local-alternative'
+  | 'community-recommended'
+  | 'other';
+
 export interface AlternativeRelationship {
   readonly id: RecordId;
   readonly sourceEntityId: RecordId;
   readonly alternativeEntityId: RecordId;
   readonly contextKey: string;
-  readonly relationshipType:
-    | 'similar-creator'
-    | 'similar-service'
-    | 'direct-competitor'
-    | 'indie-alternative'
-    | 'local-alternative'
-    | 'community-recommended'
-    | 'other';
+  readonly relationshipType: AlternativeRelationshipType;
   readonly rank: number;
   readonly rationale: string | null;
   readonly state: 'proposed' | 'approved' | 'rejected' | 'retired';
@@ -236,11 +253,19 @@ export interface AlternativeDestination {
   readonly verifiedAt: Timestamp | null;
 }
 
+export type ReviewAction =
+  | 'submitted'
+  | 'approved'
+  | 'rejected'
+  | 'corrected'
+  | 'withdrawn'
+  | 'restored';
+
 export interface ReviewEvent {
   readonly id: RecordId;
   readonly subjectType: string;
   readonly subjectId: RecordId;
-  readonly action: 'submitted' | 'approved' | 'rejected' | 'corrected' | 'withdrawn' | 'restored';
+  readonly action: ReviewAction;
   readonly reviewerId: string;
   readonly rationale: string;
   readonly at: Timestamp;

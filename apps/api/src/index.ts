@@ -47,7 +47,9 @@ export function createApiRouter(deps: ApiDependencies) {
       const q = request.query.q?.trim() ?? '';
       if (q.length < 2) return response(400, { error: 'query_too_short' });
       const requestedLimit = Number.parseInt(request.query.limit ?? '20', 10);
-      const limit = Number.isFinite(requestedLimit) ? Math.min(50, Math.max(1, requestedLimit)) : 20;
+      const limit = Number.isFinite(requestedLimit)
+        ? Math.min(50, Math.max(1, requestedLimit))
+        : 20;
       return response(200, { results: await deps.entities.search(q, limit) });
     }
 
@@ -85,7 +87,9 @@ export function createApiRouter(deps: ApiDependencies) {
       const channelValue = publicationMatch[1];
       const listValue = publicationMatch[2];
       const operation = publicationMatch[3];
-      if (!channelValue || !listValue || !operation) return response(404, { error: 'not_found' });
+      if (!channelValue || !listValue || !operation) {
+        return response(404, { error: 'not_found' });
+      }
       if (!isChannel(channelValue) || !isList(listValue)) {
         return response(404, { error: 'not_found' });
       }
@@ -128,7 +132,9 @@ function parseSubmission(body: unknown): SubmissionInput | null {
   }
 
   const proposedList = body.proposedList;
-  if (proposedList !== null && proposedList !== undefined && !isListValue(proposedList)) return null;
+  if (proposedList !== null && proposedList !== undefined && !isListValue(proposedList)) {
+    return null;
+  }
   const sourceUrls = body.sourceUrls;
   if (!Array.isArray(sourceUrls) || sourceUrls.some((url) => typeof url !== 'string')) return null;
   if (sourceUrls.length > 20) return null;

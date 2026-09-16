@@ -132,7 +132,10 @@ export function compileEntries(
   channel: PublicationChannel,
   list: ListKind,
 ): readonly CompiledEntry[] {
-  const byIdentifier = new Map<string, { entityId: PublicEntityId; reasonCodes: Set<ReasonCode> }>();
+  const byIdentifier = new Map<
+    string,
+    { entityId: PublicEntityId; reasonCodes: Set<ReasonCode> }
+  >();
 
   for (const candidate of candidates) {
     if (candidate.channel !== channel || candidate.list !== list) continue;
@@ -153,13 +156,12 @@ export function compileEntries(
     byIdentifier.set(candidate.identifier, target);
   }
 
-  return [...byIdentifier.entries()]
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(([identifier, value]) => [
-      identifier,
-      value.entityId,
-      [...value.reasonCodes].sort(),
-    ] as const);
+  const sorted = [...byIdentifier.entries()].sort(([left], [right]) => left.localeCompare(right));
+  const entries: CompiledEntry[] = [];
+  for (const [identifier, value] of sorted) {
+    entries.push([identifier, value.entityId, [...value.reasonCodes].sort()]);
+  }
+  return entries;
 }
 
 export function compileFullPublication(input: {
