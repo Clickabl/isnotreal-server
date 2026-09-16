@@ -202,6 +202,7 @@ function isListValue(value: unknown): value is ListKind | null {
 }
 
 function isHttpUrl(value: string): boolean {
-  if (value.length > 2_048) return false;
-  return /^https?:\/\/[^\s\u0000-\u001f\u007f]+$/i.test(value);
+  if (value.length > 2_048 || /\s/.test(value)) return false;
+  const schemeLength = value.startsWith('https://') ? 8 : value.startsWith('http://') ? 7 : 0;
+  return schemeLength > 0 && value.length > schemeLength;
 }
