@@ -61,7 +61,7 @@ test('compiler rejects one stable identifier resolving to two entities', () => {
 
 test('delta compiler emits removals and changed entries as deterministic upserts', () => {
   const previous = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     channel: 'domain',
     list: 'filter',
     version: '10',
@@ -82,7 +82,7 @@ test('delta compiler emits removals and changed entries as deterministic upserts
   };
 
   assert.deepEqual(compilePublicationDelta(previous, next), {
-    schemaVersion: 2,
+    schemaVersion: 3,
     channel: 'domain',
     list: 'filter',
     fromVersion: '10',
