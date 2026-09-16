@@ -11,6 +11,10 @@ const scaleMigration = await readFile(
   new URL('../db/migrations/0002_resolution_and_search.sql', import.meta.url),
   'utf8',
 );
+const aliasMigration = await readFile(
+  new URL('../db/migrations/0003_identifier_aliases.sql', import.meta.url),
+  'utf8',
+);
 
 test('core migration separates truth, identifiers, policy and publication', () => {
   for (const table of [
@@ -43,4 +47,10 @@ test('scale migration resolves merge chains and indexes substring search', () =>
   assert.match(scaleMigration, /CREATE EXTENSION IF NOT EXISTS pg_trgm/);
   assert.match(scaleMigration, /canonical_name gin_trgm_ops/);
   assert.match(scaleMigration, /name gin_trgm_ops/);
+});
+
+test('identifier aliases preserve human-facing account history', () => {
+  assert.match(aliasMigration, /CREATE TABLE identifier_aliases/);
+  assert.match(aliasMigration, /verification_assertion_id/);
+  assert.match(aliasMigration, /alternative_destinations_verified_idx/);
 });

@@ -35,6 +35,14 @@ export interface PublicReasonDetail {
   readonly assertions: readonly PublicAssertionDetail[];
 }
 
+export interface ReasonCatalogEntry {
+  readonly code: ReasonCode;
+  readonly label: string;
+  readonly description: string;
+  readonly category: string;
+  readonly defaultList: ListKind | 'none';
+}
+
 export interface PublicEntitySummary {
   readonly publicId: PublicEntityId;
   readonly slug: string;
@@ -43,7 +51,24 @@ export interface PublicEntitySummary {
   readonly lists: readonly ListKind[];
 }
 
+export interface PublicIdentifierSummary {
+  readonly kind: string;
+  readonly value: string;
+  readonly displayValue: string;
+  readonly matchScope: 'exact' | 'include-subdomains';
+}
+
+export interface PublicRelationshipSummary {
+  readonly direction: 'outbound' | 'inbound';
+  readonly relationshipType: string;
+  readonly entity: PublicEntitySummary;
+  readonly ownershipPercent: number | null;
+  readonly validFrom: string | null;
+}
+
 export interface PublicEntityProfile extends PublicEntitySummary {
+  readonly identifiers: readonly PublicIdentifierSummary[];
+  readonly relationships: readonly PublicRelationshipSummary[];
   readonly reasons: readonly PublicReasonDetail[];
 }
 
@@ -86,6 +111,10 @@ export interface PublicEntityDirectory {
   byPublicId(publicId: PublicEntityId): Promise<PublicEntityProfile | null>;
   bySlug(slug: string): Promise<PublicEntityProfile | null>;
   search(query: string, limit: number): Promise<readonly PublicEntitySummary[]>;
+}
+
+export interface ReasonCatalogReader {
+  list(): Promise<readonly ReasonCatalogEntry[]>;
 }
 
 export interface AlternativeDirectory {
@@ -181,4 +210,44 @@ export function compileFullPublication(input: {
     expiresAt: input.expiresAt,
     entries: compileEntries(input.candidates, input.channel, input.list),
   };
+}
+
+export function compilePublicationDelta(
+  previous: FullPublication,
+  next: FullPublication,
+): PublicationDelta {
+  if (previous.channel !== next.channel || previous.list !== next.list) {
+    throw new Error('cannot diff publications from different channels or lists');
+  }
+
+  const previousByIdentifier = new Map(previous.entries.map((entry) => [entry[0], entry]));
+  const nextByIdentifier = new Map(next.entries.map((entry) => [entry[0], entry]));
+  const added: CompiledEntry[] = [];
+  const removed: string[] = [];
+
+  for (const [identifier, entry] of nextByIdentifier) {
+    const oldEntry = previousByIdentifier.get(identifier);
+    if (!oldEntry || !sameEntry(oldEntry, entry)) added.push(entry);
+  }
+  for (const identifier of previousByIdentifier.keys()) {
+    if (!nextByIdentifier.has(identifier)) removed.push(identifier);
+  }
+
+  added.sort(([left], [right]) => left.localeCompare(right));
+  removed.sort((left, right) => left.localeCompare(right));
+
+  return {
+    schemaVersion: PROTOCOL_SCHEMA_VERSION,
+    channel: next.channel,
+    list: next.list,
+    fromVersion: previous.version,
+    toVersion: next.version,
+    added,
+    removed,
+  };
+}
+
+function sameEntry(left: CompiledEntry, right: CompiledEntry): boolean {
+  if (left[1] !== right[1] || left[2].length !== right[2].length) return false;
+  return left[2].every((reasonCode, index) => reasonCode === right[2][index]);
 }

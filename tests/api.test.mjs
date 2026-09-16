@@ -8,6 +8,8 @@ const profile = {
   name: 'Example',
   kind: 'person',
   lists: ['highlight'],
+  identifiers: [],
+  relationships: [],
   reasons: [],
 };
 const entities = {
@@ -19,6 +21,19 @@ const entities = {
   },
   async search() {
     return [profile];
+  },
+};
+const reasons = {
+  async list() {
+    return [
+      {
+        code: 'P03',
+        label: 'Signed example campaign',
+        description: 'Documented campaign signature.',
+        category: 'campaign',
+        defaultList: 'highlight',
+      },
+    ];
   },
 };
 const alternatives = {
@@ -52,11 +67,15 @@ const publications = {
     return { schemaVersion: 2, code: 'FULL_SYNC_REQUIRED', channel, list, currentVersion: '1' };
   },
 };
-const route = createApiRouter({ entities, alternatives, submissions, publications });
+const route = createApiRouter({ entities, reasons, alternatives, submissions, publications });
 const request = (method, pathname, query = {}, body = null) => ({ method, pathname, query, body });
 
-test('entity and list endpoints expose the new public contracts', async () => {
+test('entity, reason and list endpoints expose the public contracts', async () => {
   assert.equal((await route(request('GET', '/api/v1/entities/42'))).status, 200);
+  assert.equal((await route(request('GET', '/api/v1/entities/slug/example'))).status, 200);
+  const reasonCatalog = await route(request('GET', '/api/v1/reasons'));
+  assert.equal(reasonCatalog.status, 200);
+  assert.equal(reasonCatalog.body.reasons[0].code, 'P03');
   const manifest = await route(request('GET', '/api/v1/lists/domain/filter/manifest'));
   assert.equal(manifest.status, 200);
   assert.equal(manifest.body.channel, 'domain');
@@ -67,6 +86,19 @@ test('community submission endpoint validates before enqueueing', async () => {
     request('POST', '/api/v1/submissions', {}, { submissionType: 'wat' }),
   );
   assert.equal(invalid.status, 400);
+  const unsafeSource = await route(
+    request(
+      'POST',
+      '/api/v1/submissions',
+      {},
+      {
+        submissionType: 'add-evidence',
+        narrative: 'Documented update',
+        sourceUrls: ['file:///etc/passwd'],
+      },
+    ),
+  );
+  assert.equal(unsafeSource.status, 400);
   const accepted = await route(
     request(
       'POST',

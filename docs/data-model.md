@@ -6,6 +6,7 @@ The server keeps a rich normalized evidence graph and publishes a deliberately t
 Entity
   -> names/aliases
   -> identifier assignments -> identifier (TikTok/X/Instagram/YouTube/domain/...)
+  -> identifier aliases (handles/display names/history)
   -> relationships -> other entities
   -> assertion participation
 
@@ -26,7 +27,7 @@ Membership decisions + current verified identifiers
 
 ## Entities and identifiers
 
-One entity can have unlimited domains/accounts. `identifiers` stores the stable external identifier; `identifier_assignments` stores which entity controls it and preserves reassignment history. Handles and display names are not authoritative matching keys.
+One entity can have unlimited domains/accounts. `identifiers` stores the stable external identifier; `identifier_assignments` stores which entity controls it and preserves reassignment history. `identifier_aliases` stores handles/display names/history, but aliases are not authoritative matching keys.
 
 Domains are hostnames, not URLs. Exact-host and include-subdomain matching are explicit. `www.example.com` is not silently rewritten to `example.com`.
 
@@ -42,13 +43,17 @@ Reason codes are short human-facing labels suitable for the extension block/high
 
 Membership decisions are separately reviewed outputs of a policy revision. Both filter and highlight evidence may coexist; the database does not collapse them into a score.
 
+## Public entity profiles
+
+The website/API profile is intentionally richer than extension publications. It can expose the canonical entity, current verified identifiers, current verified entity relationships, active list membership, reason details, supporting assertions and public source links. Private moderation data and submitter contact references remain server-only.
+
 ## Alternatives
 
-Alternatives are reviewed many-to-many relationships between entities with a context key and rank. Destination URLs are separately verified. The preferred-alternative query excludes entities that currently have an active filter inclusion decision.
+Alternatives are reviewed many-to-many relationships between entities with a context key and rank. Destination URLs are separately verified. The preferred-alternative query excludes entities that currently have an active filter inclusion decision and ignores destinations that have not been verified.
 
 ## Reports and community submissions
 
-Users can submit positive/negative evidence, corrections, account/domain fixes, company relationships, new entities and alternative suggestions. Submissions never mutate assertions, reasons or memberships directly.
+Users can submit positive/negative evidence, corrections, account/domain fixes, company relationships, new entities and alternative suggestions. Submissions never mutate assertions, reasons or memberships directly. Submitted source URLs are validated as HTTP(S) but are **not fetched by the public API process**.
 
 ## Publication
 

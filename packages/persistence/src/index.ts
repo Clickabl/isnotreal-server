@@ -6,12 +6,16 @@ import type {
   PublicEntityDirectory,
   PublicEntityProfile,
   PublicEntitySummary,
+  PublicIdentifierSummary,
   PublicationCandidate,
   PublicationCandidateReader,
   PublicationChannel,
   PublicEntityId,
   PublicReasonDetail,
+  PublicRelationshipSummary,
   PublicSource,
+  ReasonCatalogEntry,
+  ReasonCatalogReader,
   SubmissionInput,
   SubmissionReceipt,
   SubmissionWriter,
@@ -35,6 +39,25 @@ type EntityRow = {
   lists: readonly ListKind[] | null;
 };
 
+type IdentifierRow = {
+  kind_code: string;
+  normalized_value: string;
+  display_value: string;
+  match_scope: PublicIdentifierSummary['matchScope'];
+};
+
+type RelationshipRow = {
+  direction: PublicRelationshipSummary['direction'];
+  relationship_type: string;
+  ownership_percent: string | null;
+  valid_from: string | null;
+  public_id: string;
+  slug: string;
+  canonical_name: string;
+  kind: PublicEntitySummary['kind'];
+  lists: readonly ListKind[] | null;
+};
+
 type ReasonEvidenceRow = {
   reason_code: string;
   reason_label: string;
@@ -47,6 +70,14 @@ type ReasonEvidenceRow = {
   source_publisher: string | null;
   source_retrieved_at: string | null;
   source_primary: boolean | null;
+};
+
+type ReasonCatalogRow = {
+  code: string;
+  label: string;
+  description: string;
+  category: string;
+  default_list: ReasonCatalogEntry['defaultList'];
 };
 
 type AlternativeRow = {
@@ -144,8 +175,12 @@ export class PostgresPublicEntityDirectory implements PublicEntityDirectory {
     const result = await this.db.query<EntityRow>(sql, params);
     const row = result.rows[0];
     if (!row) return null;
-    const reasons = await this.loadReasons(row.internal_id);
-    return { ...this.toSummary(row), reasons };
+    const [identifiers, relationships, reasons] = await Promise.all([
+      this.loadIdentifiers(row.internal_id),
+      this.loadRelationships(row.internal_id),
+      this.loadReasons(row.internal_id),
+    ]);
+    return { ...this.toSummary(row), identifiers, relationships, reasons };
   }
 
   private toSummary(row: EntityRow): PublicEntitySummary {
@@ -156,6 +191,94 @@ export class PostgresPublicEntityDirectory implements PublicEntityDirectory {
       kind: row.kind,
       lists: row.lists ?? [],
     };
+  }
+
+  private async loadIdentifiers(entityId: string): Promise<readonly PublicIdentifierSummary[]> {
+    const result = await this.db.query<IdentifierRow>(
+      `SELECT i.kind_code, i.normalized_value, i.display_value, i.match_scope
+       FROM identifier_assignments ia
+       JOIN identifiers i ON i.id = ia.identifier_id
+       WHERE ia.entity_id = $1
+         AND ia.state = 'verified'
+         AND ia.valid_to IS NULL
+         AND i.status = 'active'
+       ORDER BY i.kind_code, i.normalized_value`,
+      [entityId],
+    );
+    return result.rows.map((row) => ({
+      kind: row.kind_code,
+      value: row.normalized_value,
+      displayValue: row.display_value,
+      matchScope: row.match_scope,
+    }));
+  }
+
+  private async loadRelationships(entityId: string): Promise<readonly PublicRelationshipSummary[]> {
+    const result = await this.db.query<RelationshipRow>(
+      `SELECT
+         'outbound'::text AS direction,
+         rel.relationship_type,
+         rel.ownership_percent::text,
+         rel.valid_from::text,
+         target.public_id::text AS public_id,
+         target.slug,
+         target.canonical_name,
+         target.kind,
+         ARRAY(
+           SELECT DISTINCT md.list_kind
+           FROM membership_decisions md
+           WHERE md.entity_id = target.id
+             AND md.state = 'active'
+             AND md.decision = 'include'
+           ORDER BY md.list_kind
+         ) AS lists
+       FROM entity_relationships rel
+       JOIN entity_resolution er ON er.requested_entity_id = rel.to_entity_id
+       JOIN entities target ON target.id = er.resolved_entity_id AND target.status = 'active'
+       WHERE rel.from_entity_id = $1
+         AND rel.status = 'verified'
+         AND rel.valid_to IS NULL
+       UNION ALL
+       SELECT
+         'inbound'::text AS direction,
+         rel.relationship_type,
+         rel.ownership_percent::text,
+         rel.valid_from::text,
+         source.public_id::text AS public_id,
+         source.slug,
+         source.canonical_name,
+         source.kind,
+         ARRAY(
+           SELECT DISTINCT md.list_kind
+           FROM membership_decisions md
+           WHERE md.entity_id = source.id
+             AND md.state = 'active'
+             AND md.decision = 'include'
+           ORDER BY md.list_kind
+         ) AS lists
+       FROM entity_relationships rel
+       JOIN entity_resolution er ON er.requested_entity_id = rel.from_entity_id
+       JOIN entities source ON source.id = er.resolved_entity_id AND source.status = 'active'
+       WHERE rel.to_entity_id = $1
+         AND rel.status = 'verified'
+         AND rel.valid_to IS NULL
+       ORDER BY relationship_type, canonical_name`,
+      [entityId],
+    );
+
+    return result.rows.map((row) => ({
+      direction: row.direction,
+      relationshipType: row.relationship_type,
+      ownershipPercent: row.ownership_percent === null ? null : Number(row.ownership_percent),
+      validFrom: row.valid_from,
+      entity: {
+        publicId: row.public_id,
+        slug: row.slug,
+        name: row.canonical_name,
+        kind: row.kind,
+        lists: row.lists ?? [],
+      },
+    }));
   }
 
   private async loadReasons(entityId: string): Promise<readonly PublicReasonDetail[]> {
@@ -237,6 +360,26 @@ export class PostgresPublicEntityDirectory implements PublicEntityDirectory {
   }
 }
 
+export class PostgresReasonCatalogReader implements ReasonCatalogReader {
+  constructor(private readonly db: SqlExecutor) {}
+
+  async list(): Promise<readonly ReasonCatalogEntry[]> {
+    const result = await this.db.query<ReasonCatalogRow>(
+      `SELECT code, label, description, category, default_list
+       FROM reason_definitions
+       WHERE active = true
+       ORDER BY code`,
+    );
+    return result.rows.map((row) => ({
+      code: row.code,
+      label: row.label,
+      description: row.description,
+      category: row.category,
+      defaultList: row.default_list,
+    }));
+  }
+}
+
 export class PostgresAlternativeDirectory implements AlternativeDirectory {
   constructor(private readonly db: SqlExecutor) {}
 
@@ -269,6 +412,7 @@ export class PostgresAlternativeDirectory implements AlternativeDirectory {
        LEFT JOIN alternative_destinations ad
          ON ad.entity_id = alt.id
         AND ad.active = true
+        AND ad.verified_at IS NOT NULL
         AND ($3::text IS NULL OR ad.channel = $3 OR ad.channel IS NULL)
        WHERE source.public_id = $1
          AND ea.state = 'approved'
