@@ -11,13 +11,7 @@ export type Timestamp = string;
 export type EvidenceDate = string;
 export type NonEmpty<T> = readonly [T, ...T[]];
 
-export type EntityKind =
-  | 'person'
-  | 'company'
-  | 'brand'
-  | 'organization'
-  | 'music-group'
-  | 'other';
+export type EntityKind = 'person' | 'company' | 'brand' | 'organization' | 'music-group' | 'other';
 export type EntityStatus = 'active' | 'merged' | 'hidden' | 'deleted';
 
 export interface CanonicalEntity {
@@ -150,12 +144,7 @@ export interface ReasonDefinition {
 }
 
 export type EntityRelationshipType =
-  | 'owns'
-  | 'controls'
-  | 'brand-of'
-  | 'member-of'
-  | 'licenses'
-  | 'operates';
+  'owns' | 'controls' | 'brand-of' | 'member-of' | 'licenses' | 'operates';
 
 export interface EntityRelationship {
   readonly id: RecordId;
@@ -249,12 +238,7 @@ export interface AlternativeDestination {
 }
 
 export type ReviewAction =
-  | 'submitted'
-  | 'approved'
-  | 'rejected'
-  | 'corrected'
-  | 'withdrawn'
-  | 'restored';
+  'submitted' | 'approved' | 'rejected' | 'corrected' | 'withdrawn' | 'restored';
 
 export interface ReviewEvent {
   readonly id: RecordId;
