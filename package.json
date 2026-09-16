@@ -18,7 +18,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "npm run build && node --test tests/*.test.mjs",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm test"
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test",
+    "db:migrate": "npm run build && node apps/api/dist/migrate.js",
+    "publish:local": "npm run build && node apps/api/dist/publish.js",
+    "start": "node apps/api/dist/serve.js",
+    "start:local": "npm run build && npm run start"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
