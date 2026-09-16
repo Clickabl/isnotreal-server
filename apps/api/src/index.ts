@@ -2,10 +2,11 @@ import type {
   AlternativeDirectory,
   PublicationReader,
   PublicEntityDirectory,
+  ReasonCatalogReader,
   SubmissionInput,
   SubmissionWriter,
 } from '@isnotreal/application';
-import type { ListKind, PublicationChannel } from '@isnotreal/protocol';
+import { PROTOCOL_SCHEMA_VERSION, type ListKind, type PublicationChannel } from '@isnotreal/protocol';
 
 export interface ApiRequest {
   readonly method: string;
@@ -22,6 +23,7 @@ export interface ApiResponse {
 
 export interface ApiDependencies {
   readonly entities: PublicEntityDirectory;
+  readonly reasons: ReasonCatalogReader;
   readonly alternatives: AlternativeDirectory;
   readonly submissions: SubmissionWriter;
   readonly publications: PublicationReader;
@@ -53,11 +55,28 @@ export function createApiRouter(deps: ApiDependencies) {
       return response(200, { results: await deps.entities.search(q, limit) });
     }
 
+    if (request.method === 'GET' && request.pathname === '/api/v1/reasons') {
+      return response(200, {
+        schemaVersion: PROTOCOL_SCHEMA_VERSION,
+        reasons: await deps.reasons.list(),
+      });
+    }
+
     const entityMatch = /^\/api\/v1\/entities\/(\d+)$/.exec(request.pathname);
     if (request.method === 'GET' && entityMatch) {
       const publicId = entityMatch[1];
       if (!publicId) return response(404, { error: 'not_found' });
       const entity = await deps.entities.byPublicId(publicId);
+      return entity ? response(200, entity) : response(404, { error: 'not_found' });
+    }
+
+    const slugMatch = /^\/api\/v1\/entities\/slug\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(
+      request.pathname,
+    );
+    if (request.method === 'GET' && slugMatch) {
+      const slug = slugMatch[1];
+      if (!slug) return response(404, { error: 'not_found' });
+      const entity = await deps.entities.bySlug(slug);
       return entity ? response(200, entity) : response(404, { error: 'not_found' });
     }
 
@@ -132,23 +151,36 @@ function parseSubmission(body: unknown): SubmissionInput | null {
   }
 
   const proposedList = body.proposedList;
-  if (proposedList !== null && proposedList !== undefined && !isListValue(proposedList)) {
-    return null;
-  }
+  if (proposedList !== null && proposedList !== undefined && !isListValue(proposedList)) return null;
+
   const sourceUrls = body.sourceUrls;
-  if (!Array.isArray(sourceUrls) || sourceUrls.some((url) => typeof url !== 'string')) return null;
-  if (sourceUrls.length > 20) return null;
+  if (!Array.isArray(sourceUrls) || sourceUrls.length > 20) return null;
+  if (sourceUrls.some((url) => typeof url !== 'string' || !isHttpUrl(url))) return null;
+
+  const entityPublicId = nullableString(body.entityPublicId);
+  if (entityPublicId !== null && !/^\d+$/.test(entityPublicId)) return null;
+
+  const identifierKind = nullableString(body.identifierKind);
+  const identifierValue = nullableString(body.identifierValue);
+  if (identifierKind && identifierKind.length > 64) return null;
+  if (identifierValue && identifierValue.length > 512) return null;
+
+  const proposedReasonCode = nullableString(body.proposedReasonCode);
+  if (proposedReasonCode && !/^[A-Z][A-Z0-9_-]{1,15}$/.test(proposedReasonCode)) return null;
+
+  const submitterContactRef = nullableString(body.submitterContactRef);
+  if (submitterContactRef && submitterContactRef.length > 512) return null;
 
   return {
-    entityPublicId: nullableString(body.entityPublicId),
-    identifierKind: nullableString(body.identifierKind),
-    identifierValue: nullableString(body.identifierValue),
+    entityPublicId,
+    identifierKind,
+    identifierValue,
     submissionType: type as SubmissionInput['submissionType'],
     proposedList: proposedList === undefined ? null : proposedList,
-    proposedReasonCode: nullableString(body.proposedReasonCode),
+    proposedReasonCode,
     narrative: narrative.trim(),
     sourceUrls: sourceUrls as string[],
-    submitterContactRef: nullableString(body.submitterContactRef),
+    submitterContactRef,
   };
 }
 
@@ -162,4 +194,14 @@ function nullableString(value: unknown): string | null {
 
 function isListValue(value: unknown): value is ListKind | null {
   return value === null || value === 'filter' || value === 'highlight';
+}
+
+function isHttpUrl(value: string): boolean {
+  if (value.length > 2_048) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
 }
