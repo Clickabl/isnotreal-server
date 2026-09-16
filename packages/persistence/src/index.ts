@@ -22,10 +22,7 @@ export interface SqlQueryResult<Row> {
 }
 
 export interface SqlExecutor {
-  query<Row extends object>(
-    sql: string,
-    params?: readonly unknown[],
-  ): Promise<SqlQueryResult<Row>>;
+  query<Row extends object>(sql: string, params?: readonly unknown[]): Promise<SqlQueryResult<Row>>;
   transaction<T>(work: (tx: SqlExecutor) => Promise<T>): Promise<T>;
 }
 
@@ -141,10 +138,7 @@ export class PostgresPublicEntityDirectory implements PublicEntityDirectory {
     return result.rows.map((row) => this.toSummary(row));
   }
 
-  private async load(
-    sql: string,
-    params: readonly unknown[],
-  ): Promise<PublicEntityProfile | null> {
+  private async load(sql: string, params: readonly unknown[]): Promise<PublicEntityProfile | null> {
     const result = await this.db.query<EntityRow>(sql, params);
     const row = result.rows[0];
     if (!row) return null;
@@ -352,10 +346,10 @@ export class PostgresSubmissionWriter implements SubmissionWriter {
       if (!row) throw new Error('submission insert did not return a row');
 
       for (const url of input.sourceUrls) {
-        await tx.query(`INSERT INTO submission_sources (submission_id, url) VALUES ($1, $2)`, [
-          row.id,
-          url,
-        ]);
+        await tx.query(
+          `INSERT INTO submission_sources (submission_id, url) VALUES ($1, $2)`,
+          [row.id, url],
+        );
       }
 
       return { id: row.id, submittedAt: row.submitted_at, state: 'pending' };

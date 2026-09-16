@@ -63,7 +63,9 @@ test('entity and list endpoints expose the new public contracts', async () => {
 });
 
 test('community submission endpoint validates before enqueueing', async () => {
-  const invalid = await route(request('POST', '/api/v1/submissions', {}, { submissionType: 'wat' }));
+  const invalid = await route(
+    request('POST', '/api/v1/submissions', {}, { submissionType: 'wat' }),
+  );
   assert.equal(invalid.status, 400);
   const accepted = await route(
     request('POST', '/api/v1/submissions', {}, {

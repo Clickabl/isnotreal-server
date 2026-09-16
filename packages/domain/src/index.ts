@@ -105,12 +105,7 @@ export interface SourceCapture {
   readonly status: 'available' | 'missing' | 'blocked' | 'invalid';
 }
 
-export type AssertionState =
-  | 'draft'
-  | 'under-review'
-  | 'published'
-  | 'withdrawn'
-  | 'disputed';
+export type AssertionState = 'draft' | 'under-review' | 'published' | 'withdrawn' | 'disputed';
 
 export interface AssertionRecord {
   readonly id: RecordId;
