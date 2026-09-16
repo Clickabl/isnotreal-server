@@ -1,7 +1,7 @@
-export const PROTOCOL_SCHEMA_VERSION = 2 as const;
+export const PROTOCOL_SCHEMA_VERSION = 3 as const;
 
 export type Platform = 'x' | 'tiktok' | 'instagram' | 'youtube';
-export type PublicationChannel = Platform | 'domain';
+export type PublicationChannel = Platform | 'domain' | 'domain-subdomains';
 export type ListKind = 'filter' | 'highlight';
 export type IdentifierValue = string;
 export type PublicEntityId = string;
