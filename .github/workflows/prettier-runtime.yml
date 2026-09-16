@@ -3,7 +3,7 @@ on:
   push:
     branches: [diagnostics/prettier-runtime]
 permissions:
-  contents: read
+  contents: write
 jobs:
   diff:
     runs-on: ubuntu-latest
@@ -15,4 +15,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx prettier --write apps/api/src/migrate.ts apps/api/src/publish.ts apps/api/src/runtime.ts packages/persistence/src/runtime.ts
-      - run: git diff -- apps/api/src/migrate.ts apps/api/src/publish.ts apps/api/src/runtime.ts packages/persistence/src/runtime.ts
+      - name: Commit canonical formatting
+        run: |
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add apps/api/src/migrate.ts apps/api/src/publish.ts apps/api/src/runtime.ts packages/persistence/src/runtime.ts
+            git commit -m "style: apply canonical prettier formatting"
+            git push
+          fi
