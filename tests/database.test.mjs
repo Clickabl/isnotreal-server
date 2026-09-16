@@ -3,8 +3,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const migration = await readFile(
+const coreMigration = await readFile(
   new URL('../db/migrations/0001_core.sql', import.meta.url),
+  'utf8',
+);
+const scaleMigration = await readFile(
+  new URL('../db/migrations/0002_resolution_and_search.sql', import.meta.url),
   'utf8',
 );
 
@@ -26,9 +30,17 @@ test('core migration separates truth, identifiers, policy and publication', () =
     'publications',
     'publication_artifacts',
   ]) {
-    assert.match(migration, new RegExp(`CREATE TABLE ${table}\\b`));
+    assert.match(coreMigration, new RegExp(`CREATE TABLE ${table}\\b`));
   }
-  assert.match(migration, /CREATE VIEW publication_candidates/);
-  assert.match(migration, /e\.public_id::text AS entity_public_id/);
-  assert.match(migration, /array_agg\(DISTINCT mdr\.reason_code/);
+  assert.match(coreMigration, /CREATE VIEW publication_candidates/);
+  assert.match(coreMigration, /e\.public_id::text AS entity_public_id/);
+  assert.match(coreMigration, /array_agg\(DISTINCT mdr\.reason_code/);
+});
+
+test('scale migration resolves merge chains and indexes substring search', () => {
+  assert.match(scaleMigration, /WITH RECURSIVE chain/);
+  assert.match(scaleMigration, /WHERE NOT target\.id = ANY\(chain\.path\)/);
+  assert.match(scaleMigration, /CREATE EXTENSION IF NOT EXISTS pg_trgm/);
+  assert.match(scaleMigration, /canonical_name gin_trgm_ops/);
+  assert.match(scaleMigration, /name gin_trgm_ops/);
 });

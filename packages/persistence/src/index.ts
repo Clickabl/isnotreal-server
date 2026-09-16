@@ -98,8 +98,10 @@ SELECT
     ARRAY[]::text[]
   ) AS lists
 FROM entities requested
+JOIN entity_resolution er ON er.requested_entity_id = requested.id
 JOIN entities resolved
-  ON resolved.id = COALESCE(requested.merged_into_entity_id, requested.id)
+  ON resolved.id = er.resolved_entity_id
+ AND resolved.status = 'active'
 LEFT JOIN membership_decisions md ON md.entity_id = resolved.id
 `;
 
