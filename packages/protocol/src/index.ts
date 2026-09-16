@@ -1,32 +1,56 @@
-/** Public wire contract only. No entity, name, reason, evidence or source fields. */
+export const PROTOCOL_SCHEMA_VERSION = 2 as const;
+
 export type Platform = 'x' | 'tiktok' | 'instagram' | 'youtube';
-/** Opaque stable platform ID. Never a handle, display name, or numeric JS value. */
-export type AccountId = string;
-/** Opaque per-platform version: compare equality, never sort numerically. */
-export type BlocklistVersion = string;
+export type PublicationChannel = Platform | 'domain';
+export type ListKind = 'filter' | 'highlight';
+export type IdentifierValue = string;
+export type PublicEntityId = string;
+export type ReasonCode = string;
+export type PublicationVersion = string;
+
 export interface AccountReference {
   readonly platform: Platform;
-  readonly accountId: AccountId;
+  readonly accountId: IdentifierValue;
 }
-export interface BlocklistManifest {
-  readonly schemaVersion: 1;
-  readonly platform: Platform;
-  readonly version: BlocklistVersion;
+
+export interface IdentifierReference {
+  readonly channel: PublicationChannel;
+  readonly identifier: IdentifierValue;
 }
-export interface FullBlocklist extends BlocklistManifest {
-  readonly ids: readonly AccountId[];
+
+export type CompiledEntry = readonly [
+  identifier: IdentifierValue,
+  entityId: PublicEntityId,
+  reasonCodes: readonly ReasonCode[],
+];
+
+export interface PublicationManifest {
+  readonly schemaVersion: typeof PROTOCOL_SCHEMA_VERSION;
+  readonly channel: PublicationChannel;
+  readonly list: ListKind;
+  readonly version: PublicationVersion;
+  readonly generatedAt: string;
+  readonly expiresAt: string;
 }
-export interface BlocklistDelta {
-  readonly schemaVersion: 1;
-  readonly platform: Platform;
-  readonly fromVersion: BlocklistVersion;
-  readonly toVersion: BlocklistVersion;
-  readonly added: readonly AccountId[];
-  readonly removed: readonly AccountId[];
+
+export interface FullPublication extends PublicationManifest {
+  readonly entries: readonly CompiledEntry[];
 }
+
+export interface PublicationDelta {
+  readonly schemaVersion: typeof PROTOCOL_SCHEMA_VERSION;
+  readonly channel: PublicationChannel;
+  readonly list: ListKind;
+  readonly fromVersion: PublicationVersion;
+  readonly toVersion: PublicationVersion;
+  readonly added: readonly CompiledEntry[];
+  readonly removed: readonly IdentifierValue[];
+}
+
 export interface FullSyncRequired {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: typeof PROTOCOL_SCHEMA_VERSION;
   readonly code: 'FULL_SYNC_REQUIRED';
-  readonly platform: Platform;
-  readonly currentVersion: BlocklistVersion;
+  readonly channel: PublicationChannel;
+  readonly list: ListKind;
+  readonly currentVersion: PublicationVersion;
 }
