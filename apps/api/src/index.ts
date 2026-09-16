@@ -1,4 +1,3 @@
-import { URL } from 'node:url';
 import type {
   AlternativeDirectory,
   PublicationReader,
@@ -204,10 +203,5 @@ function isListValue(value: unknown): value is ListKind | null {
 
 function isHttpUrl(value: string): boolean {
   if (value.length > 2_048) return false;
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
+  return /^https?:\/\/[^\s\u0000-\u001f\u007f]+$/i.test(value);
 }
