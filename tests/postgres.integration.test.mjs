@@ -35,7 +35,7 @@ test(
         '0002_resolution_and_search.sql',
         '0003_identifier_aliases.sql',
         '0004_publication_provenance.sql',
-        '0005_domain_subtree_publications.sql',
+        '0005_domain_match_scope.sql',
       ]);
 
       const entity = await db.query(
