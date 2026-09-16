@@ -6,7 +6,11 @@ import type {
   SubmissionInput,
   SubmissionWriter,
 } from '@isnotreal/application';
-import { PROTOCOL_SCHEMA_VERSION, type ListKind, type PublicationChannel } from '@isnotreal/protocol';
+import {
+  PROTOCOL_SCHEMA_VERSION,
+  type ListKind,
+  type PublicationChannel,
+} from '@isnotreal/protocol';
 
 export interface ApiRequest {
   readonly method: string;
@@ -151,7 +155,8 @@ function parseSubmission(body: unknown): SubmissionInput | null {
   }
 
   const proposedList = body.proposedList;
-  if (proposedList !== null && proposedList !== undefined && !isListValue(proposedList)) return null;
+  if (proposedList !== null && proposedList !== undefined && !isListValue(proposedList))
+    return null;
 
   const sourceUrls = body.sourceUrls;
   if (!Array.isArray(sourceUrls) || sourceUrls.length > 20) return null;
