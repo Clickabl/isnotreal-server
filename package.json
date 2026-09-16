@@ -16,7 +16,7 @@
     "typecheck": "tsc -b --emitDeclarationOnly",
     "lint": "eslint . --max-warnings=0",
     "format": "prettier --write .",
-    "format:check": "prettier --write packages/domain/src/index.ts packages/persistence/src/index.ts tests/api.test.mjs && git diff -- packages/domain/src/index.ts packages/persistence/src/index.ts tests/api.test.mjs",
+    "format:check": "prettier --write apps/api/src/index.ts && git diff -- apps/api/src/index.ts",
     "test": "npm run build && node --test tests/*.test.mjs",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test"
   },
