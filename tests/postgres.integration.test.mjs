@@ -144,11 +144,7 @@ test(
       assert.equal(secondPublication.fullArtifactCount, 12);
       assert.equal(secondPublication.deltaArtifactCount, 12);
 
-      const delta = await published.delta(
-        'domain-subdomains',
-        'filter',
-        firstPublication.version,
-      );
+      const delta = await published.delta('domain-subdomains', 'filter', firstPublication.version);
       assert.equal('code' in delta, false);
       assert.deepEqual(delta.added, [['example.com', publicId, ['C98', 'C99']]]);
       assert.deepEqual(delta.removed, []);
