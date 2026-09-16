@@ -348,10 +348,10 @@ export class PostgresSubmissionWriter implements SubmissionWriter {
       if (!row) throw new Error('submission insert did not return a row');
 
       for (const url of input.sourceUrls) {
-        await tx.query(
-          `INSERT INTO submission_sources (submission_id, url) VALUES ($1, $2)`,
-          [row.id, url],
-        );
+        await tx.query(`INSERT INTO submission_sources (submission_id, url) VALUES ($1, $2)`, [
+          row.id,
+          url,
+        ]);
       }
 
       return { id: row.id, submittedAt: row.submitted_at, state: 'pending' };
