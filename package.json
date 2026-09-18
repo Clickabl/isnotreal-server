@@ -21,6 +21,7 @@
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test",
     "db:migrate": "npm run build && node apps/api/dist/migrate.js",
     "publish:local": "npm run build && node apps/api/dist/publish.js",
+    "reason-catalog:publish": "npm run build && node apps/api/dist/publish-reason-catalog.js",
     "start": "node apps/api/dist/serve.js",
     "start:local": "npm run build && npm run start"
   },
