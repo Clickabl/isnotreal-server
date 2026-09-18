@@ -230,18 +230,18 @@ async function assertPublicHttpUrl(url: URL): Promise<void> {
   }
 
   if (isIP(hostname)) {
-    if (!isPublicIp(hostname)) throw new Error('source capture private/reserved IP is forbidden');
+    if (!isPublicIpAddress(hostname)) throw new Error('source capture private/reserved IP is forbidden');
     return;
   }
 
   const addresses = await lookup(hostname, { all: true, verbatim: true });
   if (addresses.length === 0) throw new Error('source capture hostname did not resolve');
-  if (addresses.some((entry) => !isPublicIp(entry.address))) {
+  if (addresses.some((entry) => !isPublicIpAddress(entry.address))) {
     throw new Error('source capture hostname resolves to private/reserved IP');
   }
 }
 
-function isPublicIp(address: string): boolean {
+export function isPublicIpAddress(address: string): boolean {
   const version = isIP(address);
   if (version === 4) return isPublicIpv4(address);
   if (version === 6) return isPublicIpv6(address);
@@ -253,30 +253,42 @@ function isPublicIpv4(address: string): boolean {
   if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
     return false;
   }
-  const [a, b] = parts;
-  if (a === undefined || b === undefined) return false;
+  const [a, b, third] = parts;
+  if (a === undefined || b === undefined || third === undefined) return false;
 
   if (a === 0 || a === 10 || a === 127) return false;
   if (a === 100 && b >= 64 && b <= 127) return false;
   if (a === 169 && b === 254) return false;
   if (a === 172 && b >= 16 && b <= 31) return false;
-  if (a === 192 && (b === 0 || b === 168)) return false;
-  if (a === 198 && (b === 18 || b === 19 || b === 51)) return false;
-  if (a === 203 && b === 0) return false;
+  if (a === 192 && b === 0 && (third === 0 || third === 2)) return false;
+  if (a === 192 && b === 88 && third === 99) return false;
+  if (a === 192 && b === 168) return false;
+  if (a === 198 && (b === 18 || b === 19)) return false;
+  if (a === 198 && b === 51 && third === 100) return false;
+  if (a === 203 && b === 0 && third === 113) return false;
   if (a >= 224) return false;
   return true;
 }
 
 function isPublicIpv6(address: string): boolean {
   const value = address.toLowerCase();
-  if (value === '::' || value === '::1') return false;
+  if (
+    value === '::' ||
+    value === '::1' ||
+    value === '0:0:0:0:0:0:0:0' ||
+    value === '0:0:0:0:0:0:0:1'
+  ) {
+    return false;
+  }
   if (value.startsWith('fc') || value.startsWith('fd')) return false;
   if (/^fe[89ab]/.test(value)) return false;
   if (value.startsWith('ff')) return false;
   if (value.startsWith('2001:db8:')) return false;
+  if (value.startsWith('64:ff9b:')) return false;
 
   const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(value);
   if (mapped?.[1]) return isPublicIpv4(mapped[1]);
+  if (value.startsWith('::ffff:')) return false;
   return true;
 }
 
