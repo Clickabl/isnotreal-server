@@ -4,7 +4,10 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import process from 'node:process';
 import test from 'node:test';
-import { PostgresPublicEntityDirectory } from '../packages/persistence/dist/index.js';
+import {
+  PostgresPublicEntityDirectory,
+  PostgresReasonCatalogReader,
+} from '../packages/persistence/dist/index.js';
 import {
   FileArtifactStore,
   PgSqlExecutor,
@@ -36,7 +39,24 @@ test(
         '0003_identifier_aliases.sql',
         '0004_publication_provenance.sql',
         '0005_domain_match_scope.sql',
+        '0006_official_reason_catalog_v1.sql',
+        '0007_reason_evidence_rules_and_official_sources.sql',
       ]);
+
+      const catalog = await new PostgresReasonCatalogReader(db).list();
+      assert.equal(catalog.length, 60);
+      const artists4Ceasefire = catalog.find((reason) => reason.code === 'P03');
+      assert.equal(artists4Ceasefire?.campaigns[0]?.slug, 'artists4ceasefire');
+      assert.equal(
+        artists4Ceasefire?.evidenceRequirement?.evidenceMode,
+        'named-campaign-membership',
+      );
+      assert.equal(artists4Ceasefire?.authoritySources.length, 1);
+
+      const organicBds = catalog.find((reason) => reason.code === 'C25');
+      assert.equal(organicBds?.label, 'BDS organic boycott target');
+      assert.equal(organicBds?.evidenceRequirement?.validityMode, 'current-list-membership');
+      assert.equal(organicBds?.evidenceRequirement?.reverifyAfterDays, 90);
 
       const entity = await db.query(
         `INSERT INTO entities (kind, canonical_name, slug)
@@ -151,7 +171,7 @@ test(
 
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
       assert.deepEqual(secondMigration.applied, []);
-      assert.equal(secondMigration.alreadyApplied.length, 5);
+      assert.equal(secondMigration.alreadyApplied.length, 7);
     } finally {
       await db.close();
       await rm(artifactRoot, { recursive: true, force: true });
