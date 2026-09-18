@@ -1,10 +1,6 @@
 import type { SqlExecutor } from './index.js';
 
-export type CampaignImportKind =
-  | 'signatory-list'
-  | 'participant-list'
-  | 'target-list'
-  | 'other';
+export type CampaignImportKind = 'signatory-list' | 'participant-list' | 'target-list' | 'other';
 
 export interface CampaignImportRowInput {
   readonly rawName: string;
