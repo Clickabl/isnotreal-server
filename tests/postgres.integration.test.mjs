@@ -83,6 +83,31 @@ test(
       );
       const assertionId = assertion.rows[0].id;
 
+      const sourceDocument = await db.query(
+        `INSERT INTO source_documents (
+           canonical_url, title, publisher, source_type
+         ) VALUES (
+           'https://example.org/test-contract',
+           'Integration test contract record',
+           'Example Registry',
+           'filing'
+         )
+         RETURNING id::text`,
+      );
+      const sourceCapture = await db.query(
+        `INSERT INTO source_captures (
+           document_id, retrieved_at, capture_method, status
+         ) VALUES ($1, now(), 'manual', 'available')
+         RETURNING id::text`,
+        [sourceDocument.rows[0].id],
+      );
+      await db.query(
+        `INSERT INTO assertion_source_links (
+           assertion_id, capture_id, is_primary, stance
+         ) VALUES ($1, $2, true, 'supports')`,
+        [assertionId, sourceCapture.rows[0].id],
+      );
+
       await db.query(
         `INSERT INTO identifier_assignments (
            identifier_id, entity_id, state, verification_assertion_id
@@ -114,6 +139,27 @@ test(
          VALUES ($1, 'C03', $2)`,
         [decisionId, assertionId],
       );
+
+      const unsourcedAssertion = await db.query(
+        `INSERT INTO assertions (
+           primary_entity_id, action_type, summary, occurred_on, date_precision, state
+         ) VALUES ($1, 'unverified-test-claim', 'Intentionally unsourced test claim.', '2026-09-15', 'day', 'published')
+         RETURNING id::text`,
+        [entityId],
+      );
+      await db.query(
+        `INSERT INTO membership_decision_reasons (decision_id, reason_code, assertion_id)
+         VALUES ($1, 'C01', $2)`,
+        [decisionId, unsourcedAssertion.rows[0].id],
+      );
+      const invalidReason = await db.query(
+        `SELECT valid_for_publication, issues
+         FROM membership_reason_validation
+         WHERE decision_id = $1 AND reason_code = 'C01'`,
+        [decisionId],
+      );
+      assert.equal(invalidReason.rows[0].valid_for_publication, false);
+      assert.ok(invalidReason.rows[0].issues.includes('insufficient-sources'));
 
       const store = new FileArtifactStore(artifactRoot);
       const firstPublication = await publishCurrentState(db, store, {
