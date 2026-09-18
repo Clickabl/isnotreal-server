@@ -48,11 +48,11 @@ const reasons = {
   async version() {
     return 1;
   },
-  async list() {
-    return [reasonEntry];
+  async list(version) {
+    return version === undefined || version === 1 ? [reasonEntry] : [];
   },
-  async byCode(code) {
-    return code === 'P03' ? reasonEntry : null;
+  async byCode(code, version) {
+    return (version === undefined || version === 1) && code === 'P03' ? reasonEntry : null;
   },
 };
 const alternatives = {
