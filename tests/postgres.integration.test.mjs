@@ -41,9 +41,16 @@ test(
         '0005_domain_match_scope.sql',
         '0006_official_reason_catalog_v1.sql',
         '0007_reason_evidence_rules_and_official_sources.sql',
+        '0008_reason_catalog_versioning_and_freshness.sql',
+        '0009_membership_reason_validation.sql',
+        '0010_publication_reason_catalog_version.sql',
+        '0011_freeze_reason_bindings_and_disable_unscoped_finance.sql',
+        '0012_protect_published_reason_catalogs.sql',
       ]);
 
-      const catalog = await new PostgresReasonCatalogReader(db).list();
+      const reasonCatalog = new PostgresReasonCatalogReader(db);
+      assert.equal(await reasonCatalog.version(), 1);
+      const catalog = await reasonCatalog.list();
       assert.equal(catalog.length, 60);
       const artists4Ceasefire = catalog.find((reason) => reason.code === 'P03');
       assert.equal(artists4Ceasefire?.campaigns[0]?.slug, 'artists4ceasefire');
@@ -57,6 +64,20 @@ test(
       assert.equal(organicBds?.label, 'BDS organic boycott target');
       assert.equal(organicBds?.evidenceRequirement?.validityMode, 'current-list-membership');
       assert.equal(organicBds?.evidenceRequirement?.reverifyAfterDays, 90);
+      assert.equal(catalog.find((reason) => reason.code === 'C19')?.publicationEnabled, false);
+      assert.equal(catalog.find((reason) => reason.code === 'C20')?.publicationEnabled, false);
+      assert.equal(catalog.find((reason) => reason.code === 'C03')?.publicationEnabled, true);
+      assert.equal((await reasonCatalog.list(999)).length, 0);
+      assert.equal((await reasonCatalog.byCode('P03', 1))?.code, 'P03');
+
+      await assert.rejects(
+        db.query(
+          `UPDATE reason_catalog_entries
+           SET label = 'Mutated label'
+           WHERE reason_code = 'P03'`,
+        ),
+        /immutable once catalog leaves draft state/,
+      );
 
       const entity = await db.query(
         `INSERT INTO entities (kind, canonical_name, slug)
@@ -211,7 +232,7 @@ test(
 
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
       assert.deepEqual(secondMigration.applied, []);
-      assert.equal(secondMigration.alreadyApplied.length, 7);
+      assert.equal(secondMigration.alreadyApplied.length, 12);
     } finally {
       await db.close();
       await rm(artifactRoot, { recursive: true, force: true });
