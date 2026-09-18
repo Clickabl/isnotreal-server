@@ -13,9 +13,7 @@ async function main(): Promise<void> {
   const captureAllReasonAuthorities = process.env.CAPTURE_REASON_AUTHORITIES === '1';
 
   if ((documentId === null) === !captureAllReasonAuthorities) {
-    throw new Error(
-      'set exactly one of SOURCE_DOCUMENT_ID or CAPTURE_REASON_AUTHORITIES=1',
-    );
+    throw new Error('set exactly one of SOURCE_DOCUMENT_ID or CAPTURE_REASON_AUTHORITIES=1');
   }
 
   const db = PgSqlExecutor.create({

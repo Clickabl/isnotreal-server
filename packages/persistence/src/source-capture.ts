@@ -169,7 +169,8 @@ async function fetchTrustedSource(
       redirect: 'manual',
       signal: AbortSignal.timeout(options.timeoutMs),
       headers: {
-        accept: 'text/html,application/xhtml+xml,application/json,text/plain,application/pdf,*/*;q=0.1',
+        accept:
+          'text/html,application/xhtml+xml,application/json,text/plain,application/pdf,*/*;q=0.1',
         'user-agent': options.userAgent,
       },
     });
@@ -230,7 +231,8 @@ async function assertPublicHttpUrl(url: URL): Promise<void> {
   }
 
   if (isIP(hostname)) {
-    if (!isPublicIpAddress(hostname)) throw new Error('source capture private/reserved IP is forbidden');
+    if (!isPublicIpAddress(hostname))
+      throw new Error('source capture private/reserved IP is forbidden');
     return;
   }
 
@@ -250,7 +252,10 @@ export function isPublicIpAddress(address: string): boolean {
 
 function isPublicIpv4(address: string): boolean {
   const parts = address.split('.').map(Number);
-  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
+  if (
+    parts.length !== 4 ||
+    parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)
+  ) {
     return false;
   }
   const [a, b, third] = parts;
