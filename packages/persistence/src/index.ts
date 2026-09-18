@@ -441,7 +441,7 @@ export class PostgresReasonCatalogReader implements ReasonCatalogReader {
            '[]'::jsonb
          ) AS authority_sources
        FROM current_reason_catalog rd
-       ORDER BY rd.code,
+       ORDER BY rd.code`,
     );
     return result.rows.map((row) => ({
       code: row.code,
