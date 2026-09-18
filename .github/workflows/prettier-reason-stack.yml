@@ -1,0 +1,27 @@
+name: Prettier reason stack
+on:
+  push:
+    branches: [diagnostics/prettier-reason-stack]
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Format changed reason stack
+        run: npx prettier --write docs/reason-catalog.md docs/protocol.md packages/application/src/index.ts packages/persistence/src/index.ts packages/persistence/src/runtime.ts packages/protocol/src/index.ts apps/api/src/index.ts apps/api/src/runtime.ts tests/api.test.mjs tests/compiler.test.mjs tests/protocol.test.mjs tests/postgres.integration.test.mjs
+      - name: Commit canonical formatting
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs packages apps tests
+          git diff --cached --quiet || git commit -m "style: format reason catalog stack"
+          git push
