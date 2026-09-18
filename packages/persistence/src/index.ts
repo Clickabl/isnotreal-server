@@ -398,15 +398,15 @@ export class PostgresReasonCatalogReader implements ReasonCatalogReader {
          rd.description,
          rd.category,
          rd.default_list,
-         req.subject_scope,
-         req.evidence_mode,
-         req.validity_mode,
-         req.public_criteria,
-         req.exclusion_criteria,
-         req.primary_or_authoritative_required,
-         req.minimum_evidence_items,
-         req.reverify_after_days,
-         req.inheritance_policy,
+         rd.subject_scope,
+         rd.evidence_mode,
+         rd.validity_mode,
+         rd.public_criteria,
+         rd.exclusion_criteria,
+         rd.primary_or_authoritative_required,
+         rd.minimum_evidence_items,
+         rd.reverify_after_days,
+         rd.inheritance_policy,
          COALESCE(
            (
              SELECT jsonb_agg(
@@ -441,8 +441,7 @@ export class PostgresReasonCatalogReader implements ReasonCatalogReader {
            '[]'::jsonb
          ) AS authority_sources
        FROM current_reason_catalog rd
-       LEFT JOIN reason_evidence_requirements req ON req.reason_code = rd.code
-       ORDER BY rd.code`,
+       ORDER BY rd.code,
     );
     return result.rows.map((row) => ({
       code: row.code,
