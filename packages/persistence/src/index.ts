@@ -87,8 +87,7 @@ type ReasonCatalogRow = {
   minimum_evidence_items: number | null;
   reverify_after_days: number | null;
   inheritance_policy:
-    | NonNullable<ReasonCatalogEntry['evidenceRequirement']>['inheritancePolicy']
-    | null;
+    NonNullable<ReasonCatalogEntry['evidenceRequirement']>['inheritancePolicy'] | null;
   campaigns: ReasonCatalogEntry['campaigns'];
   authority_sources: ReasonCatalogEntry['authoritySources'];
 };

@@ -109,7 +109,10 @@ test('entity, reason and list endpoints expose the public contracts', async () =
   assert.deepEqual(compactReasons.body.labels, [['P03', 'Signed example campaign']]);
   const reasonDetail = await route(request('GET', '/api/v1/reasons/P03'));
   assert.equal(reasonDetail.status, 200);
-  assert.equal(reasonDetail.body.reason.evidenceRequirement.evidenceMode, 'named-campaign-membership');
+  assert.equal(
+    reasonDetail.body.reason.evidenceRequirement.evidenceMode,
+    'named-campaign-membership',
+  );
   assert.equal((await route(request('GET', '/api/v1/reasons/P99'))).status, 404);
   const manifest = await route(request('GET', '/api/v1/lists/domain/filter/manifest'));
   assert.equal(manifest.status, 200);

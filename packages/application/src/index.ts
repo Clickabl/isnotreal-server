@@ -50,10 +50,7 @@ export type ReasonEvidenceMode =
   | 'other';
 
 export type ReasonValidityMode =
-  | 'historical-event'
-  | 'current-status'
-  | 'current-list-membership'
-  | 'current-relationship';
+  'historical-event' | 'current-status' | 'current-list-membership' | 'current-relationship';
 
 export interface ReasonEvidenceRequirement {
   readonly subjectScope: ReasonSubjectScope;
@@ -78,10 +75,7 @@ export interface ReasonAuthoritySource {
   readonly title: string;
   readonly publisher: string | null;
   readonly role:
-    | 'canonical-campaign-record'
-    | 'authoritative-list'
-    | 'official-guidance'
-    | 'methodology';
+    'canonical-campaign-record' | 'authoritative-list' | 'official-guidance' | 'methodology';
 }
 
 export interface ReasonCatalogEntry {
