@@ -70,10 +70,11 @@ const submissions = {
 const publications = {
   async manifest(channel, list) {
     return {
-      schemaVersion: 3,
+      schemaVersion: 4,
       channel,
       list,
       version: '1',
+      reasonCatalogVersion: 1,
       generatedAt: '2026-09-15T00:00:00Z',
       expiresAt: '2026-09-16T00:00:00Z',
     };
@@ -82,7 +83,14 @@ const publications = {
     return { ...(await this.manifest(channel, list)), entries: [] };
   },
   async delta(channel, list) {
-    return { schemaVersion: 3, code: 'FULL_SYNC_REQUIRED', channel, list, currentVersion: '1' };
+    return {
+      schemaVersion: 4,
+      code: 'FULL_SYNC_REQUIRED',
+      channel,
+      list,
+      currentVersion: '1',
+      currentReasonCatalogVersion: 1,
+    };
   },
 };
 const route = createApiRouter({ entities, reasons, alternatives, submissions, publications });
@@ -95,6 +103,10 @@ test('entity, reason and list endpoints expose the public contracts', async () =
   assert.equal(reasonCatalog.status, 200);
   assert.equal(reasonCatalog.body.catalogVersion, 1);
   assert.equal(reasonCatalog.body.reasons[0].code, 'P03');
+  const compactReasons = await route(request('GET', '/api/v1/reasons/compact'));
+  assert.equal(compactReasons.status, 200);
+  assert.equal(compactReasons.body.catalogVersion, 1);
+  assert.deepEqual(compactReasons.body.labels, [['P03', 'Signed example campaign']]);
   const reasonDetail = await route(request('GET', '/api/v1/reasons/P03'));
   assert.equal(reasonDetail.status, 200);
   assert.equal(reasonDetail.body.reason.evidenceRequirement.evidenceMode, 'named-campaign-membership');
