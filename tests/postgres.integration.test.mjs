@@ -8,6 +8,7 @@ import {
   PostgresPublicEntityDirectory,
   PostgresReasonCatalogReader,
 } from '../packages/persistence/dist/index.js';
+import { publishReasonCatalogVersion } from '../packages/persistence/dist/reason-catalog.js';
 import {
   FileArtifactStore,
   PgSqlExecutor,
@@ -46,6 +47,7 @@ test(
         '0010_publication_reason_catalog_version.sql',
         '0011_freeze_reason_bindings_and_disable_unscoped_finance.sql',
         '0012_protect_published_reason_catalogs.sql',
+        '0013_reason_definition_publication_policy.sql',
       ]);
 
       const reasonCatalog = new PostgresReasonCatalogReader(db);
@@ -230,9 +232,38 @@ test(
       assert.deepEqual(delta.added, [['example.com', publicId, ['C03', 'C05']]]);
       assert.deepEqual(delta.removed, []);
 
+      const originalP14 = await reasonCatalog.byCode('P14', 1);
+      assert.ok(originalP14);
+      await db.query(
+        `UPDATE reason_definitions
+         SET label = 'Documented Palestine solidarity action', updated_at = now()
+         WHERE code = 'P14'`,
+      );
+      assert.equal((await reasonCatalog.byCode('P14', 1))?.label, originalP14.label);
+
+      const nextCatalog = await publishReasonCatalogVersion(db, {
+        notes: 'Integration-test catalog revision',
+      });
+      assert.equal(nextCatalog.version, 2);
+      assert.equal(nextCatalog.entryCount, 60);
+      assert.equal(await reasonCatalog.version(), 2);
+      assert.equal(
+        (await reasonCatalog.byCode('P14', 2))?.label,
+        'Documented Palestine solidarity action',
+      );
+      assert.equal((await reasonCatalog.byCode('P14', 1))?.label, originalP14.label);
+
+      const thirdPublication = await publishCurrentState(db, store, {
+        compilerVersion: 'integration-test',
+        sourceRevision: 'third',
+        expiresInMs: 60 * 60 * 1_000,
+      });
+      assert.equal(thirdPublication.activated, true);
+      assert.equal((await published.full('domain-subdomains', 'filter')).reasonCatalogVersion, 2);
+
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
       assert.deepEqual(secondMigration.applied, []);
-      assert.equal(secondMigration.alreadyApplied.length, 12);
+      assert.equal(secondMigration.alreadyApplied.length, 13);
     } finally {
       await db.close();
       await rm(artifactRoot, { recursive: true, force: true });
