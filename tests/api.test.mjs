@@ -151,6 +151,22 @@ test('community submission endpoint validates before enqueueing', async () => {
     ),
   );
   assert.equal(unsafeSource.status, 400);
+  const unknownReason = await route(
+    request(
+      'POST',
+      '/api/v1/submissions',
+      {},
+      {
+        submissionType: 'add-evidence',
+        proposedReasonCode: 'P99',
+        narrative: 'Documented update',
+        sourceUrls: ['https://example.org/source'],
+      },
+    ),
+  );
+  assert.equal(unknownReason.status, 400);
+  assert.equal(unknownReason.body.error, 'unknown_reason_code');
+
   const accepted = await route(
     request(
       'POST',
@@ -158,8 +174,9 @@ test('community submission endpoint validates before enqueueing', async () => {
       {},
       {
         submissionType: 'add-evidence',
+        proposedReasonCode: 'P03',
         narrative: 'Documented update',
-        sourceUrls: ['https://example.org/source'],
+        sourceUrls: ['https://example.org/source', 'https://example.org/source'],
       },
     ),
   );
