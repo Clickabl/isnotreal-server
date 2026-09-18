@@ -67,10 +67,11 @@ export function createApiRouter(deps: ApiDependencies) {
     }
 
     if (request.method === 'GET' && request.pathname === '/api/v1/reasons/compact') {
-      const [catalogVersion, reasons] = await Promise.all([
-        deps.reasons.version(),
-        deps.reasons.list(),
-      ]);
+      const requestedVersion = parseOptionalCatalogVersion(request.query.version);
+      if (requestedVersion === false) return response(400, { error: 'invalid_catalog_version' });
+      const catalogVersion = requestedVersion ?? (await deps.reasons.version());
+      const reasons = await deps.reasons.list(catalogVersion);
+      if (reasons.length === 0) return response(404, { error: 'catalog_not_found' });
       return response(200, {
         schemaVersion: PROTOCOL_SCHEMA_VERSION,
         catalogVersion,
@@ -79,10 +80,11 @@ export function createApiRouter(deps: ApiDependencies) {
     }
 
     if (request.method === 'GET' && request.pathname === '/api/v1/reasons') {
-      const [catalogVersion, reasons] = await Promise.all([
-        deps.reasons.version(),
-        deps.reasons.list(),
-      ]);
+      const requestedVersion = parseOptionalCatalogVersion(request.query.version);
+      if (requestedVersion === false) return response(400, { error: 'invalid_catalog_version' });
+      const catalogVersion = requestedVersion ?? (await deps.reasons.version());
+      const reasons = await deps.reasons.list(catalogVersion);
+      if (reasons.length === 0) return response(404, { error: 'catalog_not_found' });
       return response(200, {
         schemaVersion: PROTOCOL_SCHEMA_VERSION,
         catalogVersion,
@@ -90,17 +92,67 @@ export function createApiRouter(deps: ApiDependencies) {
       });
     }
 
+    const catalogCompactMatch = /^\/api\/v1\/reason-catalogs\/(current|\d+)\/compact$/.exec(
+      request.pathname,
+    );
+    if (request.method === 'GET' && catalogCompactMatch) {
+      const segment = catalogCompactMatch[1];
+      if (!segment) return response(404, { error: 'not_found' });
+      const catalogVersion =
+        segment === 'current' ? await deps.reasons.version() : Number.parseInt(segment, 10);
+      const reasons = await deps.reasons.list(catalogVersion);
+      if (reasons.length === 0) return response(404, { error: 'catalog_not_found' });
+      return response(200, {
+        schemaVersion: PROTOCOL_SCHEMA_VERSION,
+        catalogVersion,
+        labels: reasons.map((reason) => [reason.code, reason.label] as const),
+      });
+    }
+
+    const catalogReasonsMatch = /^\/api\/v1\/reason-catalogs\/(current|\d+)\/reasons$/.exec(
+      request.pathname,
+    );
+    if (request.method === 'GET' && catalogReasonsMatch) {
+      const segment = catalogReasonsMatch[1];
+      if (!segment) return response(404, { error: 'not_found' });
+      const catalogVersion =
+        segment === 'current' ? await deps.reasons.version() : Number.parseInt(segment, 10);
+      const reasons = await deps.reasons.list(catalogVersion);
+      return reasons.length > 0
+        ? response(200, { schemaVersion: PROTOCOL_SCHEMA_VERSION, catalogVersion, reasons })
+        : response(404, { error: 'catalog_not_found' });
+    }
+
     const reasonMatch = /^\/api\/v1\/reasons\/([A-Z][A-Z0-9_-]{1,15})$/.exec(request.pathname);
     if (request.method === 'GET' && reasonMatch) {
       const code = reasonMatch[1];
       if (!code) return response(404, { error: 'not_found' });
-      const reason = await deps.reasons.byCode(code);
+      const requestedVersion = parseOptionalCatalogVersion(request.query.version);
+      if (requestedVersion === false) return response(400, { error: 'invalid_catalog_version' });
+      const catalogVersion = requestedVersion ?? (await deps.reasons.version());
+      const reason = await deps.reasons.byCode(code, catalogVersion);
       return reason
         ? response(200, {
             schemaVersion: PROTOCOL_SCHEMA_VERSION,
-            catalogVersion: await deps.reasons.version(),
+            catalogVersion,
             reason,
           })
+        : response(404, { error: 'not_found' });
+    }
+
+    const catalogReasonMatch =
+      /^\/api\/v1\/reason-catalogs\/(current|\d+)\/reasons\/([A-Z][A-Z0-9_-]{1,15})$/.exec(
+        request.pathname,
+      );
+    if (request.method === 'GET' && catalogReasonMatch) {
+      const segment = catalogReasonMatch[1];
+      const code = catalogReasonMatch[2];
+      if (!segment || !code) return response(404, { error: 'not_found' });
+      const catalogVersion =
+        segment === 'current' ? await deps.reasons.version() : Number.parseInt(segment, 10);
+      const reason = await deps.reasons.byCode(code, catalogVersion);
+      return reason
+        ? response(200, { schemaVersion: PROTOCOL_SCHEMA_VERSION, catalogVersion, reason })
         : response(404, { error: 'not_found' });
     }
 
@@ -225,6 +277,13 @@ function parseSubmission(body: unknown): SubmissionInput | null {
     sourceUrls: sourceUrls as string[],
     submitterContactRef,
   };
+}
+
+function parseOptionalCatalogVersion(value: string | undefined): number | null | false {
+  if (value === undefined || value.trim() === '') return null;
+  if (!/^\d+$/.test(value)) return false;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : false;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
