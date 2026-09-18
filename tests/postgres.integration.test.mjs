@@ -8,6 +8,13 @@ import {
   PostgresPublicEntityDirectory,
   PostgresReasonCatalogReader,
 } from '../packages/persistence/dist/index.js';
+import {
+  approveCampaignImportRow,
+  commitCampaignImport,
+  markCampaignImportReady,
+  markCampaignImportRow,
+  stageCampaignImport,
+} from '../packages/persistence/dist/campaign-import.js';
 import { publishReasonCatalogVersion } from '../packages/persistence/dist/reason-catalog.js';
 import {
   FileArtifactStore,
@@ -48,6 +55,7 @@ test(
         '0011_freeze_reason_bindings_and_disable_unscoped_finance.sql',
         '0012_protect_published_reason_catalogs.sql',
         '0013_reason_definition_publication_policy.sql',
+        '0014_campaign_import_staging.sql',
       ]);
 
       const reasonCatalog = new PostgresReasonCatalogReader(db);
@@ -261,9 +269,94 @@ test(
       assert.equal(thirdPublication.activated, true);
       assert.equal((await published.full('domain-subdomains', 'filter')).reasonCatalogVersion, 2);
 
+      const artist = await db.query(
+        `INSERT INTO entities (kind, canonical_name, slug)
+         VALUES ('person', 'Example Artist', 'example-artist')
+         RETURNING id::text`,
+      );
+      const artistEntityId = artist.rows[0].id;
+      const campaignContext = await db.query(
+        `SELECT cv.id::text AS campaign_version_id, cv.source_document_id::text AS source_document_id
+         FROM campaign_versions cv
+         JOIN campaigns c ON c.id = cv.campaign_id
+         WHERE c.slug = 'artists4ceasefire' AND cv.version = 1`,
+      );
+      const campaignCapture = await db.query(
+        `INSERT INTO source_captures (
+           document_id, retrieved_at, capture_method, status
+         ) VALUES ($1, now(), 'manual', 'available')
+         RETURNING id::text`,
+        [campaignContext.rows[0].source_document_id],
+      );
+
+      const staged = await stageCampaignImport(db, {
+        campaignVersionId: campaignContext.rows[0].campaign_version_id,
+        reasonCode: 'P03',
+        sourceCaptureId: campaignCapture.rows[0].id,
+        importKind: 'signatory-list',
+        createdBy: 'integration-test',
+        rows: [{ rawName: 'Example Artist' }, { rawName: 'Unknown Artist' }],
+      });
+      assert.equal(staged.rowCount, 2);
+      assert.equal(staged.candidateRows, 1);
+      assert.equal(staged.unresolvedRows, 1);
+
+      const importRows = await db.query(
+        `SELECT id::text, raw_name, resolution_state
+         FROM campaign_import_rows
+         WHERE batch_id = $1
+         ORDER BY ordinal`,
+        [staged.batchId],
+      );
+      assert.equal(importRows.rows[0].resolution_state, 'candidate');
+      assert.equal(importRows.rows[1].resolution_state, 'unresolved');
+
+      await approveCampaignImportRow(
+        db,
+        importRows.rows[0].id,
+        artistEntityId,
+        'integration-reviewer',
+        'Identity verified for integration test.',
+      );
+      await markCampaignImportRow(
+        db,
+        importRows.rows[1].id,
+        'skipped',
+        'integration-reviewer',
+        'No matching entity in integration fixture.',
+      );
+      await markCampaignImportReady(db, staged.batchId, 'integration-reviewer');
+      const importCommit = await commitCampaignImport(db, staged.batchId, 'integration-reviewer');
+      assert.equal(importCommit.assertionsCreated, 1);
+
+      const importedAssertion = await db.query(
+        `SELECT
+           a.state,
+           a.action_type,
+           ar.reason_code,
+           c.slug AS campaign_slug,
+           count(asl.capture_id)::integer AS source_count
+         FROM campaign_import_rows row
+         JOIN assertions a ON a.id = row.assertion_id
+         JOIN assertion_reasons ar ON ar.assertion_id = a.id
+         JOIN campaign_versions cv ON cv.id = a.campaign_version_id
+         JOIN campaigns c ON c.id = cv.campaign_id
+         JOIN assertion_source_links asl ON asl.assertion_id = a.id
+         WHERE row.batch_id = $1 AND row.raw_name = 'Example Artist'
+         GROUP BY a.state, a.action_type, ar.reason_code, c.slug`,
+        [staged.batchId],
+      );
+      assert.deepEqual(importedAssertion.rows[0], {
+        state: 'published',
+        action_type: 'signed-open-letter',
+        reason_code: 'P03',
+        campaign_slug: 'artists4ceasefire',
+        source_count: 1,
+      });
+
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
       assert.deepEqual(secondMigration.applied, []);
-      assert.equal(secondMigration.alreadyApplied.length, 13);
+      assert.equal(secondMigration.alreadyApplied.length, 14);
     } finally {
       await db.close();
       await rm(artifactRoot, { recursive: true, force: true });
