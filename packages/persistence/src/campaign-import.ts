@@ -369,7 +369,7 @@ export async function commitCampaignImport(
   db: SqlExecutor,
   batchId: string,
   reviewerId: string,
-): Promise<{ readonly assertionsCreated: number }> {
+): Promise<{ readonly assertionsCreated: number; readonly proposalsCreated: number }> {
   return commitOfficialImport(db, batchId, reviewerId);
 }
 
@@ -377,7 +377,7 @@ export async function commitOfficialImport(
   db: SqlExecutor,
   batchId: string,
   reviewerId: string,
-): Promise<{ readonly assertionsCreated: number }> {
+): Promise<{ readonly assertionsCreated: number; readonly proposalsCreated: number }> {
   const reviewer = reviewerId.trim();
   if (!reviewer) throw new Error('reviewerId is required');
 
@@ -434,6 +434,32 @@ export async function commitOfficialImport(
         [assertionId, context.reason_code],
       );
       await tx.query(
+        `INSERT INTO membership_proposals (
+           entity_id,
+           assertion_id,
+           reason_code,
+           proposed_list,
+           created_by
+         )
+         SELECT
+           $1,
+           $2,
+           catalog.code,
+           catalog.default_list,
+           $3
+         FROM current_reason_catalog catalog
+         WHERE catalog.code = $4
+           AND catalog.publication_enabled = true
+           AND catalog.default_list IN ('filter', 'highlight')
+         ON CONFLICT (entity_id, assertion_id, reason_code, proposed_list) DO NOTHING`,
+        [
+          row.resolved_entity_id,
+          assertionId,
+          `official-import:${batchId}`,
+          context.reason_code,
+        ],
+      );
+      await tx.query(
         `UPDATE official_import_rows
          SET resolution_state = 'committed',
              assertion_id = $2,
@@ -449,14 +475,27 @@ export async function commitOfficialImport(
        WHERE id = $1 AND state = 'ready'`,
       [batchId],
     );
+    const proposalCount = await tx.query<{ count: string }>(
+      `SELECT count(*)::text AS count
+       FROM membership_proposals proposal
+       JOIN official_import_rows row ON row.assertion_id = proposal.assertion_id
+       WHERE row.batch_id = $1`,
+      [batchId],
+    );
+    const proposalsCreated = Number(proposalCount.rows[0]?.count ?? 0);
+
     await tx.query(
       `INSERT INTO official_import_events (
          batch_id, event_type, actor_id, details
        ) VALUES ($1, 'batch-committed', $2, $3::jsonb)`,
-      [batchId, reviewer, JSON.stringify({ assertionsCreated: rows.rows.length })],
+      [
+        batchId,
+        reviewer,
+        JSON.stringify({ assertionsCreated: rows.rows.length, proposalsCreated }),
+      ],
     );
 
-    return { assertionsCreated: rows.rows.length };
+    return { assertionsCreated: rows.rows.length, proposalsCreated };
   });
 }
 
