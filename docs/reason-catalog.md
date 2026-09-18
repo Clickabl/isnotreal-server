@@ -48,83 +48,83 @@ The compiler excludes stale current-status reasons from extension publications w
 
 ## Person highlight reasons
 
-| Code | Display label |
-| --- | --- |
-| P01 | Publicly advocated for Palestinian rights |
-| P02 | Publicly called for a Gaza ceasefire |
-| P03 | Signed Artists4Ceasefire |
-| P04 | Signed Film Workers for Palestine pledge |
-| P05 | Joined No Music for Genocide |
-| P06 | Boycotted Israeli institutions |
-| P07 | Withdrew in Palestine solidarity |
-| P08 | Participated in a Palestine solidarity event |
-| P09 | Raised funds for Palestinian relief |
-| P10 | Donated to Palestinian relief |
-| P11 | Released Palestine-focused creative work |
-| P12 | Publicly criticized Israeli military actions |
-| P13 | Publicly opposed occupation or settlements |
-| P14 | Took another documented Palestine solidarity action |
+| Code | Display label                                       |
+| ---- | --------------------------------------------------- |
+| P01  | Publicly advocated for Palestinian rights           |
+| P02  | Publicly called for a Gaza ceasefire                |
+| P03  | Signed Artists4Ceasefire                            |
+| P04  | Signed Film Workers for Palestine pledge            |
+| P05  | Joined No Music for Genocide                        |
+| P06  | Boycotted Israeli institutions                      |
+| P07  | Withdrew in Palestine solidarity                    |
+| P08  | Participated in a Palestine solidarity event        |
+| P09  | Raised funds for Palestinian relief                 |
+| P10  | Donated to Palestinian relief                       |
+| P11  | Released Palestine-focused creative work            |
+| P12  | Publicly criticized Israeli military actions        |
+| P13  | Publicly opposed occupation or settlements          |
+| P14  | Took another documented Palestine solidarity action |
 
 ## Person filter reasons
 
-| Code | Display label |
-| --- | --- |
-| I01 | Publicly expressed support for Israel in the conflict |
-| I02 | Signed the October 2023 CCFP Israel letter |
-| I03 | Publicly supported Israeli military action |
-| I04 | Raised funds for an IDF-related organization |
-| I05 | Donated to an IDF-related organization |
-| I06 | Participated in an IDF support fundraiser or event |
-| I07 | Publicly encouraged support for the IDF |
-| I08 | Performed at an IDF support event |
-| I09 | Publicly opposed a Gaza ceasefire |
-| I10 | Publicly opposed a Palestine boycott or solidarity campaign |
-| I11 | Publicly defended Israeli government Gaza policy |
-| I12 | Publicly opposed Palestinian statehood or self-determination |
+| Code | Display label                                                |
+| ---- | ------------------------------------------------------------ |
+| I01  | Publicly expressed support for Israel in the conflict        |
+| I02  | Signed the October 2023 CCFP Israel letter                   |
+| I03  | Publicly supported Israeli military action                   |
+| I04  | Raised funds for an IDF-related organization                 |
+| I05  | Donated to an IDF-related organization                       |
+| I06  | Participated in an IDF support fundraiser or event           |
+| I07  | Publicly encouraged support for the IDF                      |
+| I08  | Performed at an IDF support event                            |
+| I09  | Publicly opposed a Gaza ceasefire                            |
+| I10  | Publicly opposed a Palestine boycott or solidarity campaign  |
+| I11  | Publicly defended Israeli government Gaza policy             |
+| I12  | Publicly opposed Palestinian statehood or self-determination |
 
 ## Company/organization highlight reasons
 
-| Code | Display label |
-| --- | --- |
-| CP01 | Publicly called for a Gaza ceasefire |
-| CP02 | Donated to Palestinian humanitarian relief |
-| CP03 | Raised funds for Palestinian humanitarian relief |
-| CP04 | Ended a relevant Israeli military contract |
+| Code | Display label                                           |
+| ---- | ------------------------------------------------------- |
+| CP01 | Publicly called for a Gaza ceasefire                    |
+| CP02 | Donated to Palestinian humanitarian relief              |
+| CP03 | Raised funds for Palestinian humanitarian relief        |
+| CP04 | Ended a relevant Israeli military contract              |
 | CP05 | Divested from a documented boycott or divestment target |
-| CP06 | Ended settlement-related business activity |
-| CP07 | Joined a documented Palestine solidarity campaign |
-| CP08 | Refuses business with Israeli settlements |
-| CP09 | Participates in a documented Palestine-related boycott |
+| CP06 | Ended settlement-related business activity              |
+| CP07 | Joined a documented Palestine solidarity campaign       |
+| CP08 | Refuses business with Israeli settlements               |
+| CP09 | Participates in a documented Palestine-related boycott  |
 
 ## Company/brand filter reasons
 
-| Code | Display label |
-| --- | --- |
-| C01 | Supplies weapons or military equipment to Israel |
-| C02 | Supplies components used in Israeli military systems |
-| C03 | Provides cloud, AI, or technology services to Israeli military |
-| C04 | Provides surveillance or security technology used in occupied Palestinian territory |
-| C05 | Provides infrastructure or services to Israeli military |
-| C06 | Donated goods or services to Israeli military personnel |
-| C07 | Donated money to an IDF-related organization |
-| C08 | Fundraised for an IDF-related organization |
-| C09 | Operates in Israeli settlements in occupied territory |
-| C10 | Provides services or infrastructure to Israeli settlements |
-| C11 | Supplies settlement construction or expansion |
-| C12 | Extracts or uses resources from occupied Palestinian territory |
-| C13 | Listed in UN settlement-business database |
-| C14 | BDS consumer boycott priority target |
-| C15 | BDS pressure target |
-| C16 | BDS divestment or exclusion target |
-| C17 | Israeli military or security contractor |
-| C18 | Israeli government contractor for relevant military or security activity |
-| C19 | Invests in companies supplying Israeli military |
-| C20 | Finances companies supplying Israeli military |
-| C21 | Company officially supported Israeli military action |
-| C22 | Senior company leadership publicly supported Israeli military action |
-| C23 | Provided wartime material support to Israeli state or military |
-| C24 | Other documented settlement involvement |
-| C25 | BDS organic boycott target |
+| Code | Display label                                                                       |
+| ---- | ----------------------------------------------------------------------------------- |
+| C01  | Supplies weapons or military equipment to Israel                                    |
+| C02  | Supplies components used in Israeli military systems                                |
+| C03  | Provides cloud, AI, or technology services to Israeli military                      |
+| C04  | Provides surveillance or security technology used in occupied Palestinian territory |
+| C05  | Provides infrastructure or services to Israeli military                             |
+| C06  | Donated goods or services to Israeli military personnel                             |
+| C07  | Donated money to an IDF-related organization                                        |
+| C08  | Fundraised for an IDF-related organization                                          |
+| C09  | Operates in Israeli settlements in occupied territory                               |
+| C10  | Provides services or infrastructure to Israeli settlements                          |
+| C11  | Supplies settlement construction or expansion                                       |
+| C12  | Extracts or uses resources from occupied Palestinian territory                      |
+| C13  | Listed in UN settlement-business database                                           |
+| C14  | BDS consumer boycott priority target                                                |
+| C15  | BDS pressure target                                                                 |
+| C16  | BDS divestment or exclusion target                                                  |
+| C17  | Israeli military or security contractor                                             |
+| C18  | Israeli government contractor for relevant military or security activity            |
+| C19  | Invests in companies supplying Israeli military                                     |
+| C20  | Finances companies supplying Israeli military                                       |
+| C21  | Company officially supported Israeli military action                                |
+| C22  | Senior company leadership publicly supported Israeli military action                |
+| C23  | Provided wartime material support to Israeli state or military                      |
+| C24  | Other documented settlement involvement                                             |
+| C25  | BDS organic boycott target                                                          |
 
 ## Named campaign and authority bindings
 
