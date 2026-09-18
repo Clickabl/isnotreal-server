@@ -36,12 +36,63 @@ export interface PublicReasonDetail {
   readonly assertions: readonly PublicAssertionDetail[];
 }
 
+export type ReasonSubjectScope = 'person' | 'company' | 'organization' | 'any';
+
+export type ReasonEvidenceMode =
+  | 'public-statement'
+  | 'named-campaign-membership'
+  | 'documented-action'
+  | 'authoritative-list'
+  | 'contract-or-supply'
+  | 'financial-relationship'
+  | 'organizational-policy'
+  | 'leadership-attribution'
+  | 'other';
+
+export type ReasonValidityMode =
+  | 'historical-event'
+  | 'current-status'
+  | 'current-list-membership'
+  | 'current-relationship';
+
+export interface ReasonEvidenceRequirement {
+  readonly subjectScope: ReasonSubjectScope;
+  readonly evidenceMode: ReasonEvidenceMode;
+  readonly validityMode: ReasonValidityMode;
+  readonly publicCriteria: string;
+  readonly exclusionCriteria: string;
+  readonly primaryOrAuthoritativeRequired: boolean;
+  readonly minimumEvidenceItems: number;
+  readonly reverifyAfterDays: number | null;
+  readonly inheritancePolicy: 'none' | 'relationship-context-only';
+}
+
+export interface ReasonCampaignBinding {
+  readonly slug: string;
+  readonly name: string;
+  readonly membershipRole: string;
+}
+
+export interface ReasonAuthoritySource {
+  readonly url: string;
+  readonly title: string;
+  readonly publisher: string | null;
+  readonly role:
+    | 'canonical-campaign-record'
+    | 'authoritative-list'
+    | 'official-guidance'
+    | 'methodology';
+}
+
 export interface ReasonCatalogEntry {
   readonly code: ReasonCode;
   readonly label: string;
   readonly description: string;
   readonly category: string;
   readonly defaultList: ListKind | 'none';
+  readonly evidenceRequirement: ReasonEvidenceRequirement | null;
+  readonly campaigns: readonly ReasonCampaignBinding[];
+  readonly authoritySources: readonly ReasonAuthoritySource[];
 }
 
 export interface PublicEntitySummary {
