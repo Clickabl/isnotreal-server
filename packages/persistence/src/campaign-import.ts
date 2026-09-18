@@ -1,23 +1,33 @@
 import type { SqlExecutor } from './index.js';
 
-export type CampaignImportKind = 'signatory-list' | 'participant-list' | 'target-list' | 'other';
+export type OfficialImportKind = 'signatory-list' | 'participant-list' | 'target-list' | 'other';
+export type CampaignImportKind = OfficialImportKind;
 
-export interface CampaignImportRowInput {
+export interface OfficialImportRowInput {
   readonly rawName: string;
   readonly rawPayload?: Readonly<Record<string, unknown>>;
 }
 
-export interface StageCampaignImportInput {
-  readonly campaignVersionId: string;
+export type CampaignImportRowInput = OfficialImportRowInput;
+
+interface StageOfficialImportBase {
   readonly reasonCode: string;
   readonly sourceCaptureId: string;
-  readonly importKind: CampaignImportKind;
+  readonly importKind: OfficialImportKind;
   readonly createdBy: string;
   readonly metadata?: Readonly<Record<string, unknown>>;
-  readonly rows: readonly CampaignImportRowInput[];
+  readonly rows: readonly OfficialImportRowInput[];
 }
 
-export interface StageCampaignImportResult {
+export interface StageCampaignImportInput extends StageOfficialImportBase {
+  readonly campaignVersionId: string;
+}
+
+export interface StageAuthorityImportInput extends StageOfficialImportBase {
+  readonly authoritySourceDocumentId: string;
+}
+
+export interface StageOfficialImportResult {
   readonly batchId: string;
   readonly rowCount: number;
   readonly candidateRows: number;
@@ -25,10 +35,15 @@ export interface StageCampaignImportResult {
   readonly unresolvedRows: number;
 }
 
-interface CampaignBindingRow {
-  readonly campaign_name: string;
-  readonly membership_role: string;
-  readonly assertion_action_type: string;
+export type StageCampaignImportResult = StageOfficialImportResult;
+
+interface ImportBinding {
+  readonly sourceContext: 'campaign' | 'authority-list';
+  readonly campaignVersionId: string | null;
+  readonly authoritySourceDocumentId: string | null;
+  readonly sourceName: string;
+  readonly membershipRole: string;
+  readonly assertionActionType: string;
 }
 
 interface IdRow {
@@ -48,10 +63,12 @@ interface ApprovedImportRow {
 
 interface CommitContextRow {
   readonly batch_id: string;
-  readonly campaign_version_id: string;
+  readonly source_context: 'campaign' | 'authority-list';
+  readonly campaign_version_id: string | null;
+  readonly authority_source_document_id: string | null;
   readonly reason_code: string;
   readonly source_capture_id: string;
-  readonly campaign_name: string;
+  readonly source_name: string;
   readonly membership_role: string;
   readonly assertion_action_type: string;
   readonly state: string;
@@ -60,19 +77,36 @@ interface CommitContextRow {
 export async function stageCampaignImport(
   db: SqlExecutor,
   input: StageCampaignImportInput,
-): Promise<StageCampaignImportResult> {
+): Promise<StageOfficialImportResult> {
+  const binding = await validateCampaignImportBinding(db, input);
+  return stageOfficialImport(db, input, binding);
+}
+
+export async function stageAuthorityImport(
+  db: SqlExecutor,
+  input: StageAuthorityImportInput,
+): Promise<StageOfficialImportResult> {
+  const binding = await validateAuthorityImportBinding(db, input);
+  return stageOfficialImport(db, input, binding);
+}
+
+async function stageOfficialImport(
+  db: SqlExecutor,
+  input: StageOfficialImportBase,
+  binding: ImportBinding,
+): Promise<StageOfficialImportResult> {
   const createdBy = input.createdBy.trim();
   if (createdBy.length === 0 || createdBy.length > 256) {
     throw new Error('createdBy must contain 1-256 characters');
   }
   if (input.rows.length === 0 || input.rows.length > 100_000) {
-    throw new Error('campaign import must contain 1-100000 rows');
+    throw new Error('official import must contain 1-100000 rows');
   }
 
   const normalizedRows = input.rows.map((row, ordinal) => {
     const rawName = row.rawName.trim();
     if (rawName.length === 0 || rawName.length > 512) {
-      throw new Error(`invalid campaign import name at row ${ordinal}`);
+      throw new Error(`invalid official import name at row ${ordinal}`);
     }
     return {
       ordinal,
@@ -84,11 +118,12 @@ export async function stageCampaignImport(
 
   return db.transaction(async (tx) => {
     await tx.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
-    const binding = await validateCampaignImportBinding(tx, input);
 
     const batchResult = await tx.query<IdRow>(
-      `INSERT INTO campaign_import_batches (
+      `INSERT INTO official_import_batches (
          campaign_version_id,
+         authority_source_document_id,
+         source_context,
          reason_code,
          source_capture_id,
          import_kind,
@@ -96,10 +131,12 @@ export async function stageCampaignImport(
          source_row_count,
          created_by,
          metadata
-       ) VALUES ($1, $2, $3, $4, 'resolving', $5, $6, $7::jsonb)
+       ) VALUES ($1, $2, $3, $4, $5, $6, 'resolving', $7, $8, $9::jsonb)
        RETURNING id::text`,
       [
-        input.campaignVersionId,
+        binding.campaignVersionId,
+        binding.authoritySourceDocumentId,
+        binding.sourceContext,
         input.reasonCode,
         input.sourceCaptureId,
         input.importKind,
@@ -109,16 +146,17 @@ export async function stageCampaignImport(
       ],
     );
     const batchId = batchResult.rows[0]?.id;
-    if (!batchId) throw new Error('campaign import batch insert failed');
+    if (!batchId) throw new Error('official import batch insert failed');
 
     await tx.query(
-      `INSERT INTO campaign_import_events (batch_id, event_type, actor_id, details)
+      `INSERT INTO official_import_events (batch_id, event_type, actor_id, details)
        VALUES ($1, 'created', $2, $3::jsonb)`,
       [
         batchId,
         createdBy,
         JSON.stringify({
-          campaign: binding.campaign_name,
+          sourceContext: binding.sourceContext,
+          sourceName: binding.sourceName,
           reasonCode: input.reasonCode,
           rowCount: normalizedRows.length,
         }),
@@ -127,16 +165,16 @@ export async function stageCampaignImport(
 
     for (const row of normalizedRows) {
       const inserted = await tx.query<IdRow>(
-        `INSERT INTO campaign_import_rows (
+        `INSERT INTO official_import_rows (
            batch_id, ordinal, raw_name, normalized_name, raw_payload
          ) VALUES ($1, $2, $3, $4, $5::jsonb)
          RETURNING id::text`,
         [batchId, row.ordinal, row.rawName, row.normalizedName, JSON.stringify(row.rawPayload)],
       );
       const rowId = inserted.rows[0]?.id;
-      if (!rowId) throw new Error('campaign import row insert failed');
+      if (!rowId) throw new Error('official import row insert failed');
       await tx.query(
-        `INSERT INTO campaign_import_events (
+        `INSERT INTO official_import_events (
            batch_id, row_id, event_type, actor_id, details
          ) VALUES ($1, $2, 'row-staged', $3, '{}'::jsonb)`,
         [batchId, rowId, createdBy],
@@ -147,7 +185,7 @@ export async function stageCampaignImport(
 
     const counts = await tx.query<ResolutionCountRow>(
       `SELECT resolution_state, count(*)::text AS count
-       FROM campaign_import_rows
+       FROM official_import_rows
        WHERE batch_id = $1
        GROUP BY resolution_state`,
       [batchId],
@@ -171,12 +209,22 @@ export async function approveCampaignImportRow(
   reviewerId: string,
   note = '',
 ): Promise<void> {
+  return approveOfficialImportRow(db, rowId, entityId, reviewerId, note);
+}
+
+export async function approveOfficialImportRow(
+  db: SqlExecutor,
+  rowId: string,
+  entityId: string,
+  reviewerId: string,
+  note = '',
+): Promise<void> {
   const reviewer = reviewerId.trim();
   if (!reviewer) throw new Error('reviewerId is required');
 
   await db.transaction(async (tx) => {
     const result = await tx.query<{ batch_id: string }>(
-      `UPDATE campaign_import_rows row
+      `UPDATE official_import_rows row
        SET resolved_entity_id = $2,
            resolution_state = 'approved',
            resolution_method = 'manual',
@@ -184,7 +232,7 @@ export async function approveCampaignImportRow(
            reviewed_at = now(),
            review_note = $4,
            updated_at = now()
-       FROM campaign_import_batches batch, entities entity
+       FROM official_import_batches batch, entities entity
        WHERE row.id = $1
          AND batch.id = row.batch_id
          AND batch.state IN ('resolving', 'ready')
@@ -195,10 +243,10 @@ export async function approveCampaignImportRow(
       [rowId, entityId, reviewer, note.trim()],
     );
     const batchId = result.rows[0]?.batch_id;
-    if (!batchId) throw new Error('campaign import row cannot be approved');
+    if (!batchId) throw new Error('official import row cannot be approved');
 
     await tx.query(
-      `INSERT INTO campaign_import_events (
+      `INSERT INTO official_import_events (
          batch_id, row_id, event_type, actor_id, details
        ) VALUES ($1, $2, 'row-approved', $3, $4::jsonb)`,
       [batchId, rowId, reviewer, JSON.stringify({ entityId })],
@@ -213,20 +261,30 @@ export async function markCampaignImportRow(
   reviewerId: string,
   note: string,
 ): Promise<void> {
+  return markOfficialImportRow(db, rowId, state, reviewerId, note);
+}
+
+export async function markOfficialImportRow(
+  db: SqlExecutor,
+  rowId: string,
+  state: 'skipped' | 'rejected',
+  reviewerId: string,
+  note: string,
+): Promise<void> {
   const reviewer = reviewerId.trim();
   if (!reviewer) throw new Error('reviewerId is required');
   if (!note.trim()) throw new Error('a review note is required when skipping or rejecting a row');
 
   await db.transaction(async (tx) => {
     const result = await tx.query<{ batch_id: string }>(
-      `UPDATE campaign_import_rows row
+      `UPDATE official_import_rows row
        SET resolution_state = $2,
            resolved_entity_id = NULL,
            reviewed_by = $3,
            reviewed_at = now(),
            review_note = $4,
            updated_at = now()
-       FROM campaign_import_batches batch
+       FROM official_import_batches batch
        WHERE row.id = $1
          AND batch.id = row.batch_id
          AND batch.state IN ('resolving', 'ready')
@@ -235,10 +293,10 @@ export async function markCampaignImportRow(
       [rowId, state, reviewer, note.trim()],
     );
     const batchId = result.rows[0]?.batch_id;
-    if (!batchId) throw new Error('campaign import row cannot be updated');
+    if (!batchId) throw new Error('official import row cannot be updated');
 
     await tx.query(
-      `INSERT INTO campaign_import_events (
+      `INSERT INTO official_import_events (
          batch_id, row_id, event_type, actor_id, details
        ) VALUES ($1, $2, $3, $4, $5::jsonb)`,
       [
@@ -257,42 +315,50 @@ export async function markCampaignImportReady(
   batchId: string,
   reviewerId: string,
 ): Promise<void> {
+  return markOfficialImportReady(db, batchId, reviewerId);
+}
+
+export async function markOfficialImportReady(
+  db: SqlExecutor,
+  batchId: string,
+  reviewerId: string,
+): Promise<void> {
   const reviewer = reviewerId.trim();
   if (!reviewer) throw new Error('reviewerId is required');
 
   await db.transaction(async (tx) => {
     const unresolved = await tx.query<{ count: string }>(
       `SELECT count(*)::text AS count
-       FROM campaign_import_rows
+       FROM official_import_rows
        WHERE batch_id = $1
          AND resolution_state NOT IN ('approved', 'skipped', 'rejected')`,
       [batchId],
     );
     if (Number(unresolved.rows[0]?.count ?? 0) !== 0) {
-      throw new Error('campaign import still has unresolved rows');
+      throw new Error('official import still has unresolved rows');
     }
 
     const approved = await tx.query<{ count: string }>(
       `SELECT count(*)::text AS count
-       FROM campaign_import_rows
+       FROM official_import_rows
        WHERE batch_id = $1 AND resolution_state = 'approved'`,
       [batchId],
     );
     if (Number(approved.rows[0]?.count ?? 0) === 0) {
-      throw new Error('campaign import has no approved rows');
+      throw new Error('official import has no approved rows');
     }
 
     const updated = await tx.query<IdRow>(
-      `UPDATE campaign_import_batches
+      `UPDATE official_import_batches
        SET state = 'ready'
        WHERE id = $1 AND state = 'resolving'
        RETURNING id::text`,
       [batchId],
     );
-    if (!updated.rows[0]) throw new Error('campaign import batch is not resolvable');
+    if (!updated.rows[0]) throw new Error('official import batch is not resolvable');
 
     await tx.query(
-      `INSERT INTO campaign_import_events (batch_id, event_type, actor_id, details)
+      `INSERT INTO official_import_events (batch_id, event_type, actor_id, details)
        VALUES ($1, 'batch-ready', $2, '{}'::jsonb)`,
       [batchId, reviewer],
     );
@@ -304,44 +370,31 @@ export async function commitCampaignImport(
   batchId: string,
   reviewerId: string,
 ): Promise<{ readonly assertionsCreated: number }> {
+  return commitOfficialImport(db, batchId, reviewerId);
+}
+
+export async function commitOfficialImport(
+  db: SqlExecutor,
+  batchId: string,
+  reviewerId: string,
+): Promise<{ readonly assertionsCreated: number }> {
   const reviewer = reviewerId.trim();
   if (!reviewer) throw new Error('reviewerId is required');
 
   return db.transaction(async (tx) => {
-    await tx.query("SELECT pg_advisory_xact_lock(hashtext('isnotreal-campaign-import-commit'))");
+    await tx.query("SELECT pg_advisory_xact_lock(hashtext('isnotreal-official-import-commit'))");
 
-    const contextResult = await tx.query<CommitContextRow>(
-      `SELECT
-         batch.id::text AS batch_id,
-         batch.campaign_version_id::text,
-         batch.reason_code,
-         batch.source_capture_id::text,
-         campaign.name AS campaign_name,
-         binding.membership_role,
-         binding.assertion_action_type,
-         batch.state
-       FROM campaign_import_batches batch
-       JOIN campaign_versions version ON version.id = batch.campaign_version_id
-       JOIN campaigns campaign ON campaign.id = version.campaign_id
-       JOIN reason_campaign_bindings binding
-         ON binding.campaign_id = campaign.id
-        AND binding.reason_code = batch.reason_code
-       WHERE batch.id = $1
-       FOR UPDATE OF batch`,
-      [batchId],
-    );
-    const context = contextResult.rows[0];
-    if (!context) throw new Error('campaign import batch not found');
-    if (context.state !== 'ready') throw new Error('campaign import batch is not ready');
+    const context = await loadCommitContext(tx, batchId);
+    if (context.state !== 'ready') throw new Error('official import batch is not ready');
 
     const rows = await tx.query<ApprovedImportRow>(
       `SELECT id::text, resolved_entity_id::text, raw_name
-       FROM campaign_import_rows
+       FROM official_import_rows
        WHERE batch_id = $1 AND resolution_state = 'approved'
        ORDER BY ordinal`,
       [batchId],
     );
-    if (rows.rows.length === 0) throw new Error('campaign import has no approved rows');
+    if (rows.rows.length === 0) throw new Error('official import has no approved rows');
 
     for (const row of rows.rows) {
       const assertion = await tx.query<IdRow>(
@@ -358,11 +411,11 @@ export async function commitCampaignImport(
           row.resolved_entity_id,
           context.assertion_action_type,
           context.campaign_version_id,
-          `Verified ${context.membership_role} entry on ${context.campaign_name}: ${row.raw_name}`,
+          `Verified ${context.membership_role} entry on ${context.source_name}: ${row.raw_name}`,
         ],
       );
       const assertionId = assertion.rows[0]?.id;
-      if (!assertionId) throw new Error('campaign assertion insert failed');
+      if (!assertionId) throw new Error('official assertion insert failed');
 
       await tx.query(
         `INSERT INTO assertion_participants (assertion_id, entity_id, role)
@@ -381,7 +434,7 @@ export async function commitCampaignImport(
         [assertionId, context.reason_code],
       );
       await tx.query(
-        `UPDATE campaign_import_rows
+        `UPDATE official_import_rows
          SET resolution_state = 'committed',
              assertion_id = $2,
              updated_at = now()
@@ -391,13 +444,13 @@ export async function commitCampaignImport(
     }
 
     await tx.query(
-      `UPDATE campaign_import_batches
+      `UPDATE official_import_batches
        SET state = 'committed', committed_at = now()
        WHERE id = $1 AND state = 'ready'`,
       [batchId],
     );
     await tx.query(
-      `INSERT INTO campaign_import_events (
+      `INSERT INTO official_import_events (
          batch_id, event_type, actor_id, details
        ) VALUES ($1, 'batch-committed', $2, $3::jsonb)`,
       [batchId, reviewer, JSON.stringify({ assertionsCreated: rows.rows.length })],
@@ -410,8 +463,12 @@ export async function commitCampaignImport(
 async function validateCampaignImportBinding(
   db: SqlExecutor,
   input: StageCampaignImportInput,
-): Promise<CampaignBindingRow> {
-  const result = await db.query<CampaignBindingRow>(
+): Promise<ImportBinding> {
+  const result = await db.query<{
+    campaign_name: string;
+    membership_role: string;
+    assertion_action_type: string;
+  }>(
     `SELECT
        campaign.name AS campaign_name,
        binding.membership_role,
@@ -433,7 +490,94 @@ async function validateCampaignImportBinding(
   if (!binding) {
     throw new Error('campaign version, reason code, and source capture are not a valid binding');
   }
-  return binding;
+  return {
+    sourceContext: 'campaign',
+    campaignVersionId: input.campaignVersionId,
+    authoritySourceDocumentId: null,
+    sourceName: binding.campaign_name,
+    membershipRole: binding.membership_role,
+    assertionActionType: binding.assertion_action_type,
+  };
+}
+
+async function validateAuthorityImportBinding(
+  db: SqlExecutor,
+  input: StageAuthorityImportInput,
+): Promise<ImportBinding> {
+  const result = await db.query<{ source_name: string }>(
+    `SELECT document.title AS source_name
+     FROM source_documents document
+     JOIN source_captures capture
+       ON capture.document_id = document.id
+      AND capture.id = $2
+      AND capture.status = 'available'
+     JOIN current_reason_catalog catalog ON catalog.code = $3
+     WHERE document.id = $1
+       AND catalog.evidence_mode = 'authoritative-list'
+       AND EXISTS (
+         SELECT 1
+         FROM jsonb_array_elements(catalog.authority_sources) authority
+         WHERE authority ->> 'url' = document.canonical_url
+       )
+     LIMIT 1`,
+    [input.authoritySourceDocumentId, input.sourceCaptureId, input.reasonCode],
+  );
+  const source = result.rows[0];
+  if (!source) {
+    throw new Error('authority source, reason code, and source capture are not a valid binding');
+  }
+  return {
+    sourceContext: 'authority-list',
+    campaignVersionId: null,
+    authoritySourceDocumentId: input.authoritySourceDocumentId,
+    sourceName: source.source_name,
+    membershipRole: 'target',
+    assertionActionType: 'listed-by-authority',
+  };
+}
+
+async function loadCommitContext(db: SqlExecutor, batchId: string): Promise<CommitContextRow> {
+  const result = await db.query<CommitContextRow>(
+    `SELECT
+       batch.id::text AS batch_id,
+       batch.source_context,
+       batch.campaign_version_id::text,
+       batch.authority_source_document_id::text,
+       batch.reason_code,
+       batch.source_capture_id::text,
+       CASE
+         WHEN batch.source_context = 'campaign' THEN campaign.name
+         ELSE authority_document.title
+       END AS source_name,
+       CASE
+         WHEN batch.source_context = 'campaign' THEN campaign_binding.membership_role
+         ELSE 'target'
+       END AS membership_role,
+       CASE
+         WHEN batch.source_context = 'campaign' THEN campaign_binding.assertion_action_type
+         ELSE 'listed-by-authority'
+       END AS assertion_action_type,
+       batch.state
+     FROM official_import_batches batch
+     LEFT JOIN campaign_versions version ON version.id = batch.campaign_version_id
+     LEFT JOIN campaigns campaign ON campaign.id = version.campaign_id
+     LEFT JOIN reason_campaign_bindings campaign_binding
+       ON campaign_binding.campaign_id = campaign.id
+      AND campaign_binding.reason_code = batch.reason_code
+     LEFT JOIN source_documents authority_document
+       ON authority_document.id = batch.authority_source_document_id
+     WHERE batch.id = $1
+       AND (
+         (batch.source_context = 'campaign' AND campaign_binding.reason_code IS NOT NULL)
+         OR
+         (batch.source_context = 'authority-list' AND authority_document.id IS NOT NULL)
+       )
+     FOR UPDATE OF batch`,
+    [batchId],
+  );
+  const context = result.rows[0];
+  if (!context) throw new Error('official import batch not found or invalid');
+  return context;
 }
 
 async function discoverExactNameCandidates(
@@ -442,9 +586,9 @@ async function discoverExactNameCandidates(
   actorId: string,
 ): Promise<void> {
   await db.query(
-    `INSERT INTO campaign_import_candidates (row_id, entity_id, match_basis, score)
+    `INSERT INTO official_import_candidates (row_id, entity_id, match_basis, score)
      SELECT row.id, entity.id, 'canonical-name', 1
-     FROM campaign_import_rows row
+     FROM official_import_rows row
      JOIN entities entity
        ON lower(btrim(entity.canonical_name)) = row.normalized_name
       AND entity.status = 'active'
@@ -454,9 +598,9 @@ async function discoverExactNameCandidates(
   );
 
   await db.query(
-    `INSERT INTO campaign_import_candidates (row_id, entity_id, match_basis, score)
+    `INSERT INTO official_import_candidates (row_id, entity_id, match_basis, score)
      SELECT row.id, name.entity_id, 'alias', 1
-     FROM campaign_import_rows row
+     FROM official_import_rows row
      JOIN entity_names name ON name.normalized_name = row.normalized_name
      JOIN entities entity ON entity.id = name.entity_id AND entity.status = 'active'
      WHERE row.batch_id = $1
@@ -467,12 +611,12 @@ async function discoverExactNameCandidates(
   await db.query(
     `WITH counts AS (
        SELECT row.id, count(candidate.entity_id) AS candidate_count
-       FROM campaign_import_rows row
-       LEFT JOIN campaign_import_candidates candidate ON candidate.row_id = row.id
+       FROM official_import_rows row
+       LEFT JOIN official_import_candidates candidate ON candidate.row_id = row.id
        WHERE row.batch_id = $1
        GROUP BY row.id
      )
-     UPDATE campaign_import_rows row
+     UPDATE official_import_rows row
      SET resolution_state = CASE
            WHEN counts.candidate_count = 0 THEN 'unresolved'
            WHEN counts.candidate_count = 1 THEN 'candidate'
@@ -485,7 +629,7 @@ async function discoverExactNameCandidates(
   );
 
   await db.query(
-    `INSERT INTO campaign_import_events (
+    `INSERT INTO official_import_events (
        batch_id, row_id, event_type, actor_id, details
      )
      SELECT
@@ -494,11 +638,10 @@ async function discoverExactNameCandidates(
        'candidate-found',
        $2,
        jsonb_build_object('candidateCount', count(candidate.entity_id))
-     FROM campaign_import_rows row
-     JOIN campaign_import_candidates candidate ON candidate.row_id = row.id
+     FROM official_import_rows row
+     JOIN official_import_candidates candidate ON candidate.row_id = row.id
      WHERE row.batch_id = $1
-     GROUP BY row.batch_id, row.id
-     ON CONFLICT DO NOTHING`,
+     GROUP BY row.batch_id, row.id`,
     [batchId, actorId],
   );
 }
@@ -510,6 +653,6 @@ function participantRole(membershipRole: string): string {
   return 'other';
 }
 
-function normalizeEntityName(value: string): string {
+export function normalizeEntityName(value: string): string {
   return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
 }
