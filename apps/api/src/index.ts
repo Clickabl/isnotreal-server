@@ -99,7 +99,8 @@ export function createApiRouter(deps: ApiDependencies) {
       const segment = catalogCompactMatch[1];
       if (!segment) return response(404, { error: 'not_found' });
       const catalogVersion =
-        segment === 'current' ? await deps.reasons.version() : Number.parseInt(segment, 10);
+        segment === 'current' ? await deps.reasons.version() : parseCatalogVersionSegment(segment);
+      if (catalogVersion === null) return response(404, { error: 'catalog_not_found' });
       const reasons = await deps.reasons.list(catalogVersion);
       if (reasons.length === 0) return response(404, { error: 'catalog_not_found' });
       return response(200, {
@@ -116,7 +117,8 @@ export function createApiRouter(deps: ApiDependencies) {
       const segment = catalogReasonsMatch[1];
       if (!segment) return response(404, { error: 'not_found' });
       const catalogVersion =
-        segment === 'current' ? await deps.reasons.version() : Number.parseInt(segment, 10);
+        segment === 'current' ? await deps.reasons.version() : parseCatalogVersionSegment(segment);
+      if (catalogVersion === null) return response(404, { error: 'catalog_not_found' });
       const reasons = await deps.reasons.list(catalogVersion);
       return reasons.length > 0
         ? response(200, { schemaVersion: PROTOCOL_SCHEMA_VERSION, catalogVersion, reasons })
@@ -149,7 +151,8 @@ export function createApiRouter(deps: ApiDependencies) {
       const code = catalogReasonMatch[2];
       if (!segment || !code) return response(404, { error: 'not_found' });
       const catalogVersion =
-        segment === 'current' ? await deps.reasons.version() : Number.parseInt(segment, 10);
+        segment === 'current' ? await deps.reasons.version() : parseCatalogVersionSegment(segment);
+      if (catalogVersion === null) return response(404, { error: 'catalog_not_found' });
       const reason = await deps.reasons.byCode(code, catalogVersion);
       return reason
         ? response(200, { schemaVersion: PROTOCOL_SCHEMA_VERSION, catalogVersion, reason })
@@ -287,9 +290,14 @@ function parseSubmission(body: unknown): SubmissionInput | null {
 
 function parseOptionalCatalogVersion(value: string | undefined): number | null | false {
   if (value === undefined || value.trim() === '') return null;
-  if (!/^\d+$/.test(value)) return false;
+  const parsed = parseCatalogVersionSegment(value);
+  return parsed ?? false;
+}
+
+function parseCatalogVersionSegment(value: string): number | null {
+  if (!/^\d+$/.test(value)) return null;
   const parsed = Number.parseInt(value, 10);
-  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : false;
+  return Number.isSafeInteger(parsed) && parsed > 0 && parsed <= 2_147_483_647 ? parsed : null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
