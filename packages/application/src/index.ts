@@ -251,6 +251,7 @@ export function compileFullPublication(input: {
   readonly channel: PublicationChannel;
   readonly list: ListKind;
   readonly version: string;
+  readonly reasonCatalogVersion: number;
   readonly generatedAt: string;
   readonly expiresAt: string;
   readonly candidates: readonly PublicationCandidate[];
@@ -260,6 +261,7 @@ export function compileFullPublication(input: {
     channel: input.channel,
     list: input.list,
     version: input.version,
+    reasonCatalogVersion: input.reasonCatalogVersion,
     generatedAt: input.generatedAt,
     expiresAt: input.expiresAt,
     entries: compileEntries(input.candidates, input.channel, input.list),
@@ -296,6 +298,7 @@ export function compilePublicationDelta(
     list: next.list,
     fromVersion: previous.version,
     toVersion: next.version,
+    reasonCatalogVersion: next.reasonCatalogVersion,
     added,
     removed,
   };
