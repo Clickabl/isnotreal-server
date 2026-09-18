@@ -27,5 +27,5 @@ test('compiled entry is stripped to identifier, public entity id and reason code
 test('domain matching preserves exact and include-subdomains semantics', () => {
   assert.match(source, /PublicationChannel = Platform \| 'domain' \| 'domain-subdomains'/);
   assert.match(source, /ListKind = 'filter' \| 'highlight'/);
-  assert.match(source, /PROTOCOL_SCHEMA_VERSION = 3/);
+  assert.match(source, /PROTOCOL_SCHEMA_VERSION = 4/);
 });
