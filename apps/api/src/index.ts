@@ -66,6 +66,18 @@ export function createApiRouter(deps: ApiDependencies) {
       return response(200, { results: await deps.entities.search(q, limit) });
     }
 
+    if (request.method === 'GET' && request.pathname === '/api/v1/reasons/compact') {
+      const [catalogVersion, reasons] = await Promise.all([
+        deps.reasons.version(),
+        deps.reasons.list(),
+      ]);
+      return response(200, {
+        schemaVersion: PROTOCOL_SCHEMA_VERSION,
+        catalogVersion,
+        labels: reasons.map((reason) => [reason.code, reason.label] as const),
+      });
+    }
+
     if (request.method === 'GET' && request.pathname === '/api/v1/reasons') {
       const [catalogVersion, reasons] = await Promise.all([
         deps.reasons.version(),
