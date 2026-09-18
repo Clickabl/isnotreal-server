@@ -211,7 +211,9 @@ function sendJson(
 
 function cachePolicy(request: ApiRequest, status: number): string {
   if (request.method !== 'GET' || status !== 200) return 'no-store';
-  if (request.pathname === '/api/v1/reasons')
+  if (request.pathname === '/api/v1/reasons/compact')
+    return 'public, max-age=3600, stale-while-revalidate=86400';
+  if (request.pathname === '/api/v1/reasons' || request.pathname.startsWith('/api/v1/reasons/'))
     return 'public, max-age=300, stale-while-revalidate=3600';
   if (request.pathname.includes('/lists/')) return 'public, max-age=60, stale-while-revalidate=300';
   return 'public, max-age=60, stale-while-revalidate=300';
