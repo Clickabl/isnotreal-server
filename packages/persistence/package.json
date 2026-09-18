@@ -27,6 +27,10 @@
     "./membership-review": {
       "types": "./dist/membership-review.d.ts",
       "import": "./dist/membership-review.js"
+    },
+    "./moderation": {
+      "types": "./dist/moderation.d.ts",
+      "import": "./dist/moderation.js"
     }
   },
   "files": [
