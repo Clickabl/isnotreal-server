@@ -200,6 +200,7 @@ type DeltaPublicationPayload = Awaited<ReturnType<PublicationReader['delta']>>;
 
 interface ArtifactMetadataRow {
   readonly version: string;
+  readonly reason_catalog_version: number;
   readonly generated_at: string;
   readonly expires_at: string;
   readonly storage_key: string;
@@ -226,6 +227,7 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
       channel,
       list,
       version: metadata.version,
+      reasonCatalogVersion: metadata.reason_catalog_version,
       generatedAt: metadata.generated_at,
       expiresAt: metadata.expires_at,
     };
@@ -249,6 +251,7 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
         list,
         fromVersion,
         toVersion: current.version,
+        reasonCatalogVersion: current.reason_catalog_version,
         added: [],
         removed: [],
       };
@@ -257,6 +260,7 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
     const result = await this.db.query<ArtifactMetadataRow>(
       `SELECT
          pa.version,
+         p.reason_catalog_version,
          p.generated_at::text,
          p.expires_at::text,
          pa.storage_key,
@@ -282,11 +286,19 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
         channel,
         list,
         currentVersion: current.version,
+        currentReasonCatalogVersion: current.reason_catalog_version,
       };
     }
 
     const bytes = await this.readVerifiedBytes(metadata);
-    return parseDeltaPublication(bytes, channel, list, fromVersion, current.version);
+    return parseDeltaPublication(
+      bytes,
+      channel,
+      list,
+      fromVersion,
+      current.version,
+      current.reason_catalog_version,
+    );
   }
 
   private async currentFullMetadata(
@@ -296,6 +308,7 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
     const result = await this.db.query<ArtifactMetadataRow>(
       `SELECT
          pa.version,
+         p.reason_catalog_version,
          p.generated_at::text,
          p.expires_at::text,
          pa.storage_key,
@@ -322,7 +335,13 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
     list: ListKind,
   ): Promise<FullPublicationPayload> {
     const bytes = await this.readVerifiedBytes(metadata);
-    return parseFullPublication(bytes, channel, list, metadata.version);
+    return parseFullPublication(
+      bytes,
+      channel,
+      list,
+      metadata.version,
+      metadata.reason_catalog_version,
+    );
   }
 
   private async readVerifiedBytes(metadata: ArtifactMetadataRow): Promise<Uint8Array> {
@@ -345,6 +364,7 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
 interface PublicationInsertRow {
   readonly id: string;
   readonly sequence: string;
+  readonly reason_catalog_version: number;
   readonly generated_at: string;
   readonly expires_at: string;
 }
@@ -410,10 +430,21 @@ export async function publishCurrentState(
   const expiresAt = new Date(Date.now() + expiresInMs).toISOString();
   const inserted = await db.query<PublicationInsertRow>(
     `INSERT INTO publications (
-       protocol_version, compiler_version, source_revision, state, expires_at
-     ) VALUES ($1, $2, $3, 'building', $4)
-     RETURNING id::text, sequence::text, generated_at::text, expires_at::text`,
-    [PROTOCOL_SCHEMA_VERSION, options.compilerVersion, options.sourceRevision, expiresAt],
+       protocol_version, reason_catalog_version, compiler_version, source_revision, state, expires_at
+     ) VALUES ($1, $2, $3, $4, 'building', $5)
+     RETURNING
+       id::text,
+       sequence::text,
+       reason_catalog_version,
+       generated_at::text,
+       expires_at::text`,
+    [
+      PROTOCOL_SCHEMA_VERSION,
+      snapshot.reasonCatalogVersion,
+      options.compilerVersion,
+      options.sourceRevision,
+      expiresAt,
+    ],
   );
   const publication = inserted.rows[0];
   if (!publication) throw new Error('publication insert did not return a row');
@@ -430,6 +461,7 @@ export async function publishCurrentState(
           channel,
           list,
           version: publication.sequence,
+          reasonCatalogVersion: publication.reason_catalog_version,
           generatedAt: publication.generated_at,
           expiresAt: publication.expires_at,
           candidates: snapshot.candidates.get(key) ?? [],
@@ -461,6 +493,7 @@ export async function publishCurrentState(
           previousMetadata.channel,
           previousMetadata.list_kind,
           previousMetadata.version,
+          previousMetadata.reason_catalog_version,
         );
         const delta = compilePublicationDelta(old, next);
         artifacts.push(
@@ -540,6 +573,7 @@ export async function publishCurrentState(
 interface PublicationSnapshot {
   readonly candidates: ReadonlyMap<string, readonly PublicationCandidate[]>;
   readonly policyRevisionIds: readonly string[];
+  readonly reasonCatalogVersion: number;
 }
 
 async function loadPublicationSnapshot(db: SqlExecutor): Promise<PublicationSnapshot> {
@@ -558,9 +592,15 @@ async function loadPublicationSnapshot(db: SqlExecutor): Promise<PublicationSnap
        WHERE state = 'active'
        ORDER BY policy_revision_id::text`,
     );
+    const reasonCatalog = await tx.query<{ version: number }>(
+      `SELECT version FROM reason_catalog_versions WHERE state = 'active' LIMIT 1`,
+    );
+    const reasonCatalogVersion = reasonCatalog.rows[0]?.version;
+    if (!reasonCatalogVersion) throw new Error('no active reason catalog version');
     return {
       candidates,
       policyRevisionIds: revisions.rows.map((row) => row.policy_revision_id),
+      reasonCatalogVersion,
     };
   });
 }
@@ -573,6 +613,7 @@ async function loadActiveFullArtifacts(
        pa.channel,
        pa.list_kind,
        pa.version,
+       p.reason_catalog_version,
        p.generated_at::text,
        p.expires_at::text,
        pa.storage_key,
@@ -667,6 +708,7 @@ function parseFullPublication(
   channel: PublicationChannel,
   list: ListKind,
   version: string,
+  reasonCatalogVersion: number,
 ): FullPublicationPayload {
   const parsed: unknown = JSON.parse(Buffer.from(bytes).toString('utf8'));
   if (!isRecord(parsed)) throw new Error('publication artifact is not an object');
@@ -675,6 +717,7 @@ function parseFullPublication(
     parsed.channel !== channel ||
     parsed.list !== list ||
     parsed.version !== version ||
+    parsed.reasonCatalogVersion !== reasonCatalogVersion ||
     typeof parsed.generatedAt !== 'string' ||
     typeof parsed.expiresAt !== 'string' ||
     !Array.isArray(parsed.entries) ||
@@ -691,6 +734,7 @@ function parseDeltaPublication(
   list: ListKind,
   fromVersion: string,
   toVersion: string,
+  reasonCatalogVersion: number,
 ): DeltaPublicationPayload {
   const parsed: unknown = JSON.parse(Buffer.from(bytes).toString('utf8'));
   if (!isRecord(parsed)) throw new Error('delta artifact is not an object');
@@ -700,6 +744,7 @@ function parseDeltaPublication(
     parsed.list !== list ||
     parsed.fromVersion !== fromVersion ||
     parsed.toVersion !== toVersion ||
+    parsed.reasonCatalogVersion !== reasonCatalogVersion ||
     !Array.isArray(parsed.added) ||
     !parsed.added.every(isCompiledEntry) ||
     !Array.isArray(parsed.removed) ||
