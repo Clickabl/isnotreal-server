@@ -23,6 +23,10 @@
     "./source-capture": {
       "types": "./dist/source-capture.d.ts",
       "import": "./dist/source-capture.js"
+    },
+    "./membership-review": {
+      "types": "./dist/membership-review.d.ts",
+      "import": "./dist/membership-review.js"
     }
   },
   "files": [
