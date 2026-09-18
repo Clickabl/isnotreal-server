@@ -56,6 +56,7 @@ test(
         '0012_protect_published_reason_catalogs.sql',
         '0013_reason_definition_publication_policy.sql',
         '0014_campaign_import_staging.sql',
+        '0015_enforce_reason_alignment.sql',
       ]);
 
       const reasonCatalog = new PostgresReasonCatalogReader(db);
@@ -166,6 +167,11 @@ test(
       );
       const decisionId = decision.rows[0].id;
       await db.query(
+        `INSERT INTO assertion_reasons (assertion_id, reason_code)
+         VALUES ($1, 'C03')`,
+        [assertionId],
+      );
+      await db.query(
         `INSERT INTO membership_decision_reasons (decision_id, reason_code, assertion_id)
          VALUES ($1, 'C03', $2)`,
         [decisionId, assertionId],
@@ -177,6 +183,11 @@ test(
          ) VALUES ($1, 'unverified-test-claim', 'Intentionally unsourced test claim.', '2026-09-15', 'day', 'published')
          RETURNING id::text`,
         [entityId],
+      );
+      await db.query(
+        `INSERT INTO assertion_reasons (assertion_id, reason_code)
+         VALUES ($1, 'C01')`,
+        [unsourcedAssertion.rows[0].id],
       );
       await db.query(
         `INSERT INTO membership_decision_reasons (decision_id, reason_code, assertion_id)
@@ -220,6 +231,11 @@ test(
         },
       ]);
 
+      await db.query(
+        `INSERT INTO assertion_reasons (assertion_id, reason_code)
+         VALUES ($1, 'C05')`,
+        [assertionId],
+      );
       await db.query(
         `INSERT INTO membership_decision_reasons (decision_id, reason_code, assertion_id)
          VALUES ($1, 'C05', $2)`,
@@ -356,7 +372,7 @@ test(
 
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
       assert.deepEqual(secondMigration.applied, []);
-      assert.equal(secondMigration.alreadyApplied.length, 14);
+      assert.equal(secondMigration.alreadyApplied.length, 15);
     } finally {
       await db.close();
       await rm(artifactRoot, { recursive: true, force: true });
