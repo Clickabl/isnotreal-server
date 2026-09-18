@@ -385,12 +385,14 @@ export class PostgresReasonCatalogReader implements ReasonCatalogReader {
     return row.version;
   }
 
-  async byCode(code: string): Promise<ReasonCatalogEntry | null> {
-    const entries = await this.list();
+  async byCode(code: string, version?: number): Promise<ReasonCatalogEntry | null> {
+    const entries = await this.list(version);
     return entries.find((entry) => entry.code === code) ?? null;
   }
 
-  async list(): Promise<readonly ReasonCatalogEntry[]> {
+  async list(version?: number): Promise<readonly ReasonCatalogEntry[]> {
+    const condition = version === undefined ? "rcv.state = 'active'" : 'rcv.version = $1';
+    const params = version === undefined ? [] : [version];
     const result = await this.db.query<ReasonCatalogRow>(
       `SELECT
          rd.code,
@@ -410,8 +412,11 @@ export class PostgresReasonCatalogReader implements ReasonCatalogReader {
          rd.inheritance_policy,
          rd.campaigns,
          rd.authority_sources
-       FROM current_reason_catalog rd
+       FROM reason_catalog_versions rcv
+       JOIN reason_catalog_entries rd ON rd.catalog_version_id = rcv.id
+       WHERE ${condition}
        ORDER BY rd.code`,
+      params,
     );
     return result.rows.map((row) => ({
       code: row.code,
