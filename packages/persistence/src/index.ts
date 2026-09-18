@@ -376,6 +376,20 @@ export class PostgresPublicEntityDirectory implements PublicEntityDirectory {
 export class PostgresReasonCatalogReader implements ReasonCatalogReader {
   constructor(private readonly db: SqlExecutor) {}
 
+  async version(): Promise<number> {
+    const result = await this.db.query<{ version: number }>(
+      `SELECT version FROM reason_catalog_versions WHERE state = 'active' LIMIT 1`,
+    );
+    const row = result.rows[0];
+    if (!row) throw new Error('no active reason catalog version');
+    return row.version;
+  }
+
+  async byCode(code: string): Promise<ReasonCatalogEntry | null> {
+    const entries = await this.list();
+    return entries.find((entry) => entry.code === code) ?? null;
+  }
+
   async list(): Promise<readonly ReasonCatalogEntry[]> {
     const result = await this.db.query<ReasonCatalogRow>(
       `SELECT
@@ -426,9 +440,8 @@ export class PostgresReasonCatalogReader implements ReasonCatalogReader {
            ),
            '[]'::jsonb
          ) AS authority_sources
-       FROM reason_definitions rd
+       FROM current_reason_catalog rd
        LEFT JOIN reason_evidence_requirements req ON req.reason_code = rd.code
-       WHERE rd.active = true
        ORDER BY rd.code`,
     );
     return result.rows.map((row) => ({
