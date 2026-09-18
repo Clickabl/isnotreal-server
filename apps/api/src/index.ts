@@ -67,10 +67,29 @@ export function createApiRouter(deps: ApiDependencies) {
     }
 
     if (request.method === 'GET' && request.pathname === '/api/v1/reasons') {
+      const [catalogVersion, reasons] = await Promise.all([
+        deps.reasons.version(),
+        deps.reasons.list(),
+      ]);
       return response(200, {
         schemaVersion: PROTOCOL_SCHEMA_VERSION,
-        reasons: await deps.reasons.list(),
+        catalogVersion,
+        reasons,
       });
+    }
+
+    const reasonMatch = /^\/api\/v1\/reasons\/([A-Z][A-Z0-9_-]{1,15})$/.exec(request.pathname);
+    if (request.method === 'GET' && reasonMatch) {
+      const code = reasonMatch[1];
+      if (!code) return response(404, { error: 'not_found' });
+      const reason = await deps.reasons.byCode(code);
+      return reason
+        ? response(200, {
+            schemaVersion: PROTOCOL_SCHEMA_VERSION,
+            catalogVersion: await deps.reasons.version(),
+            reason,
+          })
+        : response(404, { error: 'not_found' });
     }
 
     const entityMatch = /^\/api\/v1\/entities\/(\d+)$/.exec(request.pathname);
