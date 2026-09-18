@@ -78,6 +78,19 @@ type ReasonCatalogRow = {
   description: string;
   category: string;
   default_list: ReasonCatalogEntry['defaultList'];
+  subject_scope: NonNullable<ReasonCatalogEntry['evidenceRequirement']>['subjectScope'] | null;
+  evidence_mode: NonNullable<ReasonCatalogEntry['evidenceRequirement']>['evidenceMode'] | null;
+  validity_mode: NonNullable<ReasonCatalogEntry['evidenceRequirement']>['validityMode'] | null;
+  public_criteria: string | null;
+  exclusion_criteria: string | null;
+  primary_or_authoritative_required: boolean | null;
+  minimum_evidence_items: number | null;
+  reverify_after_days: number | null;
+  inheritance_policy:
+    | NonNullable<ReasonCatalogEntry['evidenceRequirement']>['inheritancePolicy']
+    | null;
+  campaigns: ReasonCatalogEntry['campaigns'];
+  authority_sources: ReasonCatalogEntry['authoritySources'];
 };
 
 type AlternativeRow = {
@@ -365,10 +378,58 @@ export class PostgresReasonCatalogReader implements ReasonCatalogReader {
 
   async list(): Promise<readonly ReasonCatalogEntry[]> {
     const result = await this.db.query<ReasonCatalogRow>(
-      `SELECT code, label, description, category, default_list
-       FROM reason_definitions
-       WHERE active = true
-       ORDER BY code`,
+      `SELECT
+         rd.code,
+         rd.label,
+         rd.description,
+         rd.category,
+         rd.default_list,
+         req.subject_scope,
+         req.evidence_mode,
+         req.validity_mode,
+         req.public_criteria,
+         req.exclusion_criteria,
+         req.primary_or_authoritative_required,
+         req.minimum_evidence_items,
+         req.reverify_after_days,
+         req.inheritance_policy,
+         COALESCE(
+           (
+             SELECT jsonb_agg(
+               jsonb_build_object(
+                 'slug', c.slug,
+                 'name', c.name,
+                 'membershipRole', rcb.membership_role
+               )
+               ORDER BY c.slug
+             )
+             FROM reason_campaign_bindings rcb
+             JOIN campaigns c ON c.id = rcb.campaign_id
+             WHERE rcb.reason_code = rd.code
+           ),
+           '[]'::jsonb
+         ) AS campaigns,
+         COALESCE(
+           (
+             SELECT jsonb_agg(
+               jsonb_build_object(
+                 'url', sd.canonical_url,
+                 'title', sd.title,
+                 'publisher', sd.publisher,
+                 'role', ras.authority_role
+               )
+               ORDER BY ras.authority_role, sd.canonical_url
+             )
+             FROM reason_authority_sources ras
+             JOIN source_documents sd ON sd.id = ras.source_document_id
+             WHERE ras.reason_code = rd.code
+           ),
+           '[]'::jsonb
+         ) AS authority_sources
+       FROM reason_definitions rd
+       LEFT JOIN reason_evidence_requirements req ON req.reason_code = rd.code
+       WHERE rd.active = true
+       ORDER BY rd.code`,
     );
     return result.rows.map((row) => ({
       code: row.code,
@@ -376,6 +437,29 @@ export class PostgresReasonCatalogReader implements ReasonCatalogReader {
       description: row.description,
       category: row.category,
       defaultList: row.default_list,
+      evidenceRequirement:
+        row.subject_scope &&
+        row.evidence_mode &&
+        row.validity_mode &&
+        row.public_criteria !== null &&
+        row.exclusion_criteria !== null &&
+        row.primary_or_authoritative_required !== null &&
+        row.minimum_evidence_items !== null &&
+        row.inheritance_policy
+          ? {
+              subjectScope: row.subject_scope,
+              evidenceMode: row.evidence_mode,
+              validityMode: row.validity_mode,
+              publicCriteria: row.public_criteria,
+              exclusionCriteria: row.exclusion_criteria,
+              primaryOrAuthoritativeRequired: row.primary_or_authoritative_required,
+              minimumEvidenceItems: row.minimum_evidence_items,
+              reverifyAfterDays: row.reverify_after_days,
+              inheritancePolicy: row.inheritance_policy,
+            }
+          : null,
+      campaigns: row.campaigns,
+      authoritySources: row.authority_sources,
     }));
   }
 }
