@@ -19,6 +19,10 @@
     "./campaign-import": {
       "types": "./dist/campaign-import.d.ts",
       "import": "./dist/campaign-import.js"
+    },
+    "./source-capture": {
+      "types": "./dist/source-capture.d.ts",
+      "import": "./dist/source-capture.js"
     }
   },
   "files": [
