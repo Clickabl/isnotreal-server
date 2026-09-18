@@ -162,8 +162,8 @@ export interface PublicEntityDirectory {
 
 export interface ReasonCatalogReader {
   version(): Promise<number>;
-  list(): Promise<readonly ReasonCatalogEntry[]>;
-  byCode(code: ReasonCode): Promise<ReasonCatalogEntry | null>;
+  list(version?: number): Promise<readonly ReasonCatalogEntry[]>;
+  byCode(code: ReasonCode, version?: number): Promise<ReasonCatalogEntry | null>;
 }
 
 export interface AlternativeDirectory {
