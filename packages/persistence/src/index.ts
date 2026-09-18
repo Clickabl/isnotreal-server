@@ -78,6 +78,7 @@ type ReasonCatalogRow = {
   description: string;
   category: string;
   default_list: ReasonCatalogEntry['defaultList'];
+  publication_enabled: boolean;
   subject_scope: NonNullable<ReasonCatalogEntry['evidenceRequirement']>['subjectScope'] | null;
   evidence_mode: NonNullable<ReasonCatalogEntry['evidenceRequirement']>['evidenceMode'] | null;
   validity_mode: NonNullable<ReasonCatalogEntry['evidenceRequirement']>['validityMode'] | null;
@@ -397,6 +398,7 @@ export class PostgresReasonCatalogReader implements ReasonCatalogReader {
          rd.description,
          rd.category,
          rd.default_list,
+         rd.publication_enabled,
          rd.subject_scope,
          rd.evidence_mode,
          rd.validity_mode,
@@ -406,39 +408,8 @@ export class PostgresReasonCatalogReader implements ReasonCatalogReader {
          rd.minimum_evidence_items,
          rd.reverify_after_days,
          rd.inheritance_policy,
-         COALESCE(
-           (
-             SELECT jsonb_agg(
-               jsonb_build_object(
-                 'slug', c.slug,
-                 'name', c.name,
-                 'membershipRole', rcb.membership_role
-               )
-               ORDER BY c.slug
-             )
-             FROM reason_campaign_bindings rcb
-             JOIN campaigns c ON c.id = rcb.campaign_id
-             WHERE rcb.reason_code = rd.code
-           ),
-           '[]'::jsonb
-         ) AS campaigns,
-         COALESCE(
-           (
-             SELECT jsonb_agg(
-               jsonb_build_object(
-                 'url', sd.canonical_url,
-                 'title', sd.title,
-                 'publisher', sd.publisher,
-                 'role', ras.authority_role
-               )
-               ORDER BY ras.authority_role, sd.canonical_url
-             )
-             FROM reason_authority_sources ras
-             JOIN source_documents sd ON sd.id = ras.source_document_id
-             WHERE ras.reason_code = rd.code
-           ),
-           '[]'::jsonb
-         ) AS authority_sources
+         rd.campaigns,
+         rd.authority_sources
        FROM current_reason_catalog rd
        ORDER BY rd.code`,
     );
@@ -448,6 +419,7 @@ export class PostgresReasonCatalogReader implements ReasonCatalogReader {
       description: row.description,
       category: row.category,
       defaultList: row.default_list,
+      publicationEnabled: row.publication_enabled,
       evidenceRequirement:
         row.subject_scope &&
         row.evidence_mode &&
