@@ -90,13 +90,6 @@ test(
         [identifierId, entityId, assertionId],
       );
 
-      await db.query(
-        `INSERT INTO reason_definitions (code, label, description, category, default_list)
-         VALUES
-           ('C98', 'Second verified test reason', 'Integration-test reason.', 'company', 'filter'),
-           ('C99', 'Verified test reason', 'Integration-test reason.', 'company', 'filter')`,
-      );
-
       const policy = await db.query(
         `INSERT INTO policies (slug, name, description)
          VALUES ('default-filter-policy', 'Default filter policy', 'Integration-test policy.')
@@ -118,7 +111,7 @@ test(
       const decisionId = decision.rows[0].id;
       await db.query(
         `INSERT INTO membership_decision_reasons (decision_id, reason_code, assertion_id)
-         VALUES ($1, 'C99', $2)`,
+         VALUES ($1, 'C03', $2)`,
         [decisionId, assertionId],
       );
 
@@ -134,7 +127,7 @@ test(
 
       const published = new PostgresPublishedArtifactReader(db, store);
       const firstFull = await published.full('domain-subdomains', 'filter');
-      assert.deepEqual(firstFull.entries, [['example.com', publicId, ['C99']]]);
+      assert.deepEqual(firstFull.entries, [['example.com', publicId, ['C03']]]);
       assert.deepEqual((await published.full('domain', 'filter')).entries, []);
 
       const directory = new PostgresPublicEntityDirectory(db);
@@ -151,7 +144,7 @@ test(
 
       await db.query(
         `INSERT INTO membership_decision_reasons (decision_id, reason_code, assertion_id)
-         VALUES ($1, 'C98', $2)`,
+         VALUES ($1, 'C05', $2)`,
         [decisionId, assertionId],
       );
 
@@ -166,7 +159,7 @@ test(
 
       const delta = await published.delta('domain-subdomains', 'filter', firstPublication.version);
       assert.equal('code' in delta, false);
-      assert.deepEqual(delta.added, [['example.com', publicId, ['C98', 'C99']]]);
+      assert.deepEqual(delta.added, [['example.com', publicId, ['C03', 'C05']]]);
       assert.deepEqual(delta.removed, []);
 
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
