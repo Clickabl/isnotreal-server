@@ -1,4 +1,4 @@
-export const PROTOCOL_SCHEMA_VERSION = 3 as const;
+export const PROTOCOL_SCHEMA_VERSION = 4 as const;
 
 export type Platform = 'x' | 'tiktok' | 'instagram' | 'youtube';
 export type PublicationChannel = Platform | 'domain' | 'domain-subdomains';
@@ -29,6 +29,7 @@ export interface PublicationManifest {
   readonly channel: PublicationChannel;
   readonly list: ListKind;
   readonly version: PublicationVersion;
+  readonly reasonCatalogVersion: number;
   readonly generatedAt: string;
   readonly expiresAt: string;
 }
@@ -43,6 +44,7 @@ export interface PublicationDelta {
   readonly list: ListKind;
   readonly fromVersion: PublicationVersion;
   readonly toVersion: PublicationVersion;
+  readonly reasonCatalogVersion: number;
   readonly added: readonly CompiledEntry[];
   readonly removed: readonly IdentifierValue[];
 }
@@ -53,4 +55,5 @@ export interface FullSyncRequired {
   readonly channel: PublicationChannel;
   readonly list: ListKind;
   readonly currentVersion: PublicationVersion;
+  readonly currentReasonCatalogVersion: number;
 }
