@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { URL } from 'node:url';
@@ -73,7 +73,7 @@ export async function captureSourceDocument(
   });
 
   const hash = createHash('sha256').update(fetched.bytes).digest('hex');
-  const storageKey = `source-captures/${document.id}/${hash}-${randomUUID()}.bin`;
+  const storageKey = `source-captures/${document.id}/${hash}.bin`;
   await store.put(storageKey, fetched.bytes);
 
   const inserted = await db.query<CaptureInsertRow>(
@@ -84,10 +84,25 @@ export async function captureSourceDocument(
        storage_uri,
        capture_method,
        http_status,
-       status
-     ) VALUES ($1, now(), $2, $3, 'http', $4, 'available')
+       status,
+       final_url,
+       content_type,
+       byte_size,
+       etag,
+       last_modified
+     ) VALUES ($1, now(), $2, $3, 'http', $4, 'available', $5, $6, $7, $8, $9)
      RETURNING id::text, retrieved_at::text`,
-    [document.id, hash, `artifact://${storageKey}`, fetched.status],
+    [
+      document.id,
+      hash,
+      `artifact://${storageKey}`,
+      fetched.status,
+      fetched.finalUrl,
+      fetched.contentType,
+      fetched.bytes.byteLength,
+      fetched.etag,
+      fetched.lastModified,
+    ],
   );
   const capture = inserted.rows[0];
   if (!capture) throw new Error('source capture insert failed');
@@ -136,6 +151,8 @@ interface TrustedFetchResult {
   readonly finalUrl: string;
   readonly status: number;
   readonly contentType: string | null;
+  readonly etag: string | null;
+  readonly lastModified: string | null;
 }
 
 async function fetchTrustedSource(
@@ -185,6 +202,8 @@ async function fetchTrustedSource(
       finalUrl: current.toString(),
       status: response.status,
       contentType: response.headers.get('content-type'),
+      etag: response.headers.get('etag'),
+      lastModified: response.headers.get('last-modified'),
     };
   }
 
