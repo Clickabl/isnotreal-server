@@ -189,6 +189,12 @@ export function createApiRouter(deps: ApiDependencies) {
     if (request.method === 'POST' && request.pathname === '/api/v1/submissions') {
       const input = parseSubmission(request.body);
       if (!input) return response(400, { error: 'invalid_submission' });
+      if (
+        input.proposedReasonCode !== null &&
+        (await deps.reasons.byCode(input.proposedReasonCode)) === null
+      ) {
+        return response(400, { error: 'unknown_reason_code' });
+      }
       return response(202, await deps.submissions.create(input));
     }
 
@@ -274,7 +280,7 @@ function parseSubmission(body: unknown): SubmissionInput | null {
     proposedList: proposedList === undefined ? null : proposedList,
     proposedReasonCode,
     narrative: narrative.trim(),
-    sourceUrls: sourceUrls as string[],
+    sourceUrls: [...new Set(sourceUrls as string[])],
     submitterContactRef,
   };
 }
