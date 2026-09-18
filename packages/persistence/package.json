@@ -15,6 +15,10 @@
     "./reason-catalog": {
       "types": "./dist/reason-catalog.d.ts",
       "import": "./dist/reason-catalog.js"
+    },
+    "./campaign-import": {
+      "types": "./dist/campaign-import.d.ts",
+      "import": "./dist/campaign-import.js"
     }
   },
   "files": [
