@@ -23,17 +23,35 @@ const entities = {
     return [profile];
   },
 };
+const reasonEntry = {
+  code: 'P03',
+  label: 'Signed example campaign',
+  description: 'Documented campaign signature.',
+  category: 'campaign',
+  defaultList: 'highlight',
+  evidenceRequirement: {
+    subjectScope: 'person',
+    evidenceMode: 'named-campaign-membership',
+    validityMode: 'historical-event',
+    publicCriteria: 'Official campaign record.',
+    exclusionCriteria: '',
+    primaryOrAuthoritativeRequired: true,
+    minimumEvidenceItems: 1,
+    reverifyAfterDays: null,
+    inheritancePolicy: 'none',
+  },
+  campaigns: [],
+  authoritySources: [],
+};
 const reasons = {
+  async version() {
+    return 1;
+  },
   async list() {
-    return [
-      {
-        code: 'P03',
-        label: 'Signed example campaign',
-        description: 'Documented campaign signature.',
-        category: 'campaign',
-        defaultList: 'highlight',
-      },
-    ];
+    return [reasonEntry];
+  },
+  async byCode(code) {
+    return code === 'P03' ? reasonEntry : null;
   },
 };
 const alternatives = {
@@ -75,7 +93,12 @@ test('entity, reason and list endpoints expose the public contracts', async () =
   assert.equal((await route(request('GET', '/api/v1/entities/slug/example'))).status, 200);
   const reasonCatalog = await route(request('GET', '/api/v1/reasons'));
   assert.equal(reasonCatalog.status, 200);
+  assert.equal(reasonCatalog.body.catalogVersion, 1);
   assert.equal(reasonCatalog.body.reasons[0].code, 'P03');
+  const reasonDetail = await route(request('GET', '/api/v1/reasons/P03'));
+  assert.equal(reasonDetail.status, 200);
+  assert.equal(reasonDetail.body.reason.evidenceRequirement.evidenceMode, 'named-campaign-membership');
+  assert.equal((await route(request('GET', '/api/v1/reasons/P99'))).status, 404);
   const manifest = await route(request('GET', '/api/v1/lists/domain/filter/manifest'));
   assert.equal(manifest.status, 200);
   assert.equal(manifest.body.channel, 'domain');
