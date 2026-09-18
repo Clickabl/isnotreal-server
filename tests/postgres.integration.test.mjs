@@ -173,6 +173,7 @@ test(
 
       const published = new PostgresPublishedArtifactReader(db, store);
       const firstFull = await published.full('domain-subdomains', 'filter');
+      assert.equal(firstFull.reasonCatalogVersion, 1);
       assert.deepEqual(firstFull.entries, [['example.com', publicId, ['C03']]]);
       assert.deepEqual((await published.full('domain', 'filter')).entries, []);
 
