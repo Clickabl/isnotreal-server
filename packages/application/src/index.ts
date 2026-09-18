@@ -84,6 +84,7 @@ export interface ReasonCatalogEntry {
   readonly description: string;
   readonly category: string;
   readonly defaultList: ListKind | 'none';
+  readonly publicationEnabled: boolean;
   readonly evidenceRequirement: ReasonEvidenceRequirement | null;
   readonly campaigns: readonly ReasonCampaignBinding[];
   readonly authoritySources: readonly ReasonAuthoritySource[];
