@@ -13,6 +13,7 @@ import {
   commitCampaignImport,
   markCampaignImportReady,
   markCampaignImportRow,
+  stageAuthorityImport,
   stageCampaignImport,
 } from '../packages/persistence/dist/campaign-import.js';
 import { publishReasonCatalogVersion } from '../packages/persistence/dist/reason-catalog.js';
@@ -319,7 +320,7 @@ test(
 
       const importRows = await db.query(
         `SELECT id::text, raw_name, resolution_state
-         FROM campaign_import_rows
+         FROM official_import_rows
          WHERE batch_id = $1
          ORDER BY ordinal`,
         [staged.batchId],
@@ -352,7 +353,7 @@ test(
            ar.reason_code,
            c.slug AS campaign_slug,
            count(asl.capture_id)::integer AS source_count
-         FROM campaign_import_rows row
+         FROM official_import_rows row
          JOIN assertions a ON a.id = row.assertion_id
          JOIN assertion_reasons ar ON ar.assertion_id = a.id
          JOIN campaign_versions cv ON cv.id = a.campaign_version_id
@@ -370,9 +371,67 @@ test(
         source_count: 1,
       });
 
+      const authorityCompany = await db.query(
+        `INSERT INTO entities (kind, canonical_name, slug)
+         VALUES ('company', 'Authority Listed Company', 'authority-listed-company')
+         RETURNING id::text`,
+      );
+      const authoritySource = await db.query(
+        `SELECT id::text
+         FROM source_documents
+         WHERE canonical_url = 'https://www.ohchr.org/sites/default/files/documents/hrbodies/hrcouncil/sessions-regular/session31/database-hrc3136/23-06-30-Update-israeli-settlement-opt-database-hrc3136.pdf'`,
+      );
+      const authorityCapture = await db.query(
+        `INSERT INTO source_captures (
+           document_id, retrieved_at, capture_method, status
+         ) VALUES ($1, now(), 'manual', 'available')
+         RETURNING id::text`,
+        [authoritySource.rows[0].id],
+      );
+      const stagedAuthority = await stageAuthorityImport(db, {
+        authoritySourceDocumentId: authoritySource.rows[0].id,
+        reasonCode: 'C13',
+        sourceCaptureId: authorityCapture.rows[0].id,
+        importKind: 'target-list',
+        createdBy: 'integration-test',
+        rows: [{ rawName: 'Authority Listed Company' }],
+      });
+      assert.equal(stagedAuthority.candidateRows, 1);
+      const authorityRow = await db.query(
+        `SELECT id::text
+         FROM official_import_rows
+         WHERE batch_id = $1`,
+        [stagedAuthority.batchId],
+      );
+      await approveCampaignImportRow(
+        db,
+        authorityRow.rows[0].id,
+        authorityCompany.rows[0].id,
+        'integration-reviewer',
+        'Authority list identity verified.',
+      );
+      await markCampaignImportReady(db, stagedAuthority.batchId, 'integration-reviewer');
+      assert.equal(
+        (await commitCampaignImport(db, stagedAuthority.batchId, 'integration-reviewer'))
+          .assertionsCreated,
+        1,
+      );
+      const authorityAssertion = await db.query(
+        `SELECT a.action_type, ar.reason_code
+         FROM official_import_rows row
+         JOIN assertions a ON a.id = row.assertion_id
+         JOIN assertion_reasons ar ON ar.assertion_id = a.id
+         WHERE row.batch_id = $1`,
+        [stagedAuthority.batchId],
+      );
+      assert.deepEqual(authorityAssertion.rows[0], {
+        action_type: 'listed-by-authority',
+        reason_code: 'C13',
+      });
+
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
       assert.deepEqual(secondMigration.applied, []);
-      assert.equal(secondMigration.alreadyApplied.length, 15);
+      assert.equal(secondMigration.alreadyApplied.length, 18);
     } finally {
       await db.close();
       await rm(artifactRoot, { recursive: true, force: true });
