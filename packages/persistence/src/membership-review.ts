@@ -352,16 +352,29 @@ export async function approveMembershipProposal(
       if (!decisionId) throw new Error('membership decision insert failed');
     }
 
+    const reviewEvent = await tx.query<IdRow>(
+      `INSERT INTO review_events (
+         subject_type, subject_id, action, reviewer_id, rationale
+       ) VALUES ('membership-proposal', $1, 'approved', $2, $3)
+       RETURNING id::text`,
+      [proposal.id, reviewer, note.trim()],
+    );
+    const reviewEventId = reviewEvent.rows[0]?.id;
+    if (!reviewEventId) throw new Error('membership review event insert failed');
+
     await tx.query(
       `INSERT INTO membership_decision_reasons (
          decision_id,
          reason_code,
          assertion_id,
-         last_verified_at
-       ) VALUES ($1, $2, $3, now())
+         last_verified_at,
+         verification_review_event_id
+       ) VALUES ($1, $2, $3, now(), $4)
        ON CONFLICT (decision_id, reason_code, assertion_id)
-       DO UPDATE SET last_verified_at = EXCLUDED.last_verified_at`,
-      [decisionId, proposal.reason_code, proposal.assertion_id],
+       DO UPDATE SET
+         last_verified_at = EXCLUDED.last_verified_at,
+         verification_review_event_id = EXCLUDED.verification_review_event_id`,
+      [decisionId, proposal.reason_code, proposal.assertion_id, reviewEventId],
     );
 
     await tx.query(
@@ -371,16 +384,10 @@ export async function approveMembershipProposal(
            reviewed_at = now(),
            review_note = $3,
            applied_decision_id = $4,
-           applied_at = now()
+           applied_at = now(),
+           verification_review_event_id = $5
        WHERE id = $1`,
-      [proposal.id, reviewer, note.trim(), decisionId],
-    );
-
-    await tx.query(
-      `INSERT INTO review_events (
-         subject_type, subject_id, action, reviewer_id, rationale
-       ) VALUES ('membership-proposal', $1, 'approved', $2, $3)`,
-      [proposal.id, reviewer, note.trim()],
+      [proposal.id, reviewer, note.trim(), decisionId, reviewEventId],
     );
 
     return decisionId;
