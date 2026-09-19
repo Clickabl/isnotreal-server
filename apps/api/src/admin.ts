@@ -33,8 +33,7 @@ export interface AdminDependencies {
   readonly moderation: PostgresModerationQueue;
 }
 
-const uuidPattern =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const submissionStates = new Set<CommunitySubmissionState>([
   'pending',
   'triaged',
@@ -55,8 +54,9 @@ export function createAdminRouter(deps: AdminDependencies) {
       });
     }
 
-    const submissionReview =
-      /^\/admin\/api\/v1\/submissions\/([0-9a-f-]+)\/review$/i.exec(request.pathname);
+    const submissionReview = /^\/admin\/api\/v1\/submissions\/([0-9a-f-]+)\/review$/i.exec(
+      request.pathname,
+    );
     if (request.method === 'POST' && submissionReview) {
       const id = validUuid(submissionReview[1]);
       const body = parseReviewBody(request.body);
@@ -82,9 +82,7 @@ export function createAdminRouter(deps: AdminDependencies) {
       });
     }
 
-    const importRows = /^\/admin\/api\/v1\/imports\/([0-9a-f-]+)\/rows$/i.exec(
-      request.pathname,
-    );
+    const importRows = /^\/admin\/api\/v1\/imports\/([0-9a-f-]+)\/rows$/i.exec(request.pathname);
     if (request.method === 'GET' && importRows) {
       const batchId = validUuid(importRows[1]);
       const limit = parseLimit(request.query.limit, 500, 1000);
@@ -94,8 +92,9 @@ export function createAdminRouter(deps: AdminDependencies) {
       });
     }
 
-    const importRowApprove =
-      /^\/admin\/api\/v1\/import-rows\/([0-9a-f-]+)\/approve$/i.exec(request.pathname);
+    const importRowApprove = /^\/admin\/api\/v1\/import-rows\/([0-9a-f-]+)\/approve$/i.exec(
+      request.pathname,
+    );
     if (request.method === 'POST' && importRowApprove) {
       const rowId = validUuid(importRowApprove[1]);
       const body = parseEntityReviewBody(request.body);
@@ -105,9 +104,7 @@ export function createAdminRouter(deps: AdminDependencies) {
     }
 
     const importRowDisposition =
-      /^\/admin\/api\/v1\/import-rows\/([0-9a-f-]+)\/(skip|reject)$/i.exec(
-        request.pathname,
-      );
+      /^\/admin\/api\/v1\/import-rows\/([0-9a-f-]+)\/(skip|reject)$/i.exec(request.pathname);
     if (request.method === 'POST' && importRowDisposition) {
       const rowId = validUuid(importRowDisposition[1]);
       const action = importRowDisposition[2];
@@ -123,9 +120,7 @@ export function createAdminRouter(deps: AdminDependencies) {
       return response(200, { ok: true });
     }
 
-    const importReady = /^\/admin\/api\/v1\/imports\/([0-9a-f-]+)\/ready$/i.exec(
-      request.pathname,
-    );
+    const importReady = /^\/admin\/api\/v1\/imports\/([0-9a-f-]+)\/ready$/i.exec(request.pathname);
     if (request.method === 'POST' && importReady) {
       const batchId = validUuid(importReady[1]);
       if (!batchId) return response(400, { error: 'invalid_request' });
@@ -160,10 +155,9 @@ export function createAdminRouter(deps: AdminDependencies) {
       });
     }
 
-    const proposalApprove =
-      /^\/admin\/api\/v1\/membership-proposals\/([0-9a-f-]+)\/approve$/i.exec(
-        request.pathname,
-      );
+    const proposalApprove = /^\/admin\/api\/v1\/membership-proposals\/([0-9a-f-]+)\/approve$/i.exec(
+      request.pathname,
+    );
     if (request.method === 'POST' && proposalApprove) {
       const proposalId = validUuid(proposalApprove[1]);
       const body = parseNoteBody(request.body, false);
@@ -177,10 +171,9 @@ export function createAdminRouter(deps: AdminDependencies) {
       return response(200, { ok: true, decisionId });
     }
 
-    const proposalReject =
-      /^\/admin\/api\/v1\/membership-proposals\/([0-9a-f-]+)\/reject$/i.exec(
-        request.pathname,
-      );
+    const proposalReject = /^\/admin\/api\/v1\/membership-proposals\/([0-9a-f-]+)\/reject$/i.exec(
+      request.pathname,
+    );
     if (request.method === 'POST' && proposalReject) {
       const proposalId = validUuid(proposalReject[1]);
       const body = parseNoteBody(request.body, true);
@@ -229,9 +222,7 @@ function nullableString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
 }
 
-function parseReviewBody(
-  body: unknown,
-): { readonly state: string; readonly note: string } | null {
+function parseReviewBody(body: unknown): { readonly state: string; readonly note: string } | null {
   if (!isRecord(body) || typeof body.state !== 'string') return null;
   const note = typeof body.note === 'string' ? body.note.trim() : '';
   if (note.length > 10_000) return null;
@@ -248,10 +239,7 @@ function parseEntityReviewBody(
   return { entityId, note };
 }
 
-function parseNoteBody(
-  body: unknown,
-  required: boolean,
-): { readonly note: string } | null {
+function parseNoteBody(body: unknown, required: boolean): { readonly note: string } | null {
   if (body === null || body === undefined) return required ? null : { note: '' };
   if (!isRecord(body)) return null;
   const note = typeof body.note === 'string' ? body.note.trim() : '';
