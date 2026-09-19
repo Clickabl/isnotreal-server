@@ -15,8 +15,8 @@ async function main(): Promise<void> {
     host: process.env.HOST ?? '0.0.0.0',
     port,
     maxDatabaseConnections,
-    adminToken,
-    adminActorId,
+    ...(adminToken ? { adminToken } : {}),
+    ...(adminActorId ? { adminActorId } : {}),
   });
 
   console.log(`isnotreal API listening on ${runtime.host}:${runtime.port}`);
