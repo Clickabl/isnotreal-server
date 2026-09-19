@@ -395,7 +395,7 @@ export class PostgresReasonCatalogReader implements ReasonCatalogReader {
     const params = version === undefined ? [] : [version];
     const result = await this.db.query<ReasonCatalogRow>(
       `SELECT
-         rd.code,
+         rd.reason_code AS code,
          rd.label,
          rd.description,
          rd.category,
@@ -415,7 +415,7 @@ export class PostgresReasonCatalogReader implements ReasonCatalogReader {
        FROM reason_catalog_versions rcv
        JOIN reason_catalog_entries rd ON rd.catalog_version_id = rcv.id
        WHERE ${condition}
-       ORDER BY rd.code`,
+       ORDER BY rd.reason_code`,
       params,
     );
     return result.rows.map((row) => ({
