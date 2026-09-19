@@ -1,4 +1,5 @@
 import { Buffer } from 'node:buffer';
+import { timingSafeEqual } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import {
   PostgresAlternativeDirectory,
@@ -6,11 +7,13 @@ import {
   PostgresReasonCatalogReader,
   PostgresSubmissionWriter,
 } from '@isnotreal/persistence';
+import { PostgresModerationQueue } from '@isnotreal/persistence/moderation';
 import {
   FileArtifactStore,
   PgSqlExecutor,
   PostgresPublishedArtifactReader,
 } from '@isnotreal/persistence/runtime';
+import { createAdminRouter, type AdminRequest } from './admin.js';
 import { createApiRouter, type ApiRequest, type ApiResponse } from './index.js';
 
 export interface NodeApiRuntimeOptions {
@@ -20,6 +23,8 @@ export interface NodeApiRuntimeOptions {
   readonly port?: number;
   readonly maxBodyBytes?: number;
   readonly maxDatabaseConnections?: number;
+  readonly adminToken?: string;
+  readonly adminActorId?: string;
 }
 
 export interface RunningNodeApiRuntime {
@@ -63,9 +68,26 @@ export async function startNodeApiRuntime(
     submissions: new PostgresSubmissionWriter(db),
     publications: new PostgresPublishedArtifactReader(db, store),
   });
+  const adminToken = options.adminToken?.trim() || null;
+  const adminActorId = options.adminActorId?.trim() || 'admin';
+  const adminRouter = adminToken
+    ? createAdminRouter({
+        db,
+        moderation: new PostgresModerationQueue(db),
+      })
+    : null;
 
   const server = createServer((request, response) => {
-    void handleRequest(request, response, router, db, maxBodyBytes).catch((error: unknown) => {
+    void handleRequest(
+      request,
+      response,
+      router,
+      adminRouter,
+      adminToken,
+      adminActorId,
+      db,
+      maxBodyBytes,
+    ).catch((error: unknown) => {
       const status = error instanceof HttpError ? error.status : 500;
       if (status >= 500) {
         const message = error instanceof Error ? error.message : 'unknown error';
@@ -122,6 +144,9 @@ async function handleRequest(
   request: IncomingMessage,
   response: ServerResponse,
   router: ReturnType<typeof createApiRouter>,
+  adminRouter: ReturnType<typeof createAdminRouter> | null,
+  adminToken: string | null,
+  adminActorId: string,
   db: PgSqlExecutor,
   maxBodyBytes: number,
 ): Promise<void> {
@@ -154,6 +179,36 @@ async function handleRequest(
   const body = await readBody(request, maxBodyBytes);
   const query: Record<string, string | undefined> = {};
   for (const [key, value] of url.searchParams) query[key] = value;
+
+  if (url.pathname.startsWith('/admin/')) {
+    if (!adminRouter || !adminToken) {
+      sendJson(response, 404, { error: 'not_found' }, { 'cache-control': 'no-store' });
+      return;
+    }
+    const suppliedToken = bearerToken(request.headers.authorization);
+    if (!suppliedToken || !timingSafeTokenEqual(suppliedToken, adminToken)) {
+      sendJson(
+        response,
+        401,
+        { error: 'unauthorized' },
+        {
+          'cache-control': 'no-store',
+          'www-authenticate': 'Bearer realm="isnotreal-admin"',
+        },
+      );
+      return;
+    }
+    const adminRequest: AdminRequest = {
+      method: request.method ?? 'GET',
+      pathname: url.pathname,
+      query,
+      body,
+      actorId: adminActorId,
+    };
+    const result = await adminRouter(adminRequest);
+    sendJson(response, result.status, result.body, { 'cache-control': 'no-store' });
+    return;
+  }
 
   const apiRequest: ApiRequest = {
     method: request.method ?? 'GET',
@@ -217,6 +272,18 @@ function cachePolicy(request: ApiRequest, status: number): string {
     return 'public, max-age=300, stale-while-revalidate=3600';
   if (request.pathname.includes('/lists/')) return 'public, max-age=60, stale-while-revalidate=300';
   return 'public, max-age=60, stale-while-revalidate=300';
+}
+
+function bearerToken(authorization: string | undefined): string | null {
+  if (!authorization) return null;
+  const match = /^Bearer\s+(.+)$/i.exec(authorization.trim());
+  return match?.[1]?.trim() || null;
+}
+
+function timingSafeTokenEqual(left: string, right: string): boolean {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  return leftBuffer.byteLength === rightBuffer.byteLength && timingSafeEqual(leftBuffer, rightBuffer);
 }
 
 function writeSecurityHeaders(response: ServerResponse): void {
