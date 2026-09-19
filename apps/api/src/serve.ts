@@ -7,12 +7,16 @@ async function main(): Promise<void> {
   const artifactRoot = resolve(process.env.PUBLICATION_ROOT ?? '.local/publications');
   const port = parsePositiveInteger(process.env.PORT, 3_000, 65_535, true);
   const maxDatabaseConnections = parsePositiveInteger(process.env.DB_POOL_MAX, 20, 500, false);
+  const adminToken = process.env.ADMIN_BEARER_TOKEN?.trim() || undefined;
+  const adminActorId = process.env.ADMIN_ACTOR_ID?.trim() || undefined;
   const runtime = await startNodeApiRuntime({
     databaseUrl,
     artifactRoot,
     host: process.env.HOST ?? '0.0.0.0',
     port,
     maxDatabaseConnections,
+    adminToken,
+    adminActorId,
   });
 
   console.log(`isnotreal API listening on ${runtime.host}:${runtime.port}`);
