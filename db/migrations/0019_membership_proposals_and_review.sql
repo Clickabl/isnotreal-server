@@ -20,6 +20,7 @@ CREATE TABLE membership_proposals (
   review_note text NOT NULL DEFAULT '',
   applied_decision_id uuid NULL REFERENCES membership_decisions(id),
   applied_at timestamptz NULL,
+  verification_review_event_id uuid NULL REFERENCES review_events(id),
   CHECK ((reviewed_by IS NULL) = (reviewed_at IS NULL)),
   CHECK ((state = 'applied') = (applied_decision_id IS NOT NULL)),
   UNIQUE (entity_id, assertion_id, reason_code, proposed_list)
