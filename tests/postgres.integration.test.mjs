@@ -62,6 +62,10 @@ test(
         '0013_reason_definition_publication_policy.sql',
         '0014_campaign_import_staging.sql',
         '0015_enforce_reason_alignment.sql',
+        '0016_source_capture_http_metadata.sql',
+        '0017_refresh_bds_authority_registry.sql',
+        '0018_generalize_official_list_imports.sql',
+        '0019_membership_proposals_and_review.sql',
       ]);
 
       const reasonCatalog = new PostgresReasonCatalogReader(db);
