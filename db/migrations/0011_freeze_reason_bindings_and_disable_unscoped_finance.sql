@@ -30,6 +30,8 @@ SET campaigns = COALESCE(
   '[]'::jsonb
 );
 
+DROP VIEW current_reason_catalog;
+
 UPDATE reason_catalog_entries rce
 SET authority_sources = COALESCE(
   (
