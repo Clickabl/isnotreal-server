@@ -16,6 +16,10 @@ import {
   stageAuthorityImport,
   stageCampaignImport,
 } from '../packages/persistence/dist/campaign-import.js';
+import {
+  approveMembershipProposal,
+  listMembershipProposals,
+} from '../packages/persistence/dist/membership-review.js';
 import { publishReasonCatalogVersion } from '../packages/persistence/dist/reason-catalog.js';
 import {
   FileArtifactStore,
@@ -345,6 +349,7 @@ test(
       await markCampaignImportReady(db, staged.batchId, 'integration-reviewer');
       const importCommit = await commitCampaignImport(db, staged.batchId, 'integration-reviewer');
       assert.equal(importCommit.assertionsCreated, 1);
+      assert.equal(importCommit.proposalsCreated, 1);
 
       const importedAssertion = await db.query(
         `SELECT
@@ -411,11 +416,13 @@ test(
         'Authority list identity verified.',
       );
       await markCampaignImportReady(db, stagedAuthority.batchId, 'integration-reviewer');
-      assert.equal(
-        (await commitCampaignImport(db, stagedAuthority.batchId, 'integration-reviewer'))
-          .assertionsCreated,
-        1,
+      const authorityCommit = await commitCampaignImport(
+        db,
+        stagedAuthority.batchId,
+        'integration-reviewer',
       );
+      assert.equal(authorityCommit.assertionsCreated, 1);
+      assert.equal(authorityCommit.proposalsCreated, 1);
       const authorityAssertion = await db.query(
         `SELECT a.action_type, ar.reason_code
          FROM official_import_rows row
@@ -429,9 +436,52 @@ test(
         reason_code: 'C13',
       });
 
+      const proposals = await listMembershipProposals(db, 'pending', 10);
+      assert.equal(proposals.length, 2);
+      const artistProposal = proposals.find((proposal) => proposal.reasonCode === 'P03');
+      assert.ok(artistProposal);
+      assert.equal(artistProposal.proposedList, 'highlight');
+
+      const artistIdentifier = await db.query(
+        `INSERT INTO identifiers (
+           kind_code, value, normalized_value, display_value, status
+         ) VALUES ('instagram', 'exampleartist', 'exampleartist', 'exampleartist', 'active')
+         RETURNING id::text`,
+      );
+      const artistAssertion = await db.query(
+        `SELECT assertion_id::text
+         FROM official_import_rows
+         WHERE batch_id = $1 AND raw_name = 'Example Artist'`,
+        [staged.batchId],
+      );
+      await db.query(
+        `INSERT INTO identifier_assignments (
+           identifier_id, entity_id, state, verification_assertion_id
+         ) VALUES ($1, $2, 'verified', $3)`,
+        [artistIdentifier.rows[0].id, artistEntityId, artistAssertion.rows[0].assertion_id],
+      );
+
+      const artistDecisionId = await approveMembershipProposal(
+        db,
+        artistProposal.id,
+        'integration-reviewer',
+        'Verified official signatory and identity.',
+      );
+      assert.ok(artistDecisionId);
+
+      const fourthPublication = await publishCurrentState(db, store, {
+        compilerVersion: 'integration-test',
+        sourceRevision: 'fourth',
+        expiresInMs: 60 * 60 * 1_000,
+      });
+      assert.equal(fourthPublication.activated, true);
+      assert.deepEqual((await published.full('instagram', 'highlight')).entries, [
+        ['exampleartist', (await db.query(`SELECT public_id::text FROM entities WHERE id = $1`, [artistEntityId])).rows[0].public_id, ['P03']],
+      ]);
+
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
       assert.deepEqual(secondMigration.applied, []);
-      assert.equal(secondMigration.alreadyApplied.length, 18);
+      assert.equal(secondMigration.alreadyApplied.length, 19);
     } finally {
       await db.close();
       await rm(artifactRoot, { recursive: true, force: true });
