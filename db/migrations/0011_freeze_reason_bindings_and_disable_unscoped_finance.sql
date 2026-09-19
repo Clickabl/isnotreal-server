@@ -30,6 +30,8 @@ SET campaigns = COALESCE(
   '[]'::jsonb
 );
 
+DROP VIEW publication_candidates;
+DROP VIEW membership_reason_validation;
 DROP VIEW current_reason_catalog;
 
 UPDATE reason_catalog_entries rce
@@ -74,9 +76,6 @@ SELECT
 FROM reason_catalog_versions rcv
 JOIN reason_catalog_entries rce ON rce.catalog_version_id = rcv.id
 WHERE rcv.state = 'active';
-
-DROP VIEW publication_candidates;
-DROP VIEW membership_reason_validation;
 
 CREATE VIEW membership_reason_validation AS
 WITH checks AS (
