@@ -476,7 +476,12 @@ test(
       });
       assert.equal(fourthPublication.activated, true);
       assert.deepEqual((await published.full('instagram', 'highlight')).entries, [
-        ['exampleartist', (await db.query(`SELECT public_id::text FROM entities WHERE id = $1`, [artistEntityId])).rows[0].public_id, ['P03']],
+        [
+          'exampleartist',
+          (await db.query(`SELECT public_id::text FROM entities WHERE id = $1`, [artistEntityId]))
+            .rows[0].public_id,
+          ['P03'],
+        ],
       ]);
 
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
