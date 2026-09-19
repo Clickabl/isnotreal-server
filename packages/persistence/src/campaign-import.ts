@@ -452,12 +452,7 @@ export async function commitOfficialImport(
            AND catalog.publication_enabled = true
            AND catalog.default_list IN ('filter', 'highlight')
          ON CONFLICT (entity_id, assertion_id, reason_code, proposed_list) DO NOTHING`,
-        [
-          row.resolved_entity_id,
-          assertionId,
-          `official-import:${batchId}`,
-          context.reason_code,
-        ],
+        [row.resolved_entity_id, assertionId, `official-import:${batchId}`, context.reason_code],
       );
       await tx.query(
         `UPDATE official_import_rows

@@ -291,12 +291,7 @@ export async function approveMembershipProposal(
            NULL
          ) AS issues
        FROM evidence`,
-      [
-        proposal.entity_id,
-        proposal.assertion_id,
-        proposal.reason_code,
-        proposal.proposed_list,
-      ],
+      [proposal.entity_id, proposal.assertion_id, proposal.reason_code, proposal.proposed_list],
     );
     const check = validation.rows[0];
     if (!check?.valid_for_publication) {

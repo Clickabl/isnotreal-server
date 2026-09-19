@@ -1,11 +1,7 @@
 import type { SqlExecutor } from './index.js';
 
 export type CommunitySubmissionState =
-  | 'pending'
-  | 'triaged'
-  | 'accepted'
-  | 'rejected'
-  | 'duplicate';
+  'pending' | 'triaged' | 'accepted' | 'rejected' | 'duplicate';
 
 export interface CommunitySubmissionQueueItem {
   readonly id: string;
