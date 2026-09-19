@@ -283,7 +283,9 @@ function bearerToken(authorization: string | undefined): string | null {
 function timingSafeTokenEqual(left: string, right: string): boolean {
   const leftBuffer = Buffer.from(left);
   const rightBuffer = Buffer.from(right);
-  return leftBuffer.byteLength === rightBuffer.byteLength && timingSafeEqual(leftBuffer, rightBuffer);
+  return (
+    leftBuffer.byteLength === rightBuffer.byteLength && timingSafeEqual(leftBuffer, rightBuffer)
+  );
 }
 
 function writeSecurityHeaders(response: ServerResponse): void {

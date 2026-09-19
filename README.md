@@ -56,7 +56,6 @@ tests/
 
 PostgreSQL is the source of truth. The extension never receives names, biographies, evidence or source URLs in normal list synchronization. Compiled publications contain only the stable platform/domain identifier, stable public entity ID and short display reason codes. The website/API can resolve the public entity ID into the complete public record.
 
-
 ## Reason and evidence workflow
 
 The public list pipeline intentionally separates factual ingestion from editorial membership:
