@@ -625,9 +625,6 @@ async function loadPublicationSnapshot(db: SqlExecutor): Promise<PublicationSnap
        WHERE state = 'active'
        ORDER BY policy_revision_id::text`,
     );
-    const causesResult = await tx.query<{ slug: string }>(
-      `SELECT slug FROM causes WHERE active = true ORDER BY sort_order, slug`,
-    );
     const reasonCatalog = await tx.query<{ version: number }>(
       `SELECT version FROM reason_catalog_versions WHERE state = 'active' LIMIT 1`,
     );
