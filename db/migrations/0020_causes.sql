@@ -98,25 +98,4 @@ ALTER TABLE membership_proposals
   ADD CONSTRAINT membership_proposals_unique_cause_reason
   UNIQUE (entity_id, assertion_id, reason_code, cause_id, proposed_list);
 
-ALTER TABLE publications
-  ADD COLUMN cause_id uuid NULL REFERENCES causes(id);
-
-UPDATE publications publication
-SET cause_id = cause.id
-FROM causes cause
-WHERE cause.slug = 'israel-palestine'
-  AND publication.cause_id IS NULL;
-
-ALTER TABLE publications
-  ALTER COLUMN cause_id SET NOT NULL;
-
-DROP INDEX publications_one_active_uq;
-
-CREATE UNIQUE INDEX publications_one_active_per_cause_uq
-  ON publications(cause_id)
-  WHERE state = 'active';
-
-CREATE INDEX publications_cause_sequence_idx
-  ON publications(cause_id, sequence DESC);
-
 COMMIT;
