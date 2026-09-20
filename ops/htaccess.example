@@ -1,0 +1,21 @@
+# Apache equivalent for deployments that use .htaccess instead of nginx.
+# Dynamic entity and alternative resolution remains in the Node application,
+# avoiding a generated rewrite file that would need regeneration for every entity.
+RewriteEngine On
+
+# Preserve ACME challenges if certbot uses the webroot method.
+RewriteRule ^\.well-known/acme-challenge/ - [L]
+
+# HTTPS + canonical host.
+RewriteCond %{HTTPS} !=on [OR]
+RewriteCond %{HTTP_HOST} !^isnotreal\.click$ [NC]
+RewriteRule ^ https://isnotreal.click%{REQUEST_URI} [R=301,L,NE]
+
+# Do not proxy existing static files if a deployment adds them later.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# /123 and /go-to-alt/123 are deliberately sent to the app. It queries the
+# database and issues the canonical/alternative redirect with no stale map.
+RewriteRule ^ http://127.0.0.1:3000%{REQUEST_URI} [P,L]
