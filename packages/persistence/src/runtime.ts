@@ -218,12 +218,14 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
   ) {}
 
   async manifest(
+    cause: string,
     channel: PublicationChannel,
     list: ListKind,
   ): ReturnType<PublicationReader['manifest']> {
-    const metadata = await this.currentFullMetadata(channel, list);
+    const metadata = await this.currentFullMetadata(cause, channel, list);
     return {
       schemaVersion: PROTOCOL_SCHEMA_VERSION,
+      cause,
       channel,
       list,
       version: metadata.version,
@@ -233,20 +235,26 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
     };
   }
 
-  async full(channel: PublicationChannel, list: ListKind): ReturnType<PublicationReader['full']> {
-    const metadata = await this.currentFullMetadata(channel, list);
-    return this.readFull(metadata, channel, list);
+  async full(
+    cause: string,
+    channel: PublicationChannel,
+    list: ListKind,
+  ): ReturnType<PublicationReader['full']> {
+    const metadata = await this.currentFullMetadata(cause, channel, list);
+    return this.readFull(metadata, cause, channel, list);
   }
 
   async delta(
+    cause: string,
     channel: PublicationChannel,
     list: ListKind,
     fromVersion: string,
   ): ReturnType<PublicationReader['delta']> {
-    const current = await this.currentFullMetadata(channel, list);
+    const current = await this.currentFullMetadata(cause, channel, list);
     if (fromVersion === current.version) {
       return {
         schemaVersion: PROTOCOL_SCHEMA_VERSION,
+        cause,
         channel,
         list,
         fromVersion,
@@ -269,14 +277,16 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
          pa.base_version
        FROM publications p
        JOIN publication_artifacts pa ON pa.publication_id = p.id
+       JOIN causes cause ON cause.id = p.cause_id
        WHERE p.state = 'active'
-         AND pa.channel = $1
-         AND pa.list_kind = $2
+         AND cause.slug = $1
+         AND pa.channel = $2
+         AND pa.list_kind = $3
          AND pa.artifact_kind = 'delta'
-         AND pa.base_version = $3
-         AND pa.version = $4
+         AND pa.base_version = $4
+         AND pa.version = $5
        LIMIT 1`,
-      [channel, list, fromVersion, current.version],
+      [cause, channel, list, fromVersion, current.version],
     );
     const metadata = result.rows[0];
     if (!metadata) {
@@ -293,6 +303,7 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
     const bytes = await this.readVerifiedBytes(metadata);
     return parseDeltaPublication(
       bytes,
+      cause,
       channel,
       list,
       fromVersion,
@@ -302,6 +313,7 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
   }
 
   private async currentFullMetadata(
+    cause: string,
     channel: PublicationChannel,
     list: ListKind,
   ): Promise<ArtifactMetadataRow> {
@@ -317,12 +329,14 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
          pa.base_version
        FROM publications p
        JOIN publication_artifacts pa ON pa.publication_id = p.id
+       JOIN causes cause ON cause.id = p.cause_id
        WHERE p.state = 'active'
-         AND pa.channel = $1
-         AND pa.list_kind = $2
+         AND cause.slug = $1
+         AND pa.channel = $2
+         AND pa.list_kind = $3
          AND pa.artifact_kind = 'full'
        LIMIT 1`,
-      [channel, list],
+      [cause, channel, list],
     );
     const row = result.rows[0];
     if (!row) throw new Error(`no active publication artifact for ${channel}/${list}`);
@@ -331,12 +345,14 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
 
   private async readFull(
     metadata: ArtifactMetadataRow,
+    cause: string,
     channel: PublicationChannel,
     list: ListKind,
   ): Promise<FullPublicationPayload> {
     const bytes = await this.readVerifiedBytes(metadata);
     return parseFullPublication(
       bytes,
+      cause,
       channel,
       list,
       metadata.version,
