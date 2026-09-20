@@ -194,6 +194,7 @@ export interface PublicationReader {
 }
 
 export interface PublicationCandidate {
+  readonly cause: string;
   readonly channel: PublicationChannel;
   readonly list: ListKind;
   readonly identifier: string;
@@ -202,11 +203,16 @@ export interface PublicationCandidate {
 }
 
 export interface PublicationCandidateReader {
-  candidates(channel: PublicationChannel, list: ListKind): Promise<readonly PublicationCandidate[]>;
+  candidates(
+    cause: string,
+    channel: PublicationChannel,
+    list: ListKind,
+  ): Promise<readonly PublicationCandidate[]>;
 }
 
 export function compileEntries(
   candidates: readonly PublicationCandidate[],
+  cause: string,
   channel: PublicationChannel,
   list: ListKind,
 ): readonly CompiledEntry[] {
@@ -216,7 +222,7 @@ export function compileEntries(
   >();
 
   for (const candidate of candidates) {
-    if (candidate.channel !== channel || candidate.list !== list) continue;
+    if (candidate.cause !== cause || candidate.channel !== channel || candidate.list !== list) continue;
     if (candidate.reasonCodes.length === 0) {
       throw new Error(`publication candidate ${candidate.identifier} has no reason codes`);
     }
@@ -243,6 +249,7 @@ export function compileEntries(
 }
 
 export function compileFullPublication(input: {
+  readonly cause: string;
   readonly channel: PublicationChannel;
   readonly list: ListKind;
   readonly version: string;
@@ -253,13 +260,14 @@ export function compileFullPublication(input: {
 }): FullPublication {
   return {
     schemaVersion: PROTOCOL_SCHEMA_VERSION,
+    cause: input.cause,
     channel: input.channel,
     list: input.list,
     version: input.version,
     reasonCatalogVersion: input.reasonCatalogVersion,
     generatedAt: input.generatedAt,
     expiresAt: input.expiresAt,
-    entries: compileEntries(input.candidates, input.channel, input.list),
+    entries: compileEntries(input.candidates, input.cause, input.channel, input.list),
   };
 }
 
@@ -267,8 +275,12 @@ export function compilePublicationDelta(
   previous: FullPublication,
   next: FullPublication,
 ): PublicationDelta {
-  if (previous.channel !== next.channel || previous.list !== next.list) {
-    throw new Error('cannot diff publications from different channels or lists');
+  if (
+    previous.cause !== next.cause ||
+    previous.channel !== next.channel ||
+    previous.list !== next.list
+  ) {
+    throw new Error('cannot diff publications from different causes, channels or lists');
   }
 
   const previousByIdentifier = new Map(previous.entries.map((entry) => [entry[0], entry]));
@@ -289,6 +301,7 @@ export function compilePublicationDelta(
 
   return {
     schemaVersion: PROTOCOL_SCHEMA_VERSION,
+    cause: next.cause,
     channel: next.channel,
     list: next.list,
     fromVersion: previous.version,
