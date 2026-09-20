@@ -38,5 +38,6 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - run: bash ops/ci-postgres-client.sh
       - run: npm ci
       - run: npm run check
