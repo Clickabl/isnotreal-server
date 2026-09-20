@@ -265,7 +265,12 @@ test(
       assert.equal(secondPublication.fullArtifactCount, 48);
       assert.equal(secondPublication.deltaArtifactCount, 48);
 
-      const delta = await published.delta('israel-palestine', 'domain-subdomains', 'filter', firstPublication.version);
+      const delta = await published.delta(
+        'israel-palestine',
+        'domain-subdomains',
+        'filter',
+        firstPublication.version,
+      );
       assert.equal('code' in delta, false);
       assert.deepEqual(delta.added, [['example.com', publicId, ['C03', 'C05']]]);
       assert.deepEqual(delta.removed, []);
@@ -297,7 +302,11 @@ test(
         expiresInMs: 60 * 60 * 1_000,
       });
       assert.equal(thirdPublication.activated, true);
-      assert.equal((await published.full('israel-palestine', 'domain-subdomains', 'filter')).reasonCatalogVersion, 2);
+      assert.equal(
+        (await published.full('israel-palestine', 'domain-subdomains', 'filter'))
+          .reasonCatalogVersion,
+        2,
+      );
 
       const artist = await db.query(
         `INSERT INTO entities (kind, canonical_name, slug)
@@ -484,14 +493,17 @@ test(
         expiresInMs: 60 * 60 * 1_000,
       });
       assert.equal(fourthPublication.activated, true);
-      assert.deepEqual((await published.full('israel-palestine', 'instagram', 'highlight')).entries, [
+      assert.deepEqual(
+        (await published.full('israel-palestine', 'instagram', 'highlight')).entries,
         [
-          'exampleartist',
-          (await db.query(`SELECT public_id::text FROM entities WHERE id = $1`, [artistEntityId]))
-            .rows[0].public_id,
-          ['P03'],
+          [
+            'exampleartist',
+            (await db.query(`SELECT public_id::text FROM entities WHERE id = $1`, [artistEntityId]))
+              .rows[0].public_id,
+            ['P03'],
+          ],
         ],
-      ]);
+      );
 
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
       assert.deepEqual(secondMigration.applied, []);
