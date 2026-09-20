@@ -228,10 +228,10 @@ test(
       assert.equal(firstPublication.deltaArtifactCount, 0);
 
       const published = new PostgresPublishedArtifactReader(db, store);
-      const firstFull = await published.full('domain-subdomains', 'filter');
+      const firstFull = await published.full('israel-palestine', 'domain-subdomains', 'filter');
       assert.equal(firstFull.reasonCatalogVersion, 1);
       assert.deepEqual(firstFull.entries, [['example.com', publicId, ['C03']]]);
-      assert.deepEqual((await published.full('domain', 'filter')).entries, []);
+      assert.deepEqual((await published.full('israel-palestine', 'domain', 'filter')).entries, []);
 
       const directory = new PostgresPublicEntityDirectory(db);
       const profile = await directory.byPublicId(publicId);
@@ -265,7 +265,7 @@ test(
       assert.equal(secondPublication.fullArtifactCount, 12);
       assert.equal(secondPublication.deltaArtifactCount, 12);
 
-      const delta = await published.delta('domain-subdomains', 'filter', firstPublication.version);
+      const delta = await published.delta('israel-palestine', 'domain-subdomains', 'filter', firstPublication.version);
       assert.equal('code' in delta, false);
       assert.deepEqual(delta.added, [['example.com', publicId, ['C03', 'C05']]]);
       assert.deepEqual(delta.removed, []);
@@ -297,7 +297,7 @@ test(
         expiresInMs: 60 * 60 * 1_000,
       });
       assert.equal(thirdPublication.activated, true);
-      assert.equal((await published.full('domain-subdomains', 'filter')).reasonCatalogVersion, 2);
+      assert.equal((await published.full('israel-palestine', 'domain-subdomains', 'filter')).reasonCatalogVersion, 2);
 
       const artist = await db.query(
         `INSERT INTO entities (kind, canonical_name, slug)
@@ -484,7 +484,7 @@ test(
         expiresInMs: 60 * 60 * 1_000,
       });
       assert.equal(fourthPublication.activated, true);
-      assert.deepEqual((await published.full('instagram', 'highlight')).entries, [
+      assert.deepEqual((await published.full('israel-palestine', 'instagram', 'highlight')).entries, [
         [
           'exampleartist',
           (await db.query(`SELECT public_id::text FROM entities WHERE id = $1`, [artistEntityId]))
