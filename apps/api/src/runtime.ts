@@ -14,6 +14,7 @@ import {
   PgSqlExecutor,
   PostgresPublishedArtifactReader,
 } from '@isnotreal/persistence/runtime';
+import { createPublicWebsite } from '@isnotreal/web';
 import { createAdminRouter, type AdminRequest } from './admin.js';
 import { createApiRouter, type ApiRequest, type ApiResponse } from './index.js';
 
@@ -70,6 +71,10 @@ export async function startNodeApiRuntime(
     submissions: new PostgresSubmissionWriter(db),
     publications: new PostgresPublishedArtifactReader(db, store),
   });
+  const website = createPublicWebsite({
+    entities: new PostgresPublicEntityDirectory(db),
+    alternatives: new PostgresAlternativeDirectory(db),
+  });
   const adminToken = options.adminToken?.trim() || null;
   const adminActorId = options.adminActorId?.trim() || 'admin';
   const adminRouter = adminToken
@@ -85,6 +90,7 @@ export async function startNodeApiRuntime(
       response,
       router,
       adminRouter,
+      website,
       adminToken,
       adminActorId,
       db,
@@ -147,6 +153,7 @@ async function handleRequest(
   response: ServerResponse,
   router: ReturnType<typeof createApiRouter>,
   adminRouter: ReturnType<typeof createAdminRouter> | null,
+  website: ReturnType<typeof createPublicWebsite>,
   adminToken: string | null,
   adminActorId: string,
   db: PgSqlExecutor,
@@ -210,6 +217,28 @@ async function handleRequest(
     const result = await adminRouter(adminRequest);
     sendJson(response, result.status, result.body, { 'cache-control': 'no-store' });
     return;
+  }
+
+  if ((request.method ?? 'GET') === 'GET' && !url.pathname.startsWith('/api/')) {
+    const webResult = await website(url.pathname);
+    if (webResult) {
+      if (webResult.kind === 'redirect') {
+        response.statusCode = webResult.status;
+        response.setHeader('location', webResult.location);
+        response.setHeader('cache-control', 'no-store');
+        response.end();
+        return;
+      }
+      if (webResult.kind === 'bad-gateway') {
+        sendJson(response, webResult.status, { error: 'bad_gateway' }, { 'cache-control': 'no-store' });
+        return;
+      }
+      response.statusCode = webResult.status;
+      response.setHeader('content-type', 'text/html; charset=utf-8');
+      response.setHeader('cache-control', webResult.status === 200 ? 'public, max-age=60' : 'no-store');
+      response.end(webResult.html);
+      return;
+    }
   }
 
   const apiRequest: ApiRequest = {
