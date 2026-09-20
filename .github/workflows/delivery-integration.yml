@@ -41,9 +41,7 @@ jobs:
           python3 ops/delivery-driver.py
       - run: npm install --package-lock-only --ignore-scripts
       - run: npm ci
-      - name: Format changed source files
-        run: |
-          git ls-files -m -o --exclude-standard -z | xargs -0 -r npx prettier --write --ignore-unknown
+      - run: npx prettier --write .
       - run: npm run check
       - name: Commit only verified changes
         run: |
@@ -52,3 +50,12 @@ jobs:
           git add apps packages db tests ops docs package.json package-lock.json
           git diff --cached --quiet || git commit -m "feat: verified cause publications and usable public website"
           git push origin HEAD:main
+      - name: Save inspectable integration checkout
+        if: always()
+        run: tar --exclude=.git --exclude=.local --exclude=backups -czf /tmp/integration-checkout.tar.gz .
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: server-integration-checkout
+          path: /tmp/integration-checkout.tar.gz
+          retention-days: 1
