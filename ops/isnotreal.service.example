@@ -1,0 +1,23 @@
+[Unit]
+Description=isnotreal.click API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=isnotreal
+Group=isnotreal
+WorkingDirectory=/srv/isnotreal-server
+EnvironmentFile=/etc/isnotreal/isnotreal.env
+ExecStart=/usr/bin/env npm start
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/isnotreal-server/.local
+
+[Install]
+WantedBy=multi-user.target
