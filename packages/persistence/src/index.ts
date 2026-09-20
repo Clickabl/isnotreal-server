@@ -109,6 +109,7 @@ type AlternativeRow = {
 type SubmissionRow = { id: string; submitted_at: string };
 
 type CandidateRow = {
+  cause_slug: string;
   channel: PublicationChannel;
   list_kind: ListKind;
   identifier: string;
@@ -579,17 +580,19 @@ export class PostgresPublicationCandidateReader implements PublicationCandidateR
   constructor(private readonly db: SqlExecutor) {}
 
   async candidates(
+    cause: string,
     channel: PublicationChannel,
     list: ListKind,
   ): Promise<readonly PublicationCandidate[]> {
     const result = await this.db.query<CandidateRow>(
-      `SELECT channel, list_kind, identifier, entity_public_id, reason_codes
+      `SELECT cause_slug, channel, list_kind, identifier, entity_public_id, reason_codes
        FROM publication_candidates
-       WHERE channel = $1 AND list_kind = $2
+       WHERE cause_slug = $1 AND channel = $2 AND list_kind = $3
        ORDER BY identifier`,
-      [channel, list],
+      [cause, channel, list],
     );
     return result.rows.map((row) => ({
+      cause: row.cause_slug,
       channel: row.channel,
       list: row.list_kind,
       identifier: row.identifier,
