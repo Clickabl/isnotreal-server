@@ -69,9 +69,10 @@ const submissions = {
   },
 };
 const publications = {
-  async manifest(channel, list) {
+  async manifest(cause, channel, list) {
     return {
       schemaVersion: 4,
+      cause,
       channel,
       list,
       version: '1',
@@ -80,13 +81,14 @@ const publications = {
       expiresAt: '2026-09-16T00:00:00Z',
     };
   },
-  async full(channel, list) {
-    return { ...(await this.manifest(channel, list)), entries: [] };
+  async full(cause, channel, list) {
+    return { ...(await this.manifest(cause, channel, list)), entries: [] };
   },
-  async delta(channel, list) {
+  async delta(cause, channel, list) {
     return {
       schemaVersion: 4,
       code: 'FULL_SYNC_REQUIRED',
+      cause,
       channel,
       list,
       currentVersion: '1',
