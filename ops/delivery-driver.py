@@ -1,7 +1,7 @@
 from pathlib import Path
 
 # Temporary integration driver. Removed after generated source is verified and committed.
-# Run 8: reconcile the concurrent tests with explicit single-cause publication calls.
+# Run 9: the full server suite passed; keep workflow edits outside the Actions source commit.
 if not Path('AGENTS.md').is_file():
     raise SystemExit('Run from the repository root')
 for part in sorted(Path('ops/delivery-parts').glob('*.py')):
