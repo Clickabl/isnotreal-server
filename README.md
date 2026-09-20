@@ -80,3 +80,7 @@ See `docs/reason-catalog.md` for the public vocabulary and qualification rules.
 Set `ADMIN_BEARER_TOKEN` to enable `/admin/api/v1/*` routes. If it is unset, the admin surface returns 404. Admin responses are always `no-store`; use `ADMIN_ACTOR_ID` to identify the reviewer in audit records.
 
 The moderation surface covers community submissions, official-import identity review, membership proposals and publication-validation failures. It is an API foundation, not a graphical admin UI.
+
+## Production/server handoff
+
+Before a server-access session, read `docs/SERVER_HANDOFF.md`. The `ops/` directory contains a host/database doctor, restricted PostgreSQL role bootstrap/grants, editor shell, backup helper, production env example, and systemd/nginx templates. Actual people/evidence/list data should be written to PostgreSQL rather than committed as Git migrations; schema changes remain migration-controlled.
