@@ -225,28 +225,29 @@ export function createApiRouter(deps: ApiDependencies) {
     }
 
     const publicationMatch =
-      /^\/api\/v1\/lists\/([^/]+)\/(filter|highlight)\/(manifest|full|delta)$/.exec(
+      /^\/api\/v1\/causes\/([a-z0-9]+(?:-[a-z0-9]+)*)\/lists\/([^/]+)\/(filter|highlight)\/(manifest|full|delta)$/.exec(
         request.pathname,
       );
     if (request.method === 'GET' && publicationMatch) {
-      const channelValue = publicationMatch[1];
-      const listValue = publicationMatch[2];
-      const operation = publicationMatch[3];
-      if (!channelValue || !listValue || !operation) {
+      const causeValue = publicationMatch[1];
+      const channelValue = publicationMatch[2];
+      const listValue = publicationMatch[3];
+      const operation = publicationMatch[4];
+      if (!causeValue || !channelValue || !listValue || !operation) {
         return response(404, { error: 'not_found' });
       }
       if (!isChannel(channelValue) || !isList(listValue)) {
         return response(404, { error: 'not_found' });
       }
       if (operation === 'manifest') {
-        return response(200, await deps.publications.manifest(channelValue, listValue));
+        return response(200, await deps.publications.manifest(causeValue, channelValue, listValue));
       }
       if (operation === 'full') {
-        return response(200, await deps.publications.full(channelValue, listValue));
+        return response(200, await deps.publications.full(causeValue, channelValue, listValue));
       }
       const from = request.query.from;
       if (!from) return response(400, { error: 'missing_from_version' });
-      return response(200, await deps.publications.delta(channelValue, listValue, from));
+      return response(200, await deps.publications.delta(causeValue, channelValue, listValue, from));
     }
 
     return response(404, { error: 'not_found' });
