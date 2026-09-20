@@ -648,6 +648,7 @@ async function loadActiveFullArtifacts(
 ): Promise<ReadonlyMap<string, ExistingFullArtifactRow>> {
   const result = await db.query<ExistingFullArtifactRow>(
     `SELECT
+       cause.slug AS cause_slug,
        pa.channel,
        pa.list_kind,
        pa.version,
@@ -660,9 +661,12 @@ async function loadActiveFullArtifacts(
        pa.base_version
      FROM publications p
      JOIN publication_artifacts pa ON pa.publication_id = p.id
+     JOIN causes cause ON cause.id = p.cause_id
      WHERE p.state = 'active' AND pa.artifact_kind = 'full'`,
   );
-  return new Map(result.rows.map((row) => [publicationKey(row.channel, row.list_kind), row]));
+  return new Map(
+    result.rows.map((row) => [publicationKey(row.cause_slug, row.channel, row.list_kind), row]),
+  );
 }
 
 async function activatePublication(
