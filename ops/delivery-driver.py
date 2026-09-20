@@ -1,7 +1,7 @@
 from pathlib import Path
 
 # Temporary integration driver. Removed after generated source is verified and committed.
-# Run 5: preserve parallel artifact-cause work and reconcile activation with a forward migration.
+# Run 6: test backups with native PostgreSQL client utilities matching the server major.
 if not Path('AGENTS.md').is_file():
     raise SystemExit('Run from the repository root')
 for part in sorted(Path('ops/delivery-parts').glob('*.py')):
