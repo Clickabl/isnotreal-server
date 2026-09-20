@@ -96,15 +96,22 @@ function renderHomePage(): string {
 function renderEntityPage(entity: PublicEntityProfile): string {
   const reasons = entity.reasons.length
     ? entity.reasons
-        .map(
-          (reason) =>
-            `<article class="reason"><h3>${escapeHtml(reason.label)}</h3><p>${escapeHtml(reason.summary)}</p>${reason.sources
-              .map(
-                (source) =>
-                  `<a rel="noopener noreferrer" href="${escapeAttribute(source.url)}">${escapeHtml(source.title)}</a>`,
-              )
-              .join('')}</article>`,
-        )
+        .map((reason) => {
+          const assertions = reason.assertions.length
+            ? reason.assertions
+                .map(
+                  (assertion) =>
+                    `<div class="assertion"><p>${escapeHtml(assertion.summary)}</p>${assertion.occurredOn ? `<time>${escapeHtml(assertion.occurredOn)}</time>` : ''}${assertion.sources
+                      .map(
+                        (source) =>
+                          `<a rel="noopener noreferrer" href="${escapeAttribute(source.url)}">${escapeHtml(source.title)}</a>`,
+                      )
+                      .join('')}</div>`,
+                )
+                .join('')
+            : '<p>No public assertion details are currently attached.</p>';
+          return `<article class="reason"><h3>${escapeHtml(reason.label)}</h3><p>${escapeHtml(reason.description)}</p>${assertions}</article>`;
+        })
         .join('')
     : '<p>No published reasons are currently attached to this entity.</p>';
 
