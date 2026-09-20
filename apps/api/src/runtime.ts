@@ -230,12 +230,20 @@ async function handleRequest(
         return;
       }
       if (webResult.kind === 'bad-gateway') {
-        sendJson(response, webResult.status, { error: 'bad_gateway' }, { 'cache-control': 'no-store' });
+        sendJson(
+          response,
+          webResult.status,
+          { error: 'bad_gateway' },
+          { 'cache-control': 'no-store' },
+        );
         return;
       }
       response.statusCode = webResult.status;
       response.setHeader('content-type', 'text/html; charset=utf-8');
-      response.setHeader('cache-control', webResult.status === 200 ? 'public, max-age=60' : 'no-store');
+      response.setHeader(
+        'cache-control',
+        webResult.status === 200 ? 'public, max-age=60' : 'no-store',
+      );
       response.end(webResult.html);
       return;
     }

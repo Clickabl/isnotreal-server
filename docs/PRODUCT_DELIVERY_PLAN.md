@@ -182,7 +182,6 @@ First align contracts and add selectable causes. Then demonstrate one complete v
 
 Do not call the entire product done because a schema migrated, an import ran, a UI screenshot exists or CI passed unit tests. For each completed package record the commit, runtime tested, test evidence, known limitations and whether it is merely implemented, deployed or publicly available.
 
-
 ## Current implementation pulse
 
 Updated during active build work on 2026-09-20. `[~]` means code exists but the acceptance gate is not yet fully demonstrated.
