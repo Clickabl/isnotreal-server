@@ -5,6 +5,7 @@ import { compileEntries, compilePublicationDelta } from '../packages/application
 test('compiler emits identifier, entity id and deduplicated reason codes only', () => {
   const rows = [
     {
+      cause: 'israel-palestine',
       channel: 'tiktok',
       list: 'filter',
       identifier: '200',
@@ -12,6 +13,7 @@ test('compiler emits identifier, entity id and deduplicated reason codes only', 
       reasonCodes: ['I02'],
     },
     {
+      cause: 'israel-palestine',
       channel: 'tiktok',
       list: 'filter',
       identifier: '200',
@@ -19,6 +21,7 @@ test('compiler emits identifier, entity id and deduplicated reason codes only', 
       reasonCodes: ['I05', 'I02'],
     },
     {
+      cause: 'israel-palestine',
       channel: 'tiktok',
       list: 'filter',
       identifier: '100',
@@ -26,6 +29,7 @@ test('compiler emits identifier, entity id and deduplicated reason codes only', 
       reasonCodes: ['I01'],
     },
     {
+      cause: 'israel-palestine',
       channel: 'tiktok',
       list: 'highlight',
       identifier: '300',
@@ -33,7 +37,7 @@ test('compiler emits identifier, entity id and deduplicated reason codes only', 
       reasonCodes: ['P03'],
     },
   ];
-  assert.deepEqual(compileEntries(rows, 'tiktok', 'filter'), [
+  assert.deepEqual(compileEntries(rows, 'israel-palestine', 'tiktok', 'filter'), [
     ['100', '7', ['I01']],
     ['200', '42', ['I02', 'I05']],
   ]);
@@ -42,6 +46,7 @@ test('compiler emits identifier, entity id and deduplicated reason codes only', 
 test('compiler rejects one stable identifier resolving to two entities', () => {
   const rows = [
     {
+      cause: 'israel-palestine',
       channel: 'x',
       list: 'filter',
       identifier: '123',
@@ -49,6 +54,7 @@ test('compiler rejects one stable identifier resolving to two entities', () => {
       reasonCodes: ['I01'],
     },
     {
+      cause: 'israel-palestine',
       channel: 'x',
       list: 'filter',
       identifier: '123',
@@ -56,12 +62,13 @@ test('compiler rejects one stable identifier resolving to two entities', () => {
       reasonCodes: ['I01'],
     },
   ];
-  assert.throws(() => compileEntries(rows, 'x', 'filter'), /multiple entities/);
+  assert.throws(() => compileEntries(rows, 'israel-palestine', 'x', 'filter'), /multiple entities/);
 });
 
 test('delta compiler emits removals and changed entries as deterministic upserts', () => {
   const previous = {
     schemaVersion: 4,
+    cause: 'israel-palestine',
     channel: 'domain',
     list: 'filter',
     version: '10',
@@ -84,6 +91,7 @@ test('delta compiler emits removals and changed entries as deterministic upserts
 
   assert.deepEqual(compilePublicationDelta(previous, next), {
     schemaVersion: 4,
+    cause: 'israel-palestine',
     channel: 'domain',
     list: 'filter',
     fromVersion: '10',
