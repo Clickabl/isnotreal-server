@@ -224,7 +224,7 @@ test(
         expiresInMs: 60 * 60 * 1_000,
       });
       assert.equal(firstPublication.activated, true);
-      assert.equal(firstPublication.fullArtifactCount, 12);
+      assert.equal(firstPublication.fullArtifactCount, 48);
       assert.equal(firstPublication.deltaArtifactCount, 0);
 
       const published = new PostgresPublishedArtifactReader(db, store);
@@ -262,8 +262,8 @@ test(
         expiresInMs: 60 * 60 * 1_000,
       });
       assert.equal(secondPublication.activated, true);
-      assert.equal(secondPublication.fullArtifactCount, 12);
-      assert.equal(secondPublication.deltaArtifactCount, 12);
+      assert.equal(secondPublication.fullArtifactCount, 48);
+      assert.equal(secondPublication.deltaArtifactCount, 48);
 
       const delta = await published.delta('israel-palestine', 'domain-subdomains', 'filter', firstPublication.version);
       assert.equal('code' in delta, false);
