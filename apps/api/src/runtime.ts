@@ -8,6 +8,7 @@ import {
   PostgresSubmissionWriter,
 } from '@isnotreal/persistence';
 import { PostgresModerationQueue } from '@isnotreal/persistence/moderation';
+import { PostgresCauseCatalogReader } from '@isnotreal/persistence/causes';
 import {
   FileArtifactStore,
   PgSqlExecutor,
@@ -63,6 +64,7 @@ export async function startNodeApiRuntime(
   const store = new FileArtifactStore(options.artifactRoot);
   const router = createApiRouter({
     entities: new PostgresPublicEntityDirectory(db),
+    causes: new PostgresCauseCatalogReader(db),
     reasons: new PostgresReasonCatalogReader(db),
     alternatives: new PostgresAlternativeDirectory(db),
     submissions: new PostgresSubmissionWriter(db),
