@@ -69,9 +69,7 @@ export function createApiRouter(deps: ApiDependencies) {
       });
     }
 
-    const causeMatch = /^\/api\/v1\/causes\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(
-      request.pathname,
-    );
+    const causeMatch = /^\/api\/v1\/causes\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(request.pathname);
     if (request.method === 'GET' && causeMatch) {
       const slug = causeMatch[1];
       if (!slug) return response(404, { error: 'not_found' });
