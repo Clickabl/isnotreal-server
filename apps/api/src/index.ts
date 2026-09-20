@@ -25,8 +25,14 @@ export interface ApiResponse {
   readonly body: unknown;
 }
 
+export interface CauseCatalogPort {
+  list(): Promise<readonly unknown[]>;
+  bySlug(slug: string): Promise<unknown | null>;
+}
+
 export interface ApiDependencies {
   readonly entities: PublicEntityDirectory;
+  readonly causes: CauseCatalogPort;
   readonly reasons: ReasonCatalogReader;
   readonly alternatives: AlternativeDirectory;
   readonly submissions: SubmissionWriter;
@@ -56,6 +62,25 @@ const submissionTypes = new Set<SubmissionInput['submissionType']>([
 
 export function createApiRouter(deps: ApiDependencies) {
   return async (request: ApiRequest): Promise<ApiResponse> => {
+    if (request.method === 'GET' && request.pathname === '/api/v1/causes') {
+      return response(200, {
+        schemaVersion: PROTOCOL_SCHEMA_VERSION,
+        causes: await deps.causes.list(),
+      });
+    }
+
+    const causeMatch = /^\/api\/v1\/causes\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(
+      request.pathname,
+    );
+    if (request.method === 'GET' && causeMatch) {
+      const slug = causeMatch[1];
+      if (!slug) return response(404, { error: 'not_found' });
+      const cause = await deps.causes.bySlug(slug);
+      return cause
+        ? response(200, { schemaVersion: PROTOCOL_SCHEMA_VERSION, cause })
+        : response(404, { error: 'not_found' });
+    }
+
     if (request.method === 'GET' && request.pathname === '/api/v1/search') {
       const q = request.query.q?.trim() ?? '';
       if (q.length < 2) return response(400, { error: 'query_too_short' });
