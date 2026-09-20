@@ -184,9 +184,14 @@ export interface SubmissionWriter {
 }
 
 export interface PublicationReader {
-  manifest(channel: PublicationChannel, list: ListKind): Promise<PublicationManifest>;
-  full(channel: PublicationChannel, list: ListKind): Promise<FullPublication>;
+  manifest(
+    cause: string,
+    channel: PublicationChannel,
+    list: ListKind,
+  ): Promise<PublicationManifest>;
+  full(cause: string, channel: PublicationChannel, list: ListKind): Promise<FullPublication>;
   delta(
+    cause: string,
     channel: PublicationChannel,
     list: ListKind,
     fromVersion: string,
