@@ -1,7 +1,7 @@
 from pathlib import Path
 
-# Temporary integration driver. Removed after the generated source is verified and committed.
-# Run 2: include existing formatting failures before type and runtime checks.
+# Temporary integration driver. Removed after generated source is verified and committed.
+# Run 3: fix test runtime imports and deterministic cross-client identifier ordering.
 if not Path('AGENTS.md').is_file():
     raise SystemExit('Run from the repository root')
 for part in sorted(Path('ops/delivery-parts').glob('*.py')):
