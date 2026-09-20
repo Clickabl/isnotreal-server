@@ -35,13 +35,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - name: Use PostgreSQL 17 backup tools
-        run: |
-          if [ ! -x /usr/lib/postgresql/17/bin/pg_dump ]; then
-            sudo apt-get update -qq
-            sudo apt-get install -y postgresql-client-17
-          fi
-          echo /usr/lib/postgresql/17/bin >> "$GITHUB_PATH"
+      - run: bash ops/ci-postgres-client.sh
       - name: Apply guarded source changes
         run: |
           test -f ops/delivery-driver.py
