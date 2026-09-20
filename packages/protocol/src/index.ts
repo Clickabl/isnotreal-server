@@ -7,6 +7,7 @@ export type IdentifierValue = string;
 export type PublicEntityId = string;
 export type ReasonCode = string;
 export type PublicationVersion = string;
+export type CauseSlug = string;
 
 export interface AccountReference {
   readonly platform: Platform;
@@ -26,6 +27,7 @@ export type CompiledEntry = readonly [
 
 export interface PublicationManifest {
   readonly schemaVersion: typeof PROTOCOL_SCHEMA_VERSION;
+  readonly cause: CauseSlug;
   readonly channel: PublicationChannel;
   readonly list: ListKind;
   readonly version: PublicationVersion;
@@ -40,6 +42,7 @@ export interface FullPublication extends PublicationManifest {
 
 export interface PublicationDelta {
   readonly schemaVersion: typeof PROTOCOL_SCHEMA_VERSION;
+  readonly cause: CauseSlug;
   readonly channel: PublicationChannel;
   readonly list: ListKind;
   readonly fromVersion: PublicationVersion;
@@ -52,6 +55,7 @@ export interface PublicationDelta {
 export interface FullSyncRequired {
   readonly schemaVersion: typeof PROTOCOL_SCHEMA_VERSION;
   readonly code: 'FULL_SYNC_REQUIRED';
+  readonly cause: CauseSlug;
   readonly channel: PublicationChannel;
   readonly list: ListKind;
   readonly currentVersion: PublicationVersion;
