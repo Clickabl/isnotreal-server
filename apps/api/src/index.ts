@@ -247,7 +247,10 @@ export function createApiRouter(deps: ApiDependencies) {
       }
       const from = request.query.from;
       if (!from) return response(400, { error: 'missing_from_version' });
-      return response(200, await deps.publications.delta(causeValue, channelValue, listValue, from));
+      return response(
+        200,
+        await deps.publications.delta(causeValue, channelValue, listValue, from),
+      );
     }
 
     return response(404, { error: 'not_found' });
