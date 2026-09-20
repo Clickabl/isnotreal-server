@@ -277,9 +277,8 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
          pa.base_version
        FROM publications p
        JOIN publication_artifacts pa ON pa.publication_id = p.id
-       JOIN causes cause ON cause.id = p.cause_id
        WHERE p.state = 'active'
-         AND cause.slug = $1
+         AND pa.cause_slug = $1
          AND pa.channel = $2
          AND pa.list_kind = $3
          AND pa.artifact_kind = 'delta'
@@ -330,9 +329,8 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
          pa.base_version
        FROM publications p
        JOIN publication_artifacts pa ON pa.publication_id = p.id
-       JOIN causes cause ON cause.id = p.cause_id
        WHERE p.state = 'active'
-         AND cause.slug = $1
+         AND pa.cause_slug = $1
          AND pa.channel = $2
          AND pa.list_kind = $3
          AND pa.artifact_kind = 'full'
@@ -550,11 +548,12 @@ export async function publishCurrentState(
       for (const artifact of artifacts) {
         await tx.query(
           `INSERT INTO publication_artifacts (
-             publication_id, channel, list_kind, artifact_kind, version, base_version,
+             publication_id, cause_slug, channel, list_kind, artifact_kind, version, base_version,
              storage_key, sha256, byte_size, entry_count
-           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
           [
             publication.id,
+            artifact.cause,
             artifact.channel,
             artifact.list,
             artifact.kind,
@@ -648,7 +647,7 @@ async function loadActiveFullArtifacts(
 ): Promise<ReadonlyMap<string, ExistingFullArtifactRow>> {
   const result = await db.query<ExistingFullArtifactRow>(
     `SELECT
-       cause.slug AS cause_slug,
+       pa.cause_slug,
        pa.channel,
        pa.list_kind,
        pa.version,
@@ -661,7 +660,6 @@ async function loadActiveFullArtifacts(
        pa.base_version
      FROM publications p
      JOIN publication_artifacts pa ON pa.publication_id = p.id
-     JOIN causes cause ON cause.id = p.cause_id
      WHERE p.state = 'active' AND pa.artifact_kind = 'full'`,
   );
   return new Map(
