@@ -222,11 +222,7 @@ export function compileEntries(
   >();
 
   for (const candidate of candidates) {
-    if (
-      candidate.cause !== cause ||
-      candidate.channel !== channel ||
-      candidate.list !== list
-    )
+    if (candidate.cause !== cause || candidate.channel !== channel || candidate.list !== list)
       continue;
     if (candidate.reasonCodes.length === 0) {
       throw new Error(`publication candidate ${candidate.identifier} has no reason codes`);
