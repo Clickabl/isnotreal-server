@@ -66,6 +66,11 @@ test(
         '0017_refresh_bds_authority_registry.sql',
         '0018_generalize_official_list_imports.sql',
         '0019_membership_proposals_and_review.sql',
+        '0020_causes.sql',
+        '0021_cause_scoped_publication_candidates.sql',
+        '0022_cause_reason_preferences.sql',
+        '0023_public_cause_catalog.sql',
+        '0024_cause_scoped_artifacts.sql',
       ]);
 
       const reasonCatalog = new PostgresReasonCatalogReader(db);
@@ -490,7 +495,7 @@ test(
 
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
       assert.deepEqual(secondMigration.applied, []);
-      assert.equal(secondMigration.alreadyApplied.length, 19);
+      assert.equal(secondMigration.alreadyApplied.length, 24);
     } finally {
       await db.close();
       await rm(artifactRoot, { recursive: true, force: true });
