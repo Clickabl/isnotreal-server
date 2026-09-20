@@ -91,8 +91,12 @@ WHERE cause.slug = 'israel-palestine'
 ALTER TABLE membership_proposals
   ALTER COLUMN cause_id SET NOT NULL;
 
-ALTER TABLE membership_proposals
-  DROP CONSTRAINT membership_proposals_entity_id_assertion_id_reason_code_pro_key;
+DO $$ DECLARE constraint_name text; BEGIN
+  FOR constraint_name IN SELECT conname FROM pg_constraint
+    WHERE conrelid='membership_proposals'::regclass AND contype='u'
+    AND pg_get_constraintdef(oid) = 'UNIQUE (entity_id, assertion_id, reason_code, proposed_list)'
+  LOOP EXECUTE format('ALTER TABLE membership_proposals DROP CONSTRAINT %I',constraint_name); END LOOP;
+END $$;
 
 ALTER TABLE membership_proposals
   ADD CONSTRAINT membership_proposals_unique_cause_reason

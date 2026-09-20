@@ -1,3 +1,6 @@
+import { generateKeyPairSync } from 'node:crypto';
+import { readdir } from 'node:fs/promises';
+import { runDeliveryChecks } from './delivery-checks.mjs';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -31,6 +34,11 @@ import {
 
 const enabled = process.env.RUN_DB_INTEGRATION === '1';
 const databaseUrl = process.env.DATABASE_URL;
+const pair = generateKeyPairSync('ed25519');
+const signing = {
+  keyId: 'integration-test',
+  privateKeyPem: pair.privateKey.export({ type: 'pkcs8', format: 'pem' }),
+};
 
 test(
   'postgres migrations and immutable publication pipeline work end to end',
@@ -46,32 +54,10 @@ test(
 
     try {
       const firstMigration = await applySqlMigrations(db, resolve('db/migrations'));
-      assert.deepEqual(firstMigration.applied, [
-        '0001_core.sql',
-        '0002_resolution_and_search.sql',
-        '0003_identifier_aliases.sql',
-        '0004_publication_provenance.sql',
-        '0005_domain_match_scope.sql',
-        '0006_official_reason_catalog_v1.sql',
-        '0007_reason_evidence_rules_and_official_sources.sql',
-        '0008_reason_catalog_versioning_and_freshness.sql',
-        '0009_membership_reason_validation.sql',
-        '0010_publication_reason_catalog_version.sql',
-        '0011_freeze_reason_bindings_and_disable_unscoped_finance.sql',
-        '0012_protect_published_reason_catalogs.sql',
-        '0013_reason_definition_publication_policy.sql',
-        '0014_campaign_import_staging.sql',
-        '0015_enforce_reason_alignment.sql',
-        '0016_source_capture_http_metadata.sql',
-        '0017_refresh_bds_authority_registry.sql',
-        '0018_generalize_official_list_imports.sql',
-        '0019_membership_proposals_and_review.sql',
-        '0020_causes.sql',
-        '0021_cause_scoped_publication_candidates.sql',
-        '0022_cause_reason_preferences.sql',
-        '0023_public_cause_catalog.sql',
-        '0024_cause_scoped_artifacts.sql',
-      ]);
+      assert.deepEqual(
+        firstMigration.applied,
+        (await readdir('db/migrations')).filter((x) => /^\d{4}_.*\.sql$/.test(x)).sort(),
+      );
 
       const reasonCatalog = new PostgresReasonCatalogReader(db);
       assert.equal(await reasonCatalog.version(), 1);
@@ -174,8 +160,8 @@ test(
       );
       const decision = await db.query(
         `INSERT INTO membership_decisions (
-           entity_id, list_kind, decision, state, policy_revision_id, decided_at
-         ) VALUES ($1, 'filter', 'include', 'active', $2, now())
+           entity_id, cause_id, list_kind, decision, state, policy_revision_id, decided_at
+         ) VALUES ($1, (SELECT id FROM causes WHERE slug='israel-palestine'), 'filter', 'include', 'active', $2, now())
          RETURNING id::text`,
         [entityId, policyRevision.rows[0].id],
       );
@@ -220,11 +206,12 @@ test(
       const store = new FileArtifactStore(artifactRoot);
       const firstPublication = await publishCurrentState(db, store, {
         compilerVersion: 'integration-test',
+        signing,
         sourceRevision: 'first',
         expiresInMs: 60 * 60 * 1_000,
       });
       assert.equal(firstPublication.activated, true);
-      assert.equal(firstPublication.fullArtifactCount, 48);
+      assert.equal(firstPublication.fullArtifactCount, 12);
       assert.equal(firstPublication.deltaArtifactCount, 0);
 
       const published = new PostgresPublishedArtifactReader(db, store);
@@ -258,14 +245,20 @@ test(
 
       const secondPublication = await publishCurrentState(db, store, {
         compilerVersion: 'integration-test',
+        signing,
         sourceRevision: 'second',
         expiresInMs: 60 * 60 * 1_000,
       });
       assert.equal(secondPublication.activated, true);
-      assert.equal(secondPublication.fullArtifactCount, 48);
-      assert.equal(secondPublication.deltaArtifactCount, 48);
+      assert.equal(secondPublication.fullArtifactCount, 12);
+      assert.equal(secondPublication.deltaArtifactCount, 12);
 
-      const delta = await published.delta('israel-palestine', 'domain-subdomains', 'filter', firstPublication.version);
+      const delta = await published.delta(
+        'israel-palestine',
+        'domain-subdomains',
+        'filter',
+        firstPublication.version,
+      );
       assert.equal('code' in delta, false);
       assert.deepEqual(delta.added, [['example.com', publicId, ['C03', 'C05']]]);
       assert.deepEqual(delta.removed, []);
@@ -293,11 +286,16 @@ test(
 
       const thirdPublication = await publishCurrentState(db, store, {
         compilerVersion: 'integration-test',
+        signing,
         sourceRevision: 'third',
         expiresInMs: 60 * 60 * 1_000,
       });
       assert.equal(thirdPublication.activated, true);
-      assert.equal((await published.full('israel-palestine', 'domain-subdomains', 'filter')).reasonCatalogVersion, 2);
+      assert.equal(
+        (await published.full('israel-palestine', 'domain-subdomains', 'filter'))
+          .reasonCatalogVersion,
+        2,
+      );
 
       const artist = await db.query(
         `INSERT INTO entities (kind, canonical_name, slug)
@@ -454,7 +452,7 @@ test(
       const artistIdentifier = await db.query(
         `INSERT INTO identifiers (
            kind_code, value, normalized_value, display_value, status
-         ) VALUES ('instagram', 'exampleartist', 'exampleartist', 'exampleartist', 'active')
+         ) VALUES ('instagram', '178414000000001', '178414000000001', '178414000000001', 'active')
          RETURNING id::text`,
       );
       const artistAssertion = await db.query(
@@ -480,22 +478,39 @@ test(
 
       const fourthPublication = await publishCurrentState(db, store, {
         compilerVersion: 'integration-test',
+        signing,
         sourceRevision: 'fourth',
         expiresInMs: 60 * 60 * 1_000,
       });
       assert.equal(fourthPublication.activated, true);
-      assert.deepEqual((await published.full('israel-palestine', 'instagram', 'highlight')).entries, [
+      assert.deepEqual(
+        (await published.full('israel-palestine', 'instagram', 'highlight')).entries,
         [
-          'exampleartist',
-          (await db.query(`SELECT public_id::text FROM entities WHERE id = $1`, [artistEntityId]))
-            .rows[0].public_id,
-          ['P03'],
+          [
+            '178414000000001',
+            (await db.query(`SELECT public_id::text FROM entities WHERE id = $1`, [artistEntityId]))
+              .rows[0].public_id,
+            ['P03'],
+          ],
         ],
-      ]);
+      );
+
+      await runDeliveryChecks({
+        db,
+        store,
+        artifactRoot,
+        databaseUrl,
+        signing,
+        publicKey: pair.publicKey,
+        entityId,
+        publicId,
+        assertionId,
+        policyRevisionId: policyRevision.rows[0].id,
+      });
 
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
       assert.deepEqual(secondMigration.applied, []);
-      assert.equal(secondMigration.alreadyApplied.length, 24);
+      assert.equal(secondMigration.alreadyApplied.length, firstMigration.applied.length);
     } finally {
       await db.close();
       await rm(artifactRoot, { recursive: true, force: true });

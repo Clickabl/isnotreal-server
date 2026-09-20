@@ -1,5 +1,4 @@
 import type { SqlExecutor } from './index.js';
-
 export interface MembershipProposal {
   readonly id: string;
   readonly entityPublicId: string;
@@ -8,6 +7,7 @@ export interface MembershipProposal {
   readonly assertionId: string;
   readonly reasonCode: string;
   readonly reasonLabel: string;
+  readonly cause: string;
   readonly proposedList: 'filter' | 'highlight';
   readonly state: 'pending' | 'approved' | 'rejected' | 'withdrawn' | 'applied';
   readonly assertionSummary: string;
@@ -17,439 +17,159 @@ export interface MembershipProposal {
   readonly reviewedAt: string | null;
   readonly reviewNote: string;
 }
-
-interface IdRow {
-  readonly id: string;
-}
-
-interface ProposalContextRow {
-  readonly id: string;
-  readonly entity_id: string;
-  readonly assertion_id: string;
-  readonly reason_code: string;
-  readonly proposed_list: 'filter' | 'highlight';
-  readonly state: string;
-}
-
-interface ActiveDecisionRow {
-  readonly id: string;
-  readonly decision: 'include' | 'exclude';
-}
-
-interface PolicyRevisionRow {
-  readonly id: string;
-}
-
-interface ProposalRow {
-  readonly id: string;
-  readonly entity_public_id: string;
-  readonly entity_name: string;
-  readonly entity_slug: string;
-  readonly assertion_id: string;
-  readonly reason_code: string;
-  readonly reason_label: string;
-  readonly proposed_list: 'filter' | 'highlight';
-  readonly state: MembershipProposal['state'];
-  readonly assertion_summary: string;
-  readonly created_by: string;
-  readonly created_at: string;
-  readonly reviewed_by: string | null;
-  readonly reviewed_at: string | null;
-  readonly review_note: string;
-}
-
 export async function proposeMembershipFromAssertion(
   db: SqlExecutor,
   assertionId: string,
   reasonCode: string,
   createdBy: string,
+  cause?: string,
 ): Promise<string> {
-  const actor = createdBy.trim();
-  if (!actor) throw new Error('createdBy is required');
-
-  const inserted = await db.query<IdRow>(
-    `INSERT INTO membership_proposals (
-       entity_id,
-       assertion_id,
-       reason_code,
-       proposed_list,
-       created_by
-     )
-     SELECT
-       assertion.primary_entity_id,
-       assertion.id,
-       catalog.code,
-       catalog.default_list,
-       $3
-     FROM assertions assertion
-     JOIN assertion_reasons assertion_reason
-       ON assertion_reason.assertion_id = assertion.id
-      AND assertion_reason.reason_code = $2
-     JOIN current_reason_catalog catalog
-       ON catalog.code = assertion_reason.reason_code
-      AND catalog.publication_enabled = true
-      AND catalog.default_list IN ('filter', 'highlight')
-     WHERE assertion.id = $1
-       AND assertion.primary_entity_id IS NOT NULL
-       AND assertion.state = 'published'
-     ON CONFLICT (entity_id, assertion_id, reason_code, proposed_list)
-     DO UPDATE SET
-       created_by = membership_proposals.created_by
-     RETURNING id::text`,
-    [assertionId, reasonCode, actor],
+  if (!createdBy.trim()) throw new Error('editor identity required');
+  const bindings = await db.query<{ id: string }>(
+    `SELECT c.id::text FROM reason_causes rc JOIN causes c ON c.id=rc.cause_id WHERE rc.reason_code=$1 AND c.active AND ($2::text IS NULL OR c.slug=$2)`,
+    [reasonCode, cause ?? null],
   );
-  const id = inserted.rows[0]?.id;
-  if (!id) throw new Error('assertion is not eligible for a membership proposal');
+  if (bindings.rows.length !== 1) throw new Error('select one explicit cause for this reason');
+  const result = await db.query<{ id: string }>(
+    `INSERT INTO membership_proposals (entity_id,assertion_id,reason_code,cause_id,proposed_list,created_by)
+  SELECT a.primary_entity_id,a.id,r.code,$4,r.default_list,$3 FROM assertions a JOIN assertion_reasons ar ON ar.assertion_id=a.id AND ar.reason_code=$2
+  JOIN current_reason_catalog r ON r.code=ar.reason_code AND r.publication_enabled AND r.default_list IN ('filter','highlight')
+  WHERE a.id=$1 AND a.state='published' AND a.primary_entity_id IS NOT NULL
+  ON CONFLICT (entity_id,assertion_id,reason_code,cause_id,proposed_list) DO UPDATE SET created_by=membership_proposals.created_by RETURNING id::text`,
+    [assertionId, reasonCode, createdBy, bindings.rows[0]!.id],
+  );
+  const id = result.rows[0]?.id;
+  if (!id) throw new Error('assertion is not eligible');
   return id;
 }
-
 export async function listMembershipProposals(
   db: SqlExecutor,
   state: MembershipProposal['state'] | null = 'pending',
   limit = 100,
 ): Promise<readonly MembershipProposal[]> {
-  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 500) {
-    throw new Error('proposal limit must be between 1 and 500');
-  }
-
-  const result = await db.query<ProposalRow>(
-    `SELECT
-       proposal.id::text,
-       entity.public_id::text AS entity_public_id,
-       entity.canonical_name AS entity_name,
-       entity.slug AS entity_slug,
-       proposal.assertion_id::text,
-       proposal.reason_code,
-       reason.label AS reason_label,
-       proposal.proposed_list,
-       proposal.state,
-       assertion.summary AS assertion_summary,
-       proposal.created_by,
-       proposal.created_at::text,
-       proposal.reviewed_by,
-       proposal.reviewed_at::text,
-       proposal.review_note
-     FROM membership_proposals proposal
-     JOIN entities entity ON entity.id = proposal.entity_id
-     JOIN assertions assertion ON assertion.id = proposal.assertion_id
-     JOIN reason_definitions reason ON reason.code = proposal.reason_code
-     WHERE ($1::text IS NULL OR proposal.state = $1)
-     ORDER BY proposal.created_at, proposal.id
-     LIMIT $2`,
+  if (!Number.isInteger(limit) || limit < 1 || limit > 500) throw new Error('invalid limit');
+  const result = await db.query<MembershipProposal>(
+    `SELECT p.id::text,e.public_id::text AS "entityPublicId",e.canonical_name AS "entityName",e.slug AS "entitySlug",
+  p.assertion_id::text AS "assertionId",p.reason_code AS "reasonCode",r.label AS "reasonLabel",c.slug AS cause,p.proposed_list AS "proposedList",p.state,
+  a.summary AS "assertionSummary",p.created_by AS "createdBy",p.created_at::text AS "createdAt",p.reviewed_by AS "reviewedBy",p.reviewed_at::text AS "reviewedAt",p.review_note AS "reviewNote"
+  FROM membership_proposals p JOIN entities e ON e.id=p.entity_id JOIN assertions a ON a.id=p.assertion_id JOIN causes c ON c.id=p.cause_id
+  JOIN reason_definitions r ON r.code=p.reason_code WHERE ($1::text IS NULL OR p.state=$1) ORDER BY p.created_at,p.id LIMIT $2`,
     [state, limit],
   );
-
-  return result.rows.map((row) => ({
-    id: row.id,
-    entityPublicId: row.entity_public_id,
-    entityName: row.entity_name,
-    entitySlug: row.entity_slug,
-    assertionId: row.assertion_id,
-    reasonCode: row.reason_code,
-    reasonLabel: row.reason_label,
-    proposedList: row.proposed_list,
-    state: row.state,
-    assertionSummary: row.assertion_summary,
-    createdBy: row.created_by,
-    createdAt: row.created_at,
-    reviewedBy: row.reviewed_by,
-    reviewedAt: row.reviewed_at,
-    reviewNote: row.review_note,
-  }));
+  return result.rows;
 }
-
+interface ProposalRow {
+  id: string;
+  entity_id: string;
+  assertion_id: string;
+  reason_code: string;
+  cause_id: string;
+  proposed_list: 'filter' | 'highlight';
+  state: string;
+}
 export async function approveMembershipProposal(
   db: SqlExecutor,
-  proposalId: string,
-  reviewerId: string,
+  id: string,
+  reviewer: string,
   note = '',
 ): Promise<string> {
-  const reviewer = reviewerId.trim();
-  if (!reviewer) throw new Error('reviewerId is required');
-
+  if (!reviewer.trim()) throw new Error('editor identity required');
   return db.transaction(async (tx) => {
-    const proposalResult = await tx.query<ProposalContextRow>(
-      `SELECT
-         id::text,
-         entity_id::text,
-         assertion_id::text,
-         reason_code,
-         proposed_list,
-         state
-       FROM membership_proposals
-       WHERE id = $1
-       FOR UPDATE`,
-      [proposalId],
+    const found = await tx.query<ProposalRow>(
+      'SELECT * FROM membership_proposals WHERE id=$1 FOR UPDATE',
+      [id],
     );
-    const proposal = proposalResult.rows[0];
-    if (!proposal) throw new Error('membership proposal not found');
-    if (proposal.state !== 'pending' && proposal.state !== 'approved') {
-      throw new Error('membership proposal is not reviewable');
-    }
-
-    const validation = await tx.query<{ valid_for_publication: boolean; issues: string[] }>(
-      `WITH candidate AS (
-         SELECT
-           $1::uuid AS entity_id,
-           $2::uuid AS assertion_id,
-           $3::text AS reason_code,
-           $4::text AS list_kind
-       ),
-       evidence AS (
-         SELECT
-           candidate.*,
-           entity.kind AS entity_kind,
-           assertion.state AS assertion_state,
-           assertion.primary_entity_id,
-           catalog.publication_enabled,
-           catalog.default_list,
-           catalog.subject_scope,
-           catalog.evidence_mode,
-           catalog.primary_or_authoritative_required,
-           catalog.minimum_evidence_items,
-           catalog.reverify_after_days,
-           catalog.inheritance_policy,
-           catalog.campaigns,
-           catalog.authority_sources,
-           COALESCE(source_counts.source_count, 0) AS source_count,
-           COALESCE(source_counts.primary_source_count, 0) AS primary_source_count,
-           COALESCE(source_counts.authority_source_count, 0) AS authority_source_count
-         FROM candidate
-         JOIN entities entity ON entity.id = candidate.entity_id
-         JOIN assertions assertion ON assertion.id = candidate.assertion_id
-         JOIN current_reason_catalog catalog ON catalog.code = candidate.reason_code
-         LEFT JOIN LATERAL (
-           SELECT
-             count(DISTINCT link.capture_id)::integer AS source_count,
-             count(DISTINCT link.capture_id) FILTER (
-               WHERE link.is_primary = true
-                  OR document.source_type IN ('primary', 'campaign', 'filing')
-             )::integer AS primary_source_count,
-             count(DISTINCT link.capture_id) FILTER (
-               WHERE EXISTS (
-                 SELECT 1
-                 FROM jsonb_array_elements(catalog.authority_sources) authority
-                 WHERE authority ->> 'url' = document.canonical_url
-               )
-             )::integer AS authority_source_count
-           FROM assertion_source_links link
-           JOIN source_captures capture
-             ON capture.id = link.capture_id
-            AND capture.status = 'available'
-           JOIN source_documents document ON document.id = capture.document_id
-           WHERE link.assertion_id = assertion.id
-         ) source_counts ON true
-       )
-       SELECT
-         (
-           publication_enabled
-           AND default_list = list_kind
-           AND assertion_state = 'published'
-           AND EXISTS (
-             SELECT 1
-             FROM assertion_reasons reason
-             WHERE reason.assertion_id = assertion_id
-               AND reason.reason_code = reason_code
-           )
-           AND CASE
-             WHEN subject_scope = 'person' THEN entity_kind IN ('person', 'music-group')
-             WHEN subject_scope = 'company' THEN entity_kind IN ('company', 'brand')
-             WHEN subject_scope = 'organization' THEN entity_kind = 'organization'
-             WHEN subject_scope = 'any' THEN true
-             ELSE false
-           END
-           AND primary_entity_id = entity_id
-           AND source_count >= minimum_evidence_items
-           AND (
-             NOT primary_or_authoritative_required
-             OR primary_source_count > 0
-             OR authority_source_count > 0
-           )
-         ) AS valid_for_publication,
-         array_remove(
-           ARRAY[
-             CASE WHEN NOT publication_enabled THEN 'reason-publication-disabled' END,
-             CASE WHEN default_list <> list_kind THEN 'reason-list-direction-mismatch' END,
-             CASE WHEN assertion_state <> 'published' THEN 'assertion-not-published' END,
-             CASE
-               WHEN NOT EXISTS (
-                 SELECT 1
-                 FROM assertion_reasons reason
-                 WHERE reason.assertion_id = assertion_id
-                   AND reason.reason_code = reason_code
-               ) THEN 'assertion-reason-mismatch'
-             END,
-             CASE WHEN primary_entity_id <> entity_id THEN 'assertion-not-attributed-to-entity' END,
-             CASE WHEN source_count < minimum_evidence_items THEN 'insufficient-sources' END,
-             CASE
-               WHEN primary_or_authoritative_required
-                AND primary_source_count = 0
-                AND authority_source_count = 0
-                 THEN 'missing-primary-or-authoritative-source'
-             END
-           ]::text[],
-           NULL
-         ) AS issues
-       FROM evidence`,
-      [proposal.entity_id, proposal.assertion_id, proposal.reason_code, proposal.proposed_list],
+    const p = found.rows[0];
+    if (!p || !['pending', 'approved'].includes(p.state))
+      throw new Error('proposal is not reviewable');
+    await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [
+      `${p.entity_id}:${p.cause_id}:${p.proposed_list}`,
+    ]);
+    const binding = await tx.query<{ id: string }>(
+      `SELECT c.id::text FROM reason_causes rc JOIN causes c ON c.id=rc.cause_id AND c.active WHERE rc.reason_code=$1 AND rc.cause_id=$2`,
+      [p.reason_code, p.cause_id],
     );
-    const check = validation.rows[0];
-    if (!check?.valid_for_publication) {
+    if (!binding.rows.length) throw new Error('reason/cause mismatch');
+    const policy = await tx.query<{ id: string }>(
+      `SELECT r.id::text FROM policy_revisions r JOIN policies p ON p.id=r.policy_id WHERE p.slug='default-publication-policy' AND r.state='active' LIMIT 1`,
+    );
+    if (!policy.rows[0]) throw new Error('no publication policy');
+    const old = await tx.query<{ id: string; decision: string }>(
+      `SELECT id::text,decision FROM membership_decisions WHERE entity_id=$1 AND cause_id=$2 AND list_kind=$3 AND state='active' FOR UPDATE`,
+      [p.entity_id, p.cause_id, p.proposed_list],
+    );
+    const previous = old.rows[0];
+    if (previous)
+      await tx.query("UPDATE membership_decisions SET state='superseded' WHERE id=$1", [
+        previous.id,
+      ]);
+    const next = await tx.query<{ id: string }>(
+      `INSERT INTO membership_decisions(entity_id,cause_id,list_kind,decision,state,policy_revision_id,decided_at,supersedes_decision_id)
+   VALUES ($1,$2,$3,'include','active',$4,now(),$5) RETURNING id::text`,
+      [p.entity_id, p.cause_id, p.proposed_list, policy.rows[0].id, previous?.id ?? null],
+    );
+    const decisionId = next.rows[0]!.id;
+    if (previous?.decision === 'include')
+      await tx.query(
+        `INSERT INTO membership_decision_reasons(decision_id,reason_code,assertion_id,last_verified_at,verification_review_event_id)
+   SELECT $1,reason_code,assertion_id,last_verified_at,verification_review_event_id FROM membership_decision_reasons WHERE decision_id=$2`,
+        [decisionId, previous.id],
+      );
+    const event = await tx.query<{ id: string }>(
+      `INSERT INTO review_events(subject_type,subject_id,action,reviewer_id,rationale) VALUES('membership-proposal',$1,'approved',$2,$3) RETURNING id::text`,
+      [id, reviewer, note],
+    );
+    const eventId = event.rows[0]!.id;
+    await tx.query(
+      `INSERT INTO membership_decision_reasons(decision_id,reason_code,assertion_id,last_verified_at,verification_review_event_id) VALUES($1,$2,$3,now(),$4)
+   ON CONFLICT(decision_id,reason_code,assertion_id) DO UPDATE SET last_verified_at=EXCLUDED.last_verified_at,verification_review_event_id=EXCLUDED.verification_review_event_id`,
+      [decisionId, p.reason_code, p.assertion_id, eventId],
+    );
+    // The exact same gate protects editor approval and publication. No duplicate SQL policy.
+    const gate = await tx.query<{ valid_for_publication: boolean; issues: string[] }>(
+      `SELECT valid_for_publication,issues FROM membership_reason_validation WHERE decision_id=$1 AND assertion_id=$2 AND reason_code=$3`,
+      [decisionId, p.assertion_id, p.reason_code],
+    );
+    if (gate.rows[0]?.valid_for_publication !== true)
       throw new Error(
-        `membership proposal does not satisfy evidence rules: ${(check?.issues ?? []).join(',')}`,
+        `evidence gate rejected approval: ${(gate.rows[0]?.issues ?? ['missing-catalog-rule']).join(',')}`,
       );
-    }
-
-    const policy = await tx.query<PolicyRevisionRow>(
-      `SELECT revision.id::text
-       FROM policies policy
-       JOIN policy_revisions revision
-         ON revision.policy_id = policy.id
-        AND revision.state = 'active'
-       WHERE policy.slug = 'default-publication-policy'
-       LIMIT 1`,
-    );
-    const policyRevisionId = policy.rows[0]?.id;
-    if (!policyRevisionId) throw new Error('default publication policy is not active');
-
-    const existingResult = await tx.query<ActiveDecisionRow>(
-      `SELECT id::text, decision
-       FROM membership_decisions
-       WHERE entity_id = $1
-         AND list_kind = $2
-         AND state = 'active'
-       FOR UPDATE`,
-      [proposal.entity_id, proposal.proposed_list],
-    );
-    const existing = existingResult.rows[0];
-
-    let decisionId: string;
-    if (existing?.decision === 'include') {
-      decisionId = existing.id;
-    } else {
-      if (existing) {
-        await tx.query(
-          `UPDATE membership_decisions
-           SET state = 'superseded'
-           WHERE id = $1 AND state = 'active'`,
-          [existing.id],
-        );
-      }
-      const created = await tx.query<IdRow>(
-        `INSERT INTO membership_decisions (
-           entity_id,
-           list_kind,
-           decision,
-           state,
-           policy_revision_id,
-           decided_at,
-           supersedes_decision_id
-         ) VALUES ($1, $2, 'include', 'active', $3, now(), $4)
-         RETURNING id::text`,
-        [proposal.entity_id, proposal.proposed_list, policyRevisionId, existing?.id ?? null],
-      );
-      decisionId = created.rows[0]?.id ?? '';
-      if (!decisionId) throw new Error('membership decision insert failed');
-    }
-
-    const reviewEvent = await tx.query<IdRow>(
-      `INSERT INTO review_events (
-         subject_type, subject_id, action, reviewer_id, rationale
-       ) VALUES ('membership-proposal', $1, 'approved', $2, $3)
-       RETURNING id::text`,
-      [proposal.id, reviewer, note.trim()],
-    );
-    const reviewEventId = reviewEvent.rows[0]?.id;
-    if (!reviewEventId) throw new Error('membership review event insert failed');
-
     await tx.query(
-      `INSERT INTO membership_decision_reasons (
-         decision_id,
-         reason_code,
-         assertion_id,
-         last_verified_at,
-         verification_review_event_id
-       ) VALUES ($1, $2, $3, now(), $4)
-       ON CONFLICT (decision_id, reason_code, assertion_id)
-       DO UPDATE SET
-         last_verified_at = EXCLUDED.last_verified_at,
-         verification_review_event_id = EXCLUDED.verification_review_event_id`,
-      [decisionId, proposal.reason_code, proposal.assertion_id, reviewEventId],
+      `UPDATE membership_proposals SET state='applied',reviewed_by=$2,reviewed_at=now(),review_note=$3,applied_decision_id=$4,applied_at=now(),verification_review_event_id=$5 WHERE id=$1`,
+      [id, reviewer, note, decisionId, eventId],
     );
-
-    await tx.query(
-      `UPDATE membership_proposals
-       SET state = 'applied',
-           reviewed_by = $2,
-           reviewed_at = now(),
-           review_note = $3,
-           applied_decision_id = $4,
-           applied_at = now(),
-           verification_review_event_id = $5
-       WHERE id = $1`,
-      [proposal.id, reviewer, note.trim(), decisionId, reviewEventId],
-    );
-
     return decisionId;
   });
 }
-
 export async function rejectMembershipProposal(
   db: SqlExecutor,
-  proposalId: string,
-  reviewerId: string,
+  id: string,
+  reviewer: string,
   note: string,
 ): Promise<void> {
-  const reviewer = reviewerId.trim();
-  const rationale = note.trim();
-  if (!reviewer) throw new Error('reviewerId is required');
-  if (!rationale) throw new Error('rejection rationale is required');
-
+  if (!reviewer.trim() || !note.trim()) throw new Error('reviewer and rationale required');
   await db.transaction(async (tx) => {
-    const updated = await tx.query<IdRow>(
-      `UPDATE membership_proposals
-       SET state = 'rejected',
-           reviewed_by = $2,
-           reviewed_at = now(),
-           review_note = $3
-       WHERE id = $1 AND state IN ('pending', 'approved')
-       RETURNING id::text`,
-      [proposalId, reviewer, rationale],
+    const result = await tx.query<{ id: string }>(
+      `UPDATE membership_proposals SET state='rejected',reviewed_by=$2,reviewed_at=now(),review_note=$3 WHERE id=$1 AND state IN('pending','approved') RETURNING id::text`,
+      [id, reviewer, note],
     );
-    if (!updated.rows[0]) throw new Error('membership proposal is not reviewable');
-
+    if (!result.rows[0]) throw new Error('proposal is not reviewable');
     await tx.query(
-      `INSERT INTO review_events (
-         subject_type, subject_id, action, reviewer_id, rationale
-       ) VALUES ('membership-proposal', $1, 'rejected', $2, $3)`,
-      [proposalId, reviewer, rationale],
+      `INSERT INTO review_events(subject_type,subject_id,action,reviewer_id,rationale) VALUES('membership-proposal',$1,'rejected',$2,$3)`,
+      [id, reviewer, note],
     );
   });
 }
-
 export async function createMembershipProposalsForImportBatch(
   db: SqlExecutor,
   batchId: string,
-  createdBy: string,
+  actor: string,
 ): Promise<number> {
-  const actor = createdBy.trim();
-  if (!actor) throw new Error('createdBy is required');
-
-  const assertions = await db.query<{ assertion_id: string; reason_code: string }>(
-    `SELECT row.assertion_id::text, batch.reason_code
-     FROM official_import_rows row
-     JOIN official_import_batches batch ON batch.id = row.batch_id
-     WHERE row.batch_id = $1
-       AND row.resolution_state = 'committed'
-       AND row.assertion_id IS NOT NULL
-     ORDER BY row.ordinal`,
+  const rows = await db.query<{ assertion_id: string; reason_code: string }>(
+    `SELECT r.assertion_id::text,b.reason_code FROM official_import_rows r JOIN official_import_batches b ON b.id=r.batch_id WHERE b.id=$1 AND r.resolution_state='committed' ORDER BY r.ordinal`,
     [batchId],
   );
-
-  let created = 0;
-  for (const row of assertions.rows) {
+  for (const row of rows.rows)
     await proposeMembershipFromAssertion(db, row.assertion_id, row.reason_code, actor);
-    created += 1;
-  }
-  return created;
+  return rows.rows.length;
 }

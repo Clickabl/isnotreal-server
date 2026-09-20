@@ -1,4 +1,4 @@
-export const PROTOCOL_SCHEMA_VERSION = 4 as const;
+export const PROTOCOL_SCHEMA_VERSION = 5 as const;
 
 export type Platform = 'x' | 'tiktok' | 'instagram' | 'youtube';
 export type PublicationChannel = Platform | 'domain' | 'domain-subdomains';
@@ -25,7 +25,22 @@ export type CompiledEntry = readonly [
   reasonCodes: readonly ReasonCode[],
 ];
 
+export interface ArtifactDescriptor {
+  readonly url: string;
+  readonly sha256: string;
+  readonly byteSize: number;
+}
+
+export interface PublicationSignature {
+  readonly algorithm: 'Ed25519';
+  readonly keyId: string;
+  readonly value: string;
+}
+
 export interface PublicationManifest {
+  readonly full?: ArtifactDescriptor;
+  readonly dictionary?: ArtifactDescriptor;
+  readonly signature?: PublicationSignature | null;
   readonly schemaVersion: typeof PROTOCOL_SCHEMA_VERSION;
   readonly cause: CauseSlug;
   readonly channel: PublicationChannel;
@@ -61,3 +76,5 @@ export interface FullSyncRequired {
   readonly currentVersion: PublicationVersion;
   readonly currentReasonCatalogVersion: number;
 }
+
+export { canonicalJson } from './canonical.js';

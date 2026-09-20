@@ -451,7 +451,7 @@ export async function commitOfficialImport(
          WHERE catalog.code = $4
            AND catalog.publication_enabled = true
            AND catalog.default_list IN ('filter', 'highlight')
-         ON CONFLICT (entity_id, assertion_id, reason_code, proposed_list) DO NOTHING`,
+         ON CONFLICT (entity_id, assertion_id, reason_code, cause_id, proposed_list) DO NOTHING`,
         [row.resolved_entity_id, assertionId, `official-import:${batchId}`, context.reason_code],
       );
       await tx.query(

@@ -77,7 +77,7 @@ Start the reviewed systemd service or use npm start in a separate terminal. Afte
     curl -fsS http://127.0.0.1:3000/healthz
     curl -fsS http://127.0.0.1:3000/readyz
 
-The old /health and /ready examples did not match apps/api/src/runtime.ts. A successful health endpoint does not verify the homepage, redirects, evidence pages or browser extension.
+The old /healthz and /readyz examples did not match apps/api/src/runtime.ts. A successful health endpoint does not verify the homepage, redirects, evidence pages or browser extension.
 
 ## First requested data import
 
@@ -101,3 +101,7 @@ Do not import unrelated sensitive personal records as an extension dataset. The 
 ## Next-session instruction
 
 Read AGENTS.md, docs/PRODUCT_DELIVERY_PLAN.md and this handoff. Inspect the host and current commits first. Validate and fix the deployment helpers and privileges on disposable PostgreSQL before production. Align the extension/server contracts and the cause-scoped data model rather than continuing the outdated single-global-list design. Provision the real database and API using protected credentials, with verified backups and health checks. Implement one trusted-batch CCFP import as I02 without redundant approval stages, preserving exact source context and identity exceptions. Keep schema/code in Git and factual data in PostgreSQL. Then demonstrate the product's install/settings/block/evidence/alternative/update integration milestone. Report what is implemented, tested, deployed and publicly available separately; do not call the whole product done from a backend CI pass.
+
+## Backup client compatibility
+
+Use PostgreSQL client utilities from the same major version as the server, or a supported newer version. A PostgreSQL 16 pg_dump cannot back up a PostgreSQL 17 server. The doctor checks utility availability; validate pg_dump --version during provisioning. Test restoration into a separate empty database before relying on backups.

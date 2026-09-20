@@ -17,6 +17,12 @@ async function main(): Promise<void> {
     maxDatabaseConnections,
     ...(adminToken ? { adminToken } : {}),
     ...(adminActorId ? { adminActorId } : {}),
+    ...(process.env.ADMIN_DATABASE_URL ? { adminDatabaseUrl: process.env.ADMIN_DATABASE_URL } : {}),
+    downloads: {
+      chromium: process.env.CHROME_WEB_STORE_URL ?? '',
+      firefox: process.env.FIREFOX_ADDON_URL ?? '',
+      safari: process.env.SAFARI_APP_STORE_URL ?? '',
+    },
   });
 
   console.log(`isnotreal API listening on ${runtime.host}:${runtime.port}`);

@@ -246,7 +246,9 @@ export function compileEntries(
     byIdentifier.set(candidate.identifier, target);
   }
 
-  const sorted = [...byIdentifier.entries()].sort(([left], [right]) => left.localeCompare(right));
+  const sorted = [...byIdentifier.entries()].sort(([left], [right]) =>
+    left < right ? -1 : left > right ? 1 : 0,
+  );
   const entries: CompiledEntry[] = [];
   for (const [identifier, value] of sorted) {
     entries.push([identifier, value.entityId, [...value.reasonCodes].sort()]);
@@ -302,8 +304,8 @@ export function compilePublicationDelta(
     if (!nextByIdentifier.has(identifier)) removed.push(identifier);
   }
 
-  added.sort(([left], [right]) => left.localeCompare(right));
-  removed.sort((left, right) => left.localeCompare(right));
+  added.sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0));
+  removed.sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
 
   return {
     schemaVersion: PROTOCOL_SCHEMA_VERSION,

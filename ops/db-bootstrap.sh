@@ -4,19 +4,25 @@ set -euo pipefail
 : "${ISNOTREAL_OWNER_PASSWORD:?Set ISNOTREAL_OWNER_PASSWORD}"
 : "${ISNOTREAL_APP_PASSWORD:?Set ISNOTREAL_APP_PASSWORD}"
 : "${ISNOTREAL_EDITOR_PASSWORD:?Set ISNOTREAL_EDITOR_PASSWORD}"
-DB_NAME="${ISNOTREAL_DB_NAME:-isnotreal}"
+DB="${ISNOTREAL_DB_NAME:-isnotreal}"
 OWNER="${ISNOTREAL_OWNER_ROLE:-isnotreal_owner}"
 APP="${ISNOTREAL_APP_ROLE:-isnotreal_app}"
 EDITOR="${ISNOTREAL_EDITOR_ROLE:-isnotreal_editor}"
-q(){ printf "%s" "$1" | sed "s/\047/\047\047/g"; }
-OPW="$(q "$ISNOTREAL_OWNER_PASSWORD")"; APW="$(q "$ISNOTREAL_APP_PASSWORD")"; EPW="$(q "$ISNOTREAL_EDITOR_PASSWORD")"
-psql "$PG_ADMIN_URL" -v ON_ERROR_STOP=1 <<SQL
-DO \\$\\$
-BEGIN
- IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname=\047$OWNER\047) THEN CREATE ROLE $OWNER LOGIN PASSWORD \047$OPW\047 NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION; ELSE ALTER ROLE $OWNER PASSWORD \047$OPW\047; END IF;
- IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname=\047$APP\047) THEN CREATE ROLE $APP LOGIN PASSWORD \047$APW\047 NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION; ELSE ALTER ROLE $APP PASSWORD \047$APW\047; END IF;
- IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname=\047$EDITOR\047) THEN CREATE ROLE $EDITOR LOGIN PASSWORD \047$EPW\047 NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION; ELSE ALTER ROLE $EDITOR PASSWORD \047$EPW\047; END IF;
-END \\$\\$;
+for name in "$DB" "$OWNER" "$APP" "$EDITOR"; do
+  [[ "$name" =~ ^[a-z_][a-z0-9_]{0,40}$ ]] || { echo 'Invalid database/role identifier' >&2; exit 1; }
+done
+[[ "$OWNER" != "$APP" && "$OWNER" != "$EDITOR" && "$APP" != "$EDITOR" ]] || { echo 'Roles must be different' >&2; exit 1; }
+for value in "$ISNOTREAL_OWNER_PASSWORD" "$ISNOTREAL_APP_PASSWORD" "$ISNOTREAL_EDITOR_PASSWORD"; do
+  [[ ${#value} -ge 24 ]] || { echo 'Generate passwords of at least 24 characters' >&2; exit 1; }
+done
+# Secrets enter psql through environment, not command arguments or SQL string concatenation.
+node ops/libpq-run.mjs PG_ADMIN_URL psql -X -v ON_ERROR_STOP=1 -v db="$DB" -v owner="$OWNER" -v app="$APP" -v editor="$EDITOR" <<'SQL'
+\getenv owner_password ISNOTREAL_OWNER_PASSWORD
+\getenv app_password ISNOTREAL_APP_PASSWORD
+\getenv editor_password ISNOTREAL_EDITOR_PASSWORD
+SELECT format('CREATE ROLE %I LOGIN PASSWORD %L NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION', :'owner', :'owner_password') WHERE NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=:'owner') \gexec
+SELECT format('CREATE ROLE %I LOGIN PASSWORD %L NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION', :'app', :'app_password') WHERE NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=:'app') \gexec
+SELECT format('CREATE ROLE %I LOGIN PASSWORD %L NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION', :'editor', :'editor_password') WHERE NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=:'editor') \gexec
+SELECT format('CREATE DATABASE %I OWNER %I', :'db', :'owner') WHERE NOT EXISTS(SELECT 1 FROM pg_database WHERE datname=:'db') \gexec
 SQL
-if ! psql "$PG_ADMIN_URL" -Atqc "select 1 from pg_database where datname=\047$DB_NAME\047" | grep -q 1; then psql "$PG_ADMIN_URL" -v ON_ERROR_STOP=1 -c "CREATE DATABASE $DB_NAME OWNER $OWNER"; fi
-echo "Roles/database ready. Run migrations as $OWNER, then ops/db-grants.sh."
+echo 'Database and roles exist. Existing passwords were not rotated. Migrate as owner, then apply grants.'
