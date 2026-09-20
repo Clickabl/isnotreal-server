@@ -120,7 +120,9 @@ test('entity, reason and list endpoints expose the public contracts', async () =
   assert.equal(historicalCatalog.body.catalogVersion, 1);
   assert.equal((await route(request('GET', '/api/v1/reason-catalogs/999/compact'))).status, 404);
   assert.equal((await route(request('GET', '/api/v1/reasons', { version: 'wat' }))).status, 400);
-  const manifest = await route(request('GET', '/api/v1/causes/israel-palestine/lists/domain/filter/manifest'));
+  const manifest = await route(
+    request('GET', '/api/v1/causes/israel-palestine/lists/domain/filter/manifest'),
+  );
   assert.equal(manifest.status, 200);
   assert.equal(manifest.body.channel, 'domain');
   const subtreeManifest = await route(
