@@ -121,16 +121,16 @@ All boxes below are open until demonstrated in the relevant runtime.
 
 ### Foundation and integration
 
-- [ ] F01: Replace stale cross-repo contract assumptions with compatible public-ID/reason/cause fixtures; both repos pass the same payload tests.
-- [ ] F02: Add cause-scoped schema, catalogs, decisions and artifacts; demonstrate independent decisions for one entity in two causes.
-- [ ] F03: Implement pure local policy evaluation and settings migrations; prove disabled causes and unselected reasons cannot filter.
+- [~] F01: Protocol v4 public-ID/reason/cause contracts are now aligned in both repos and extension CI passed; shared cross-repo fixture automation still remains.
+- [~] F02: Cause catalog, reason bindings, cause-scoped decisions/proposals/publications and candidate projection are implemented; publication runtime migration/tests are still being completed.
+- [~] F03: Pure local cause/reason evaluation is implemented in the extension core; persisted settings migrations and behavioral tests remain.
 - [ ] F04: Define availability/coverage separately from membership; unavailable or empty data cannot be displayed as successfully comprehensive.
 
 ### Website
 
-- [ ] W01: Build responsive homepage and /download with actual release availability, browser selection, install instructions and permission explanations. Only real store/package URLs get enabled install buttons.
-- [ ] W02: Build search and canonical entity pages with causes, exact reasons, evidence dates/locators, source links, account ownership context and corrections. Mount numeric redirects in the real HTTP path.
-- [ ] W03: Build cause and reason explanation pages plus methodological/privacy pages. Do not hardcode every cause to Palestine-specific copy.
+- [~] W01: Responsive homepage and honest unavailable-build install section are mounted in the Node runtime; dedicated /download, browser detection and real release links remain.
+- [~] W02: Canonical numeric redirects and source-backed entity HTML pages are mounted in the real HTTP runtime; search, richer cause/evidence metadata and correction UI remain.
+- [~] W03: Privacy/how-it-works pages and cause-aware homepage copy exist; dedicated cause/reason methodology pages remain.
 - [ ] W04: Build public evidence, correction, missing-account and alternative forms with accessible validation, spam controls and success receipts. No direct public publishing.
 - [ ] W05: Build alternative browsing, context/region filtering and no-eligible-alternative states. Candidate eligibility must consider all selected causes, not a global positive badge.
 
@@ -181,6 +181,17 @@ For the extension, retrieve a bounded set of approved candidates with small caus
 First align contracts and add selectable causes. Then demonstrate one complete vertical slice: homepage/install entry, real browser build, settings, synchronized data, one blocked test domain, block page, evidence page, alternative and local override. Add platform adapters and independent source ingestors after that slice works. Production release also requires the security, source-quality, store, signing and operational gates above.
 
 Do not call the entire product done because a schema migrated, an import ran, a UI screenshot exists or CI passed unit tests. For each completed package record the commit, runtime tested, test evidence, known limitations and whether it is merely implemented, deployed or publicly available.
+
+
+## Current implementation pulse
+
+Updated during active build work on 2026-09-20. `[~]` means code exists but the acceptance gate is not yet fully demonstrated.
+
+- Server website is now mounted into the real Node runtime rather than remaining an unused route resolver.
+- Apache `.htaccess` and nginx deployment templates proxy canonical numeric entity and alternative routes to the database-backed application; no generated per-entity rewrite map is required.
+- Extension protocol is aligned to v4 and extension CI passed after the cause-aware contract migration.
+- Cause catalog migrations 0020-0023 introduce independent causes, reason bindings, cause-scoped decisions/publications, settings metadata and a public catalog projection.
+- Active work: finish cause-scoping the publication reader/publisher/runtime and get server CI green again, then implement the actual extension sync/storage/background worker.
 
 ## External references checked during the audit
 
