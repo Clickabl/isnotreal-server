@@ -31,6 +31,10 @@
     "./moderation": {
       "types": "./dist/moderation.d.ts",
       "import": "./dist/moderation.js"
+    },
+    "./causes": {
+      "types": "./dist/causes.d.ts",
+      "import": "./dist/causes.js"
     }
   },
   "files": [
