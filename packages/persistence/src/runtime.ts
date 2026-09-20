@@ -293,6 +293,7 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
       return {
         schemaVersion: PROTOCOL_SCHEMA_VERSION,
         code: 'FULL_SYNC_REQUIRED',
+        cause,
         channel,
         list,
         currentVersion: current.version,
@@ -721,6 +722,7 @@ async function readVerifiedBytesFromStore(
 
 function parseFullPublication(
   bytes: Uint8Array,
+  cause: string,
   channel: PublicationChannel,
   list: ListKind,
   version: string,
@@ -730,6 +732,7 @@ function parseFullPublication(
   if (!isRecord(parsed)) throw new Error('publication artifact is not an object');
   if (
     parsed.schemaVersion !== PROTOCOL_SCHEMA_VERSION ||
+    parsed.cause !== cause ||
     parsed.channel !== channel ||
     parsed.list !== list ||
     parsed.version !== version ||
@@ -746,6 +749,7 @@ function parseFullPublication(
 
 function parseDeltaPublication(
   bytes: Uint8Array,
+  cause: string,
   channel: PublicationChannel,
   list: ListKind,
   fromVersion: string,
@@ -756,6 +760,7 @@ function parseDeltaPublication(
   if (!isRecord(parsed)) throw new Error('delta artifact is not an object');
   if (
     parsed.schemaVersion !== PROTOCOL_SCHEMA_VERSION ||
+    parsed.cause !== cause ||
     parsed.channel !== channel ||
     parsed.list !== list ||
     parsed.fromVersion !== fromVersion ||
@@ -786,8 +791,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function publicationKey(channel: PublicationChannel, list: ListKind): string {
-  return `${channel}:${list}`;
+function publicationKey(cause: string, channel: PublicationChannel, list: ListKind): string {
+  return `${cause}:${channel}:${list}`;
 }
 
 function sha256(value: string | Uint8Array): string {
