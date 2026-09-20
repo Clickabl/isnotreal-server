@@ -391,11 +391,13 @@ interface PolicyRevisionRow {
 }
 
 interface ExistingFullArtifactRow extends ArtifactMetadataRow {
+  readonly cause_slug: string;
   readonly channel: PublicationChannel;
   readonly list_kind: ListKind;
 }
 
 interface ArtifactRecord {
+  readonly cause: string;
   readonly channel: PublicationChannel;
   readonly list: ListKind;
   readonly kind: 'full' | 'delta';
@@ -591,6 +593,7 @@ interface PublicationSnapshot {
   readonly candidates: ReadonlyMap<string, readonly PublicationCandidate[]>;
   readonly policyRevisionIds: readonly string[];
   readonly reasonCatalogVersion: number;
+  readonly causes: readonly string[];
 }
 
 async function loadPublicationSnapshot(db: SqlExecutor): Promise<PublicationSnapshot> {
@@ -598,9 +601,17 @@ async function loadPublicationSnapshot(db: SqlExecutor): Promise<PublicationSnap
     await tx.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
     const reader = new PostgresPublicationCandidateReader(tx);
     const candidates = new Map<string, readonly PublicationCandidate[]>();
-    for (const channel of publicationChannels) {
-      for (const list of publicationLists) {
-        candidates.set(publicationKey(channel, list), await reader.candidates(channel, list));
+    const causesResult = await tx.query<{ slug: string }>(
+      `SELECT slug FROM causes WHERE active = true ORDER BY sort_order, slug`,
+    );
+    for (const cause of causesResult.rows.map((row) => row.slug)) {
+      for (const channel of publicationChannels) {
+        for (const list of publicationLists) {
+          candidates.set(
+            publicationKey(cause, channel, list),
+            await reader.candidates(cause, channel, list),
+          );
+        }
       }
     }
     const revisions = await tx.query<PolicyRevisionRow>(
@@ -608,6 +619,9 @@ async function loadPublicationSnapshot(db: SqlExecutor): Promise<PublicationSnap
        FROM membership_decisions
        WHERE state = 'active'
        ORDER BY policy_revision_id::text`,
+    );
+    const causesResult = await tx.query<{ slug: string }>(
+      `SELECT slug FROM causes WHERE active = true ORDER BY sort_order, slug`,
     );
     const reasonCatalog = await tx.query<{ version: number }>(
       `SELECT version FROM reason_catalog_versions WHERE state = 'active' LIMIT 1`,
@@ -618,6 +632,7 @@ async function loadPublicationSnapshot(db: SqlExecutor): Promise<PublicationSnap
       candidates,
       policyRevisionIds: revisions.rows.map((row) => row.policy_revision_id),
       reasonCatalogVersion,
+      causes: causesResult.rows.map((row) => row.slug),
     };
   });
 }
