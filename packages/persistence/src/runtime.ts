@@ -473,32 +473,36 @@ export async function publishCurrentState(
 
   try {
     const fullByKey = new Map<string, FullPublicationPayload>();
-    for (const channel of publicationChannels) {
-      for (const list of publicationLists) {
-        const key = publicationKey(channel, list);
-        const payload = compileFullPublication({
-          channel,
-          list,
-          version: publication.sequence,
-          reasonCatalogVersion: publication.reason_catalog_version,
-          generatedAt: publication.generated_at,
-          expiresAt: publication.expires_at,
-          candidates: snapshot.candidates.get(key) ?? [],
-        });
-        fullByKey.set(key, payload);
-        artifacts.push(
-          await writeArtifact(
-            store,
-            `publications/${publication.sequence}/${channel}/${list}/full.json`,
+    for (const cause of snapshot.causes) {
+      for (const channel of publicationChannels) {
+        for (const list of publicationLists) {
+          const key = publicationKey(cause, channel, list);
+          const payload = compileFullPublication({
+            cause,
             channel,
             list,
-            'full',
-            publication.sequence,
-            null,
-            payload,
-            payload.entries.length,
-          ),
-        );
+            version: publication.sequence,
+            reasonCatalogVersion: publication.reason_catalog_version,
+            generatedAt: publication.generated_at,
+            expiresAt: publication.expires_at,
+            candidates: snapshot.candidates.get(key) ?? [],
+          });
+          fullByKey.set(key, payload);
+          artifacts.push(
+            await writeArtifact(
+              store,
+              `publications/${publication.sequence}/${cause}/${channel}/${list}/full.json`,
+              cause,
+              channel,
+              list,
+              'full',
+              publication.sequence,
+              null,
+              payload,
+              payload.entries.length,
+            ),
+          );
+        }
       }
     }
 
@@ -509,6 +513,7 @@ export async function publishCurrentState(
         const previousBytes = await readVerifiedBytesFromStore(store, previousMetadata);
         const old = parseFullPublication(
           previousBytes,
+          previousMetadata.cause_slug,
           previousMetadata.channel,
           previousMetadata.list_kind,
           previousMetadata.version,
@@ -518,7 +523,8 @@ export async function publishCurrentState(
         artifacts.push(
           await writeArtifact(
             store,
-            `publications/${publication.sequence}/${next.channel}/${next.list}/from-${old.version}.delta.json`,
+            `publications/${publication.sequence}/${next.cause}/${next.channel}/${next.list}/from-${old.version}.delta.json`,
+            next.cause,
             next.channel,
             next.list,
             'delta',
@@ -694,6 +700,7 @@ async function activatePublication(
 async function writeArtifact(
   store: ArtifactStore,
   storageKey: string,
+  cause: string,
   channel: PublicationChannel,
   list: ListKind,
   kind: 'full' | 'delta',
@@ -705,6 +712,7 @@ async function writeArtifact(
   const bytes = Buffer.from(`${JSON.stringify(payload)}\n`, 'utf8');
   await store.put(storageKey, bytes);
   return {
+    cause,
     channel,
     list,
     kind,
