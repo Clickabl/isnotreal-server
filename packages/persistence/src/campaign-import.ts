@@ -71,6 +71,8 @@ interface CommitContextRow {
   readonly source_name: string;
   readonly membership_role: string;
   readonly assertion_action_type: string;
+  readonly cause_id: string;
+  readonly proposed_list: 'filter' | 'highlight';
   readonly state: string;
 }
 
@@ -369,7 +371,7 @@ export async function commitCampaignImport(
   db: SqlExecutor,
   batchId: string,
   reviewerId: string,
-): Promise<{ readonly assertionsCreated: number; readonly proposalsCreated: number }> {
+): Promise<{ readonly assertionsCreated: number; readonly membershipsApplied: number }> {
   return commitOfficialImport(db, batchId, reviewerId);
 }
 
@@ -377,7 +379,7 @@ export async function commitOfficialImport(
   db: SqlExecutor,
   batchId: string,
   reviewerId: string,
-): Promise<{ readonly assertionsCreated: number; readonly proposalsCreated: number }> {
+): Promise<{ readonly assertionsCreated: number; readonly membershipsApplied: number }> {
   const reviewer = reviewerId.trim();
   if (!reviewer) throw new Error('reviewerId is required');
 
@@ -386,6 +388,28 @@ export async function commitOfficialImport(
 
     const context = await loadCommitContext(tx, batchId);
     if (context.state !== 'ready') throw new Error('official import batch is not ready');
+
+    const policy = await tx.query<IdRow>(
+      `SELECT revision.id::text
+       FROM policies policy
+       JOIN policy_revisions revision
+         ON revision.policy_id = policy.id
+        AND revision.state = 'active'
+       WHERE policy.slug = 'default-publication-policy'
+       LIMIT 1`,
+    );
+    const policyRevisionId = policy.rows[0]?.id;
+    if (!policyRevisionId) throw new Error('default publication policy is not active');
+
+    const reviewEvent = await tx.query<IdRow>(
+      `INSERT INTO review_events (
+         subject_type, subject_id, action, reviewer_id, rationale
+       ) VALUES ('official-import-batch', $1, 'approved', $2, $3)
+       RETURNING id::text`,
+      [batchId, reviewer, `Trusted official-list batch: ${context.source_name}`],
+    );
+    const reviewEventId = reviewEvent.rows[0]?.id;
+    if (!reviewEventId) throw new Error('official import review event insert failed');
 
     const rows = await tx.query<ApprovedImportRow>(
       `SELECT id::text, resolved_entity_id::text, raw_name
@@ -433,26 +457,38 @@ export async function commitOfficialImport(
          VALUES ($1, $2)`,
         [assertionId, context.reason_code],
       );
+      const existingDecision = await tx.query<IdRow>(
+        `SELECT id::text
+         FROM membership_decisions
+         WHERE entity_id = $1
+           AND cause_id = $2
+           AND list_kind = $3
+           AND state = 'active'
+           AND decision = 'include'
+         FOR UPDATE`,
+        [row.resolved_entity_id, context.cause_id, context.proposed_list],
+      );
+      let decisionId = existingDecision.rows[0]?.id;
+      if (!decisionId) {
+        const decision = await tx.query<IdRow>(
+          `INSERT INTO membership_decisions (
+             entity_id, cause_id, list_kind, decision, state, policy_revision_id, decided_at
+           ) VALUES ($1, $2, $3, 'include', 'active', $4, now())
+           RETURNING id::text`,
+          [row.resolved_entity_id, context.cause_id, context.proposed_list, policyRevisionId],
+        );
+        decisionId = decision.rows[0]?.id;
+      }
+      if (!decisionId) throw new Error('official import membership decision failed');
       await tx.query(
-        `INSERT INTO membership_proposals (
-           entity_id,
-           assertion_id,
-           reason_code,
-           proposed_list,
-           created_by
-         )
-         SELECT
-           $1,
-           $2,
-           catalog.code,
-           catalog.default_list,
-           $3
-         FROM current_reason_catalog catalog
-         WHERE catalog.code = $4
-           AND catalog.publication_enabled = true
-           AND catalog.default_list IN ('filter', 'highlight')
-         ON CONFLICT (entity_id, assertion_id, reason_code, cause_id, proposed_list) DO NOTHING`,
-        [row.resolved_entity_id, assertionId, `official-import:${batchId}`, context.reason_code],
+        `INSERT INTO membership_decision_reasons (
+           decision_id, reason_code, assertion_id, last_verified_at, verification_review_event_id
+         ) VALUES ($1, $2, $3, now(), $4)
+         ON CONFLICT (decision_id, reason_code, assertion_id)
+         DO UPDATE SET
+           last_verified_at = EXCLUDED.last_verified_at,
+           verification_review_event_id = EXCLUDED.verification_review_event_id`,
+        [decisionId, context.reason_code, assertionId, reviewEventId],
       );
       await tx.query(
         `UPDATE official_import_rows
@@ -470,15 +506,6 @@ export async function commitOfficialImport(
        WHERE id = $1 AND state = 'ready'`,
       [batchId],
     );
-    const proposalCount = await tx.query<{ count: string }>(
-      `SELECT count(*)::text AS count
-       FROM membership_proposals proposal
-       JOIN official_import_rows row ON row.assertion_id = proposal.assertion_id
-       WHERE row.batch_id = $1`,
-      [batchId],
-    );
-    const proposalsCreated = Number(proposalCount.rows[0]?.count ?? 0);
-
     await tx.query(
       `INSERT INTO official_import_events (
          batch_id, event_type, actor_id, details
@@ -486,11 +513,11 @@ export async function commitOfficialImport(
       [
         batchId,
         reviewer,
-        JSON.stringify({ assertionsCreated: rows.rows.length, proposalsCreated }),
+        JSON.stringify({ assertionsCreated: rows.rows.length, membershipsApplied: rows.rows.length }),
       ],
     );
 
-    return { assertionsCreated: rows.rows.length, proposalsCreated };
+    return { assertionsCreated: rows.rows.length, membershipsApplied: rows.rows.length };
   });
 }
 
@@ -591,6 +618,8 @@ async function loadCommitContext(db: SqlExecutor, batchId: string): Promise<Comm
          WHEN batch.source_context = 'campaign' THEN campaign_binding.assertion_action_type
          ELSE 'listed-by-authority'
        END AS assertion_action_type,
+       cause.id::text AS cause_id,
+       catalog.default_list AS proposed_list,
        batch.state
      FROM official_import_batches batch
      LEFT JOIN campaign_versions version ON version.id = batch.campaign_version_id
@@ -600,6 +629,12 @@ async function loadCommitContext(db: SqlExecutor, batchId: string): Promise<Comm
       AND campaign_binding.reason_code = batch.reason_code
      LEFT JOIN source_documents authority_document
        ON authority_document.id = batch.authority_source_document_id
+     JOIN reason_causes reason_cause ON reason_cause.reason_code = batch.reason_code
+     JOIN causes cause ON cause.id = reason_cause.cause_id AND cause.active = true
+     JOIN current_reason_catalog catalog
+       ON catalog.code = batch.reason_code
+      AND catalog.publication_enabled = true
+      AND catalog.default_list IN ('filter', 'highlight')
      WHERE batch.id = $1
        AND (
          (batch.source_context = 'campaign' AND campaign_binding.reason_code IS NOT NULL)
