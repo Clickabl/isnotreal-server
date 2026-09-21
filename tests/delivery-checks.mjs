@@ -15,6 +15,7 @@ import {
   PostgresPublishedArtifactReader,
   publishCurrentState,
 } from '../packages/persistence/dist/runtime.js';
+import { publishReasonCatalogVersion } from '../packages/persistence/dist/reason-catalog.js';
 import { startNodeApiRuntime } from '../apps/api/dist/runtime.js';
 
 export async function runDeliveryChecks({
@@ -66,13 +67,31 @@ export async function runDeliveryChecks({
     `INSERT INTO causes(slug,name,description) VALUES('test-isolation','Synthetic test cause','Test only') RETURNING id::text`,
   );
   const otherId = c.rows[0].id;
-  await db.query("INSERT INTO reason_causes(reason_code,cause_id) VALUES('C03',$1)", [otherId]);
+  await assert.rejects(
+    db.query("INSERT INTO reason_causes(reason_code,cause_id) VALUES('C03',$1)", [otherId]),
+    /reason_causes_one_cause_per_reason_uq/,
+  );
+  await db.query(`INSERT INTO reason_definitions
+    (code,label,description,category,default_list,publication_enabled)
+    SELECT 'Q01','Synthetic second-cause fact','Test fixture only',category,default_list,true
+    FROM reason_definitions WHERE code='C03'`);
+  await db.query(`INSERT INTO reason_evidence_requirements
+    (reason_code,subject_scope,evidence_mode,validity_mode,public_criteria,exclusion_criteria,
+     primary_or_authoritative_required,minimum_evidence_items,reverify_after_days,inheritance_policy)
+    SELECT 'Q01',subject_scope,evidence_mode,validity_mode,public_criteria,exclusion_criteria,
+     primary_or_authoritative_required,minimum_evidence_items,reverify_after_days,inheritance_policy
+    FROM reason_evidence_requirements WHERE reason_code='C03'`);
+  await db.query("INSERT INTO reason_causes(reason_code,cause_id) VALUES('Q01',$1)", [otherId]);
+  await publishReasonCatalogVersion(db, { notes: 'Synthetic two-cause isolation fixture' });
+  await db.query("INSERT INTO assertion_reasons(assertion_id,reason_code) VALUES($1,'Q01')", [
+    assertionId,
+  ]);
   const decision = await db.query(
     `INSERT INTO membership_decisions(entity_id,cause_id,list_kind,decision,state,policy_revision_id,decided_at) VALUES($1,$2,'filter','include','active',$3,now()) RETURNING id::text`,
     [entityId, otherId, policyRevisionId],
   );
   await db.query(
-    `INSERT INTO membership_decision_reasons(decision_id,reason_code,assertion_id) VALUES($1,'C03',$2)`,
+    `INSERT INTO membership_decision_reasons(decision_id,reason_code,assertion_id) VALUES($1,'Q01',$2)`,
     [decision.rows[0].id, assertionId],
   );
   const other = await publishCurrentState(db, store, {
@@ -89,6 +108,10 @@ export async function runDeliveryChecks({
     (await reader.manifest('test-isolation', 'domain-subdomains', 'filter')).version,
     other.version,
   );
+  const otherFull = await reader.full('test-isolation', 'domain-subdomains', 'filter');
+  assert.deepEqual(otherFull.entries, [['example.com', publicId, ['Q01']]]);
+  const firstFull = await reader.full(cause, 'domain-subdomains', 'filter');
+  assert.ok(firstFull.entries.every((entry) => !entry[2].includes('Q01')));
   const next = await publishCurrentState(db, store, {
     cause,
     compilerVersion: 'test',
