@@ -234,7 +234,7 @@ export async function prepareTrustedOfficialImport(
     }>(
       `SELECT
          row.id::text AS row_id,
-         min(candidate.entity_id)::text AS entity_id,
+         (array_agg(candidate.entity_id ORDER BY candidate.entity_id))[1]::text AS entity_id,
          min(candidate.match_basis) AS match_basis
        FROM official_import_rows row
        JOIN official_import_candidates candidate ON candidate.row_id = row.id
