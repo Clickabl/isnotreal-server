@@ -104,8 +104,9 @@ export function createAdminRouter(deps: AdminDependencies) {
       return response(200, { ok: true });
     }
 
-    const importRowCreate =
-      /^\/admin\/api\/v1\/import-rows\/([0-9a-f-]+)\/create-entity$/i.exec(request.pathname);
+    const importRowCreate = /^\/admin\/api\/v1\/import-rows\/([0-9a-f-]+)\/create-entity$/i.exec(
+      request.pathname,
+    );
     if (request.method === 'POST' && importRowCreate) {
       const rowId = validUuid(importRowCreate[1]);
       const body = parseCreateEntityBody(request.body);
@@ -246,14 +247,10 @@ function parseReviewBody(body: unknown): { readonly state: string; readonly note
   return { state: body.state, note };
 }
 
-function parseCreateEntityBody(
-  body: unknown,
-):
-  | {
-      readonly kind: 'person' | 'music-group' | 'company' | 'brand' | 'organization';
-      readonly note: string;
-    }
-  | null {
+function parseCreateEntityBody(body: unknown): {
+  readonly kind: 'person' | 'music-group' | 'company' | 'brand' | 'organization';
+  readonly note: string;
+} | null {
   if (!isRecord(body) || typeof body.kind !== 'string') return null;
   const kinds = new Set(['person', 'music-group', 'company', 'brand', 'organization']);
   if (!kinds.has(body.kind)) return null;
