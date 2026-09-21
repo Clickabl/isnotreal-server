@@ -140,7 +140,11 @@ export interface SubmissionInput {
     | 'missing-identifier'
     | 'company-relationship'
     | 'suggest-alternative'
-    | 'new-entity';
+    | 'new-entity'
+    | 'product-feedback'
+    | 'bug-report'
+    | 'accessibility-feedback'
+    | 'abuse-report';
   readonly proposedList: ListKind | null;
   readonly proposedReasonCode: ReasonCode | null;
   readonly narrative: string;
