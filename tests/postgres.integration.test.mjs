@@ -19,10 +19,7 @@ import {
   stageAuthorityImport,
   stageCampaignImport,
 } from '../packages/persistence/dist/campaign-import.js';
-import {
-  approveMembershipProposal,
-  listMembershipProposals,
-} from '../packages/persistence/dist/membership-review.js';
+import { listMembershipProposals } from '../packages/persistence/dist/membership-review.js';
 import { publishReasonCatalogVersion } from '../packages/persistence/dist/reason-catalog.js';
 import {
   FileArtifactStore,
