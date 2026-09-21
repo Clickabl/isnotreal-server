@@ -186,9 +186,10 @@ Do not call the entire product done because a schema migrated, an import ran, a 
 
 - Extension foundations: `npm run check` is green in CI.
 - Chromium packaged-browser suite is mandatory in CI and uploads screenshots/traces on failure.
-- Current browser failure is isolated to the one-tab temporary allow navigation race after the block page; a rule-activation confirmation fix is now under test.
-- Server unit/web/API tests are green except the PostgreSQL delivery fixture; its obsolete duplicate reason/cause insertion was removed and CI is rerunning.
+- Current browser failure is isolated to the one-tab temporary allow navigation race after the block page; the override now uses a tab-scoped `allowAllRequests` rule and waits for rule visibility before navigating, with CI rerunning.
+- Server CI is green, including PostgreSQL migrations, signed cause-scoped publications, website/API delivery checks and source/evidence gates.
 - Runtime database grants now restrict the public API role to reads plus community-submission inserts; trusted editor DML remains separate.
+- Persisted extension snapshots and reason dictionaries are re-hashed against signed descriptors before reuse; corrupted cached labels fall through to signed artifact repair.
 
 ## Current implementation pulse
 
