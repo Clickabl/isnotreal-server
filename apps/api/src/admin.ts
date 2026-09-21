@@ -7,6 +7,7 @@ import {
   commitOfficialImport,
   createOfficialImportEntity,
   markOfficialImportReady,
+  prepareTrustedOfficialImport,
   markOfficialImportRow,
 } from '@isnotreal/persistence/campaign-import';
 import {
@@ -136,6 +137,19 @@ export function createAdminRouter(deps: AdminDependencies) {
         body.note,
       );
       return response(200, { ok: true });
+    }
+
+    const importPrepare = /^\/admin\/api\/v1\/imports\/([0-9a-f-]+)\/prepare$/i.exec(
+      request.pathname,
+    );
+    if (request.method === 'POST' && importPrepare) {
+      const batchId = validUuid(importPrepare[1]);
+      const body = parseCreateEntityBody(request.body);
+      if (!batchId || !body) return response(400, { error: 'invalid_request' });
+      return response(
+        200,
+        await prepareTrustedOfficialImport(deps.db, batchId, body.kind, request.actorId),
+      );
     }
 
     const importReady = /^\/admin\/api\/v1\/imports\/([0-9a-f-]+)\/ready$/i.exec(request.pathname);
