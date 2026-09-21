@@ -356,7 +356,7 @@ test(
       await markCampaignImportReady(db, staged.batchId, 'integration-reviewer');
       const importCommit = await commitCampaignImport(db, staged.batchId, 'integration-reviewer');
       assert.equal(importCommit.assertionsCreated, 1);
-      assert.equal(importCommit.proposalsCreated, 1);
+      assert.equal(importCommit.membershipsApplied, 1);
 
       const importedAssertion = await db.query(
         `SELECT
@@ -429,7 +429,7 @@ test(
         'integration-reviewer',
       );
       assert.equal(authorityCommit.assertionsCreated, 1);
-      assert.equal(authorityCommit.proposalsCreated, 1);
+      assert.equal(authorityCommit.membershipsApplied, 1);
       const authorityAssertion = await db.query(
         `SELECT a.action_type, ar.reason_code
          FROM official_import_rows row
@@ -444,10 +444,7 @@ test(
       });
 
       const proposals = await listMembershipProposals(db, 'pending', 10);
-      assert.equal(proposals.length, 2);
-      const artistProposal = proposals.find((proposal) => proposal.reasonCode === 'P03');
-      assert.ok(artistProposal);
-      assert.equal(artistProposal.proposedList, 'highlight');
+      assert.equal(proposals.length, 0);
 
       const artistIdentifier = await db.query(
         `INSERT INTO identifiers (
@@ -467,14 +464,6 @@ test(
          ) VALUES ($1, $2, 'verified', $3)`,
         [artistIdentifier.rows[0].id, artistEntityId, artistAssertion.rows[0].assertion_id],
       );
-
-      const artistDecisionId = await approveMembershipProposal(
-        db,
-        artistProposal.id,
-        'integration-reviewer',
-        'Verified official signatory and identity.',
-      );
-      assert.ok(artistDecisionId);
 
       const fourthPublication = await publishCurrentState(db, store, {
         compilerVersion: 'integration-test',
