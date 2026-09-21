@@ -256,6 +256,68 @@ export async function approveOfficialImportRow(
   });
 }
 
+export async function createOfficialImportEntity(
+  db: SqlExecutor,
+  rowId: string,
+  kind: 'person' | 'music-group' | 'company' | 'brand' | 'organization',
+  reviewerId: string,
+  note = '',
+): Promise<string> {
+  const reviewer = reviewerId.trim();
+  if (!reviewer) throw new Error('reviewerId is required');
+
+  return db.transaction(async (tx) => {
+    const rowResult = await tx.query<{ batch_id: string; raw_name: string }>(
+      `SELECT row.batch_id::text, row.raw_name
+       FROM official_import_rows row
+       JOIN official_import_batches batch ON batch.id = row.batch_id
+       WHERE row.id = $1
+         AND batch.state IN ('resolving', 'ready')
+         AND row.resolution_state IN ('unresolved', 'new-entity-needed')
+       FOR UPDATE OF row`,
+      [rowId],
+    );
+    const row = rowResult.rows[0];
+    if (!row) throw new Error('official import row is not eligible for entity creation');
+
+    const base = slugify(row.raw_name);
+    const slug = `${base || 'entity'}-${rowId.replaceAll('-', '').slice(0, 8)}`;
+    const entity = await tx.query<IdRow>(
+      `INSERT INTO entities (kind, canonical_name, slug, status)
+       VALUES ($1, $2, $3, 'active')
+       RETURNING id::text`,
+      [kind, row.raw_name, slug],
+    );
+    const entityId = entity.rows[0]?.id;
+    if (!entityId) throw new Error('entity creation failed');
+
+    await tx.query(
+      `UPDATE official_import_rows
+       SET resolved_entity_id = $2,
+           resolution_state = 'approved',
+           resolution_method = 'new-entity',
+           reviewed_by = $3,
+           reviewed_at = now(),
+           review_note = $4,
+           updated_at = now()
+       WHERE id = $1`,
+      [rowId, entityId, reviewer, note.trim()],
+    );
+    await tx.query(
+      `INSERT INTO official_import_events (
+         batch_id, row_id, event_type, actor_id, details
+       ) VALUES ($1, $2, 'row-approved', $3, $4::jsonb)`,
+      [
+        row.batch_id,
+        rowId,
+        reviewer,
+        JSON.stringify({ entityId, resolutionMethod: 'new-entity', kind }),
+      ],
+    );
+    return entityId;
+  });
+}
+
 export async function markCampaignImportRow(
   db: SqlExecutor,
   rowId: string,
@@ -724,4 +786,14 @@ function participantRole(membershipRole: string): string {
 
 export function normalizeEntityName(value: string): string {
   return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function slugify(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 72);
 }
