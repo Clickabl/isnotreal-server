@@ -14,7 +14,6 @@ import {
 import {
   approveCampaignImportRow,
   commitCampaignImport,
-  createOfficialImportEntity,
   markCampaignImportReady,
   prepareTrustedOfficialImport,
   stageAuthorityImport,
