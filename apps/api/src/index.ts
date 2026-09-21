@@ -58,6 +58,10 @@ const submissionTypes = new Set<SubmissionInput['submissionType']>([
   'company-relationship',
   'suggest-alternative',
   'new-entity',
+  'product-feedback',
+  'bug-report',
+  'accessibility-feedback',
+  'abuse-report',
 ]);
 
 export function createApiRouter(deps: ApiDependencies) {
