@@ -178,7 +178,8 @@ export async function startNodeApiRuntime(
     ? createAdminRouter({ db: adminDb, moderation: new PostgresModerationQueue(adminDb) })
     : null;
   let submissionWindow = Date.now(),
-    submissionCount = 0;
+    submissionCount = 0,
+    inFlight = 0;
   const server = createServer((request, response) => {
     // Bound application work even if the reverse proxy/CDN is bypassed on a
     // private or development deployment. The edge remains responsible for
