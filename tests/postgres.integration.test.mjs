@@ -16,6 +16,7 @@ import {
   commitCampaignImport,
   createOfficialImportEntity,
   markCampaignImportReady,
+  prepareTrustedOfficialImport,
   stageAuthorityImport,
   stageCampaignImport,
 } from '../packages/persistence/dist/campaign-import.js';
@@ -336,21 +337,17 @@ test(
       assert.equal(importRows.rows[0].resolution_state, 'candidate');
       assert.equal(importRows.rows[1].resolution_state, 'unresolved');
 
-      await approveCampaignImportRow(
+      const prepared = await prepareTrustedOfficialImport(
         db,
-        importRows.rows[0].id,
-        artistEntityId,
-        'integration-reviewer',
-        'Identity verified for integration test.',
-      );
-      const createdUnknownEntity = await createOfficialImportEntity(
-        db,
-        importRows.rows[1].id,
+        staged.batchId,
         'person',
         'integration-reviewer',
-        'No existing identity candidate; create the reviewed signer record.',
       );
-      assert.ok(createdUnknownEntity);
+      assert.deepEqual(prepared, {
+        matchedExisting: 1,
+        createdEntities: 1,
+        ambiguousRows: 0,
+      });
       await markCampaignImportReady(db, staged.batchId, 'integration-reviewer');
       const importCommit = await commitCampaignImport(db, staged.batchId, 'integration-reviewer');
       assert.equal(importCommit.assertionsCreated, 2);
