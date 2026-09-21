@@ -182,6 +182,14 @@ First align contracts and add selectable causes. Then demonstrate one complete v
 
 Do not call the entire product done because a schema migrated, an import ran, a UI screenshot exists or CI passed unit tests. For each completed package record the commit, runtime tested, test evidence, known limitations and whether it is merely implemented, deployed or publicly available.
 
+## Latest active verification
+
+- Extension foundations: `npm run check` is green in CI.
+- Chromium packaged-browser suite is mandatory in CI and uploads screenshots/traces on failure.
+- Current browser failure is isolated to the one-tab temporary allow navigation race after the block page; a rule-activation confirmation fix is now under test.
+- Server unit/web/API tests are green except the PostgreSQL delivery fixture; its obsolete duplicate reason/cause insertion was removed and CI is rerunning.
+- Runtime database grants now restrict the public API role to reads plus community-submission inserts; trusted editor DML remains separate.
+
 ## Current implementation pulse
 
 Updated during active build work on 2026-09-20. `[~]` means code exists but the acceptance gate is not yet fully demonstrated.
