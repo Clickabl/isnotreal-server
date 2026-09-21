@@ -14,8 +14,8 @@ import {
 import {
   approveCampaignImportRow,
   commitCampaignImport,
+  createOfficialImportEntity,
   markCampaignImportReady,
-  markCampaignImportRow,
   stageAuthorityImport,
   stageCampaignImport,
 } from '../packages/persistence/dist/campaign-import.js';
@@ -343,17 +343,18 @@ test(
         'integration-reviewer',
         'Identity verified for integration test.',
       );
-      await markCampaignImportRow(
+      const createdUnknownEntity = await createOfficialImportEntity(
         db,
         importRows.rows[1].id,
-        'skipped',
+        'person',
         'integration-reviewer',
-        'No matching entity in integration fixture.',
+        'No existing identity candidate; create the reviewed signer record.',
       );
+      assert.ok(createdUnknownEntity);
       await markCampaignImportReady(db, staged.batchId, 'integration-reviewer');
       const importCommit = await commitCampaignImport(db, staged.batchId, 'integration-reviewer');
-      assert.equal(importCommit.assertionsCreated, 1);
-      assert.equal(importCommit.membershipsApplied, 1);
+      assert.equal(importCommit.assertionsCreated, 2);
+      assert.equal(importCommit.membershipsApplied, 2);
 
       const importedAssertion = await db.query(
         `SELECT
