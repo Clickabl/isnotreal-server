@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-node@v6
         with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
-      - run: npx prettier --write packages/persistence/src/campaign-import.ts apps/api/src/admin.ts tests/postgres.integration.test.mjs ops/db-grants.sh
+      - run: npx prettier --write packages/persistence/src/campaign-import.ts apps/api/src/admin.ts tests/postgres.integration.test.mjs
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
