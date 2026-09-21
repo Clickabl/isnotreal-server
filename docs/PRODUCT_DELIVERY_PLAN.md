@@ -182,6 +182,18 @@ First align contracts and add selectable causes. Then demonstrate one complete v
 
 Do not call the entire product done because a schema migrated, an import ran, a UI screenshot exists or CI passed unit tests. For each completed package record the commit, runtime tested, test evidence, known limitations and whether it is merely implemented, deployed or publicly available.
 
+## UI and abuse audit
+
+- [~] U01: Website navigation, search, causes, downloads, evidence pages, alternatives, privacy/how-it-works and the public feedback surface share one renderer/design system. Continue visual/browser accessibility QA before calling this complete.
+- [~] U02: Extension popup, settings, block page, remembered choices, update state, evidence lookup and feedback links share one UI runtime and stylesheet. Social-feed replacement UI remains blocked on the platform adapters.
+- [~] U03: Feedback now has one public entry point and one moderation queue for evidence, corrections, identifiers, alternatives, product feedback, bugs, accessibility feedback and abuse reports. Add moderator filtering/triage views for the new categories.
+- [~] U04: Public write abuse controls include bounded JSON bodies, application submission throttling, least-privilege DB writes, Nginx per-IP write/public limits, connection limits and server timeouts. Production still needs CDN/WAF configuration, monitoring/alerts and load testing.
+- [ ] U05: Add explicit abuse/spam moderation states, duplicate clustering and reviewer actions for malicious or coordinated submissions.
+- [ ] U06: Add observability dashboards/alerts for 429/5xx rates, latency, DB pool saturation, publication failures, submission volume and disk/backup health without logging user filter preferences.
+- [ ] U07: Run keyboard-only, screen-reader semantics, reduced-motion/contrast and mobile-width QA across every website and extension surface; fix every failure.
+- [ ] U08: Remove or update every stale README/TODO/placeholder claim after final feature verification. No scaffold may describe implemented functionality as absent or vice versa.
+- [ ] U09: Production threat-model pass covering CDN/origin isolation, admin network restrictions, secret rotation, backup restore, source-fetch SSRF, submission spam, cache poisoning and publication-key compromise.
+
 ## Latest active verification
 
 - Extension foundations: `npm run check` is green in CI.
