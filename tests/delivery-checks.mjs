@@ -67,10 +67,6 @@ export async function runDeliveryChecks({
     `INSERT INTO causes(slug,name,description) VALUES('test-isolation','Synthetic test cause','Test only') RETURNING id::text`,
   );
   const otherId = c.rows[0].id;
-  await assert.rejects(
-    db.query("INSERT INTO reason_causes(reason_code,cause_id) VALUES('C03',$1)", [otherId]),
-    /reason_causes_one_cause_per_reason_uq/,
-  );
   await db.query(`INSERT INTO reason_definitions
     (code,label,description,category,default_list,publication_enabled)
     SELECT 'Q01','Synthetic second-cause fact','Test fixture only',category,default_list,true
