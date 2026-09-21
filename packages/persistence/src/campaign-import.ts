@@ -575,7 +575,10 @@ export async function commitOfficialImport(
       [
         batchId,
         reviewer,
-        JSON.stringify({ assertionsCreated: rows.rows.length, membershipsApplied: rows.rows.length }),
+        JSON.stringify({
+          assertionsCreated: rows.rows.length,
+          membershipsApplied: rows.rows.length,
+        }),
       ],
     );
 
