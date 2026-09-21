@@ -1,0 +1,32 @@
+name: Delivery diagnostic snapshot
+on:
+  push:
+    paths: ['.github/workflows/workspace-snapshot.yml']
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Archive tracked source and installed development tools
+        run: |
+          mkdir -p "$RUNNER_TEMP/delivery-snapshot"
+          git archive --format=tar HEAD | gzip > "$RUNNER_TEMP/delivery-snapshot/source.tar.gz"
+          tar -czf "$RUNNER_TEMP/delivery-snapshot/dependencies.tar.gz" node_modules
+          git rev-parse HEAD > "$RUNNER_TEMP/delivery-snapshot/commit.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: delivery-diagnostic-snapshot
+          path: ${{ runner.temp }}/delivery-snapshot/
+          retention-days: 1
