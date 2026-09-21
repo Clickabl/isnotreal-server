@@ -204,6 +204,100 @@ async function stageOfficialImport(
   });
 }
 
+export async function prepareTrustedOfficialImport(
+  db: SqlExecutor,
+  batchId: string,
+  defaultEntityKind: 'person' | 'music-group' | 'company' | 'brand' | 'organization',
+  reviewerId: string,
+): Promise<{
+  readonly matchedExisting: number;
+  readonly createdEntities: number;
+  readonly ambiguousRows: number;
+}> {
+  const reviewer = reviewerId.trim();
+  if (!reviewer) throw new Error('reviewerId is required');
+
+  return db.transaction(async (tx) => {
+    const batch = await tx.query<IdRow>(
+      `SELECT id::text
+       FROM official_import_batches
+       WHERE id = $1 AND state IN ('resolving', 'ready')
+       FOR UPDATE`,
+      [batchId],
+    );
+    if (!batch.rows[0]) throw new Error('official import batch is not preparable');
+
+    const candidates = await tx.query<{
+      row_id: string;
+      entity_id: string;
+      match_basis: 'canonical-name' | 'alias';
+    }>(
+      `SELECT
+         row.id::text AS row_id,
+         min(candidate.entity_id)::text AS entity_id,
+         min(candidate.match_basis) AS match_basis
+       FROM official_import_rows row
+       JOIN official_import_candidates candidate ON candidate.row_id = row.id
+       WHERE row.batch_id = $1
+         AND row.resolution_state = 'candidate'
+       GROUP BY row.id
+       HAVING count(candidate.entity_id) = 1
+       ORDER BY row.ordinal`,
+      [batchId],
+    );
+
+    for (const row of candidates.rows) {
+      await tx.query(
+        `UPDATE official_import_rows
+         SET resolved_entity_id = $2,
+             resolution_state = 'approved',
+             resolution_method = $3,
+             reviewed_by = $4,
+             reviewed_at = now(),
+             review_note = 'Trusted batch: unique existing identity match.',
+             updated_at = now()
+         WHERE id = $1 AND resolution_state = 'candidate'`,
+        [
+          row.row_id,
+          row.entity_id,
+          row.match_basis === 'alias' ? 'exact-alias' : 'exact-canonical-name',
+          reviewer,
+        ],
+      );
+    }
+
+    const unresolved = await tx.query<{ id: string }>(
+      `SELECT id::text
+       FROM official_import_rows
+       WHERE batch_id = $1 AND resolution_state = 'unresolved'
+       ORDER BY ordinal`,
+      [batchId],
+    );
+    for (const row of unresolved.rows) {
+      await createOfficialImportEntity(
+        tx,
+        row.id,
+        defaultEntityKind,
+        reviewer,
+        'Trusted batch: no existing identity candidate; created a new entity.',
+      );
+    }
+
+    const ambiguous = await tx.query<{ count: string }>(
+      `SELECT count(*)::text AS count
+       FROM official_import_rows
+       WHERE batch_id = $1 AND resolution_state = 'ambiguous'`,
+      [batchId],
+    );
+
+    return {
+      matchedExisting: candidates.rows.length,
+      createdEntities: unresolved.rows.length,
+      ambiguousRows: Number(ambiguous.rows[0]?.count ?? 0),
+    };
+  });
+}
+
 export async function approveCampaignImportRow(
   db: SqlExecutor,
   rowId: string,
@@ -395,7 +489,7 @@ export async function markOfficialImportReady(
       `SELECT count(*)::text AS count
        FROM official_import_rows
        WHERE batch_id = $1
-         AND resolution_state NOT IN ('approved', 'skipped', 'rejected')`,
+         AND resolution_state NOT IN ('approved', 'skipped', 'rejected', 'ambiguous')`,
       [batchId],
     );
     if (Number(unresolved.rows[0]?.count ?? 0) !== 0) {
