@@ -180,6 +180,19 @@ export async function startNodeApiRuntime(
   let submissionWindow = Date.now(),
     submissionCount = 0;
   const server = createServer((request, response) => {
+    // Bound application work even if the reverse proxy/CDN is bypassed on a
+    // private or development deployment. The edge remains responsible for
+    // per-client rate limiting.
+    if (inFlight >= 200) {
+      headers(response);
+      response.setHeader('retry-after', '1');
+      json(response, request, 503, { error: 'busy' });
+      return;
+    }
+    inFlight += 1;
+    response.once('close', () => {
+      inFlight = Math.max(0, inFlight - 1);
+    });
     void (async () => {
       const url = new URL(request.url ?? '/', 'http://localhost');
       const isAdmin = url.pathname === '/admin' || url.pathname.startsWith('/admin/');
