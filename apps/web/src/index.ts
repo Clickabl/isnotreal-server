@@ -424,7 +424,7 @@ async function load(){
    request('/admin/api/v1/publication-issues?limit=500')
   ]);
   const bar=h('div','',{class:'row'});
-  const filter=h('select','',{ariaLabel:'Filter feedback type'});
+  const filter=h('select','',{'aria-label':'Filter feedback type'});
   filter.append(h('option','All feedback types',{value:''}));
   for(const type of ['add-evidence','incorrect-information','changed-position','wrong-identifier','missing-identifier','company-relationship','suggest-alternative','new-entity','product-feedback','bug-report','accessibility-feedback','abuse-report'])filter.append(h('option',type.replaceAll('-',' '),{value:type}));
   filter.value=submissionType;filter.addEventListener('change',()=>{submissionType=filter.value;load();});
