@@ -1,0 +1,12 @@
+[Unit]
+Description=Check official evidence sources for changes
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=12h
+RandomizedDelaySec=45min
+Persistent=true
+Unit=isnotreal-source-watch.service
+
+[Install]
+WantedBy=timers.target
