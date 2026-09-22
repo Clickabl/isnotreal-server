@@ -396,6 +396,14 @@ function issues(items){
  if(!items.length)section.append(h('p','No active publication validation issues.'));
  for(const item of items)section.append(card(item.entityName,item.reasonCode+' · '+(item.issues||[]).join(', ')));return section;
 }
+function sourceChanges(items){
+ const section=h('section');section.append(h('h2','Official source changes'));
+ if(!items.length)section.append(h('p','No unreviewed official-source changes.'));
+ for(const item of items){const n=card(item.title,'Detected '+item.detectedAt);const a=h('a',item.url,{href:item.url,target:'_blank',rel:'noopener noreferrer'});n.append(a,h('p','Previous capture '+item.previousCaptureId+' → '+item.newCaptureId));const row=h('div','',{class:'row'});
+  for(const state of ['reviewed','ignored'])row.append(action(state,()=>{const note=prompt(state+' note');if(!note?.trim())return Promise.reject(Error('Review note required'));return request('/admin/api/v1/source-changes/'+item.id+'/review',{method:'POST',body:JSON.stringify({state,note})});}));
+  n.append(row);section.append(n);
+ }return section;
+}
 function identifierEditor(){
  const section=h('section');section.append(h('h2','Verified identifiers'));
  const form=h('form','');const fields=[
@@ -417,11 +425,12 @@ function identifierEditor(){
 async function load(){
  root.replaceChildren(h('p','Loading moderation queues…',{role:'status'}));
  try{
-  const [s,i,p,v]=await Promise.all([
+  const [s,i,p,v,c]=await Promise.all([
    request('/admin/api/v1/submissions?state=pending&limit=200'+(submissionType?'&type='+encodeURIComponent(submissionType):'')),
    request('/admin/api/v1/imports?limit=100'),
    request('/admin/api/v1/membership-proposals?state=pending&limit=200'),
-   request('/admin/api/v1/publication-issues?limit=500')
+   request('/admin/api/v1/publication-issues?limit=500'),
+   request('/admin/api/v1/source-changes?state=pending&limit=200')
   ]);
   const bar=h('div','',{class:'row'});
   const filter=h('select','',{'aria-label':'Filter feedback type'});
@@ -429,7 +438,7 @@ async function load(){
   for(const type of ['add-evidence','incorrect-information','changed-position','wrong-identifier','missing-identifier','company-relationship','suggest-alternative','new-entity','product-feedback','bug-report','accessibility-feedback','abuse-report'])filter.append(h('option',type.replaceAll('-',' '),{value:type}));
   filter.value=submissionType;filter.addEventListener('change',()=>{submissionType=filter.value;load();});
   bar.append(filter,action('Refresh',async()=>{}),action('Forget token',async()=>{sessionStorage.removeItem(key);location.reload();}));
-  root.replaceChildren(bar,submissions(s.submissions),identifierEditor(),imports(i.batches),proposals(p.proposals),issues(v.issues));
+  root.replaceChildren(bar,submissions(s.submissions),sourceChanges(c.changes),identifierEditor(),imports(i.batches),proposals(p.proposals),issues(v.issues));
  }catch(e){root.replaceChildren(card('Could not open moderation console',e.message));const b=action('Try another token',async()=>{sessionStorage.removeItem(key);location.reload();});root.append(b);}
 }
 const login=document.querySelector('#admin-login');
