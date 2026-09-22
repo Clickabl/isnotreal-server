@@ -168,7 +168,7 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
           .map(([key, name, host]) => {
             const candidate = safeUrl(deps.downloads?.[key!]);
             const ready = candidate && new URL(candidate).hostname === host;
-            return `<article class="card"><h2>${escape(name!)}</h2>${ready ? `<a class="button primary" href="${escape(candidate)}" rel="noreferrer">Install from the official store</a>` : '<p class="notice">Store release not yet published.</p>'}<p>Software updates use the browser’s normal extension/app update mechanism. Filtering data updates separately.</p></article>`;
+            return `<article class="card" data-platform="${escape(key!)}"><span class="tag">${escape(name!)}</span><h2>${escape(name!)}</h2>${ready ? `<a class="button primary" href="${escape(candidate)}" rel="noreferrer">Install from the official store</a>` : '<p class="notice">Store release not yet published.</p>'}<p>Software updates use the browser’s normal extension/app update mechanism. Filtering data updates separately.</p></article>`;
           })
           .join(
             '',
@@ -315,6 +315,9 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
 export const createPublicRouteResolver = createPublicWebsite;
 
 const script = String.raw`
+const ua=navigator.userAgent||'';
+const detected=/Firefox\//.test(ua)?'firefox':/Safari\//.test(ua)&&!/Chrome\//.test(ua)?'safari':/Chrome\//.test(ua)?'chromium':null;
+if(detected){const card=document.querySelector('[data-platform="'+detected+'"]');if(card){card.setAttribute('aria-current','true');const tag=card.querySelector('.tag');if(tag)tag.textContent=tag.textContent+' · this browser';}}
 const form=document.querySelector('form[data-submission]');
 if(form)form.addEventListener('submit',async(event)=>{
  event.preventDefault();if(!form.reportValidity())return;
