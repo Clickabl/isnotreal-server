@@ -680,6 +680,97 @@ export async function commitOfficialImport(
   });
 }
 
+export async function rollbackOfficialImport(
+  db: SqlExecutor,
+  batchId: string,
+  reviewerId: string,
+  note: string,
+): Promise<{ readonly assertionsWithdrawn: number; readonly decisionsSuperseded: number }> {
+  const reviewer = reviewerId.trim(),
+    rationale = note.trim();
+  if (!reviewer) throw new Error('reviewerId is required');
+  if (!rationale) throw new Error('rollback rationale is required');
+
+  return db.transaction(async (tx) => {
+    await tx.query("SELECT pg_advisory_xact_lock(hashtext('isnotreal-official-import-commit'))");
+    const batch = await tx.query<{ state: string }>(
+      `SELECT state FROM official_import_batches WHERE id = $1 FOR UPDATE`,
+      [batchId],
+    );
+    if (batch.rows[0]?.state !== 'committed') throw new Error('official import is not committed');
+
+    const assertions = await tx.query<{ assertion_id: string }>(
+      `SELECT assertion_id::text
+       FROM official_import_rows
+       WHERE batch_id = $1
+         AND resolution_state = 'committed'
+         AND assertion_id IS NOT NULL`,
+      [batchId],
+    );
+    const assertionIds = assertions.rows.map((row) => row.assertion_id);
+    if (!assertionIds.length) throw new Error('committed import has no linked assertions');
+
+    const decisions = await tx.query<{ decision_id: string }>(
+      `SELECT DISTINCT reason.decision_id::text
+       FROM membership_decision_reasons reason
+       WHERE reason.assertion_id = ANY($1::uuid[])`,
+      [assertionIds],
+    );
+
+    await tx.query(
+      `DELETE FROM membership_decision_reasons
+       WHERE assertion_id = ANY($1::uuid[])`,
+      [assertionIds],
+    );
+    const superseded = await tx.query<{ id: string }>(
+      `UPDATE membership_decisions decision
+       SET state = 'superseded'
+       WHERE decision.id = ANY($1::uuid[])
+         AND decision.state = 'active'
+         AND NOT EXISTS (
+           SELECT 1 FROM membership_decision_reasons remaining
+           WHERE remaining.decision_id = decision.id
+         )
+       RETURNING decision.id::text`,
+      [decisions.rows.map((row) => row.decision_id)],
+    );
+    await tx.query(
+      `UPDATE assertions
+       SET state = 'withdrawn', updated_at = now()
+       WHERE id = ANY($1::uuid[]) AND state IN ('published', 'disputed')`,
+      [assertionIds],
+    );
+    await tx.query(
+      `UPDATE official_import_rows
+       SET resolution_state = 'approved', assertion_id = NULL, updated_at = now()
+       WHERE batch_id = $1 AND resolution_state = 'committed'`,
+      [batchId],
+    );
+    await tx.query(
+      `UPDATE official_import_batches
+       SET state = 'ready',
+           committed_at = NULL,
+           metadata = metadata || jsonb_build_object(
+             'lastRollbackAt', now(),
+             'lastRollbackBy', $2,
+             'lastRollbackNote', $3
+           )
+       WHERE id = $1`,
+      [batchId, reviewer, rationale],
+    );
+    await tx.query(
+      `INSERT INTO review_events (
+         subject_type, subject_id, action, reviewer_id, rationale
+       ) VALUES ('official-import-batch', $1, 'withdrawn', $2, $3)`,
+      [batchId, reviewer, rationale],
+    );
+    return {
+      assertionsWithdrawn: assertionIds.length,
+      decisionsSuperseded: superseded.rows.length,
+    };
+  });
+}
+
 async function validateCampaignImportBinding(
   db: SqlExecutor,
   input: StageCampaignImportInput,
