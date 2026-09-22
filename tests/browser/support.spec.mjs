@@ -142,7 +142,9 @@ test('feedback receipts, retry errors, literal untrusted text, editor review and
   await page.getByRole('button', { name: 'Unlock workspace' }).click();
   await expect(page.getByRole('heading', { name: 'Report inbox' })).toBeVisible();
   expect(await page.evaluate(() => globalThis.injection)).toBeUndefined();
-  expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0);
+  expect(
+    await page.evaluate(() => globalThis.localStorage.length + globalThis.sessionStorage.length),
+  ).toBe(0);
   await page.getByRole('button', { name: 'Reject', exact: true }).click();
   await expect(page.locator('[data-editor-status]')).toContainText('review note');
   await page.getByLabel('Review note', { exact: true }).fill('Synthetic issue under review.');
