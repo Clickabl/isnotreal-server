@@ -10,6 +10,12 @@ interface Cause {
   name: string;
   description: string;
   reasons: readonly { code: string; label: string; description: string }[];
+  coverage?: {
+    state: 'available' | 'unavailable';
+    channels: readonly string[];
+    generatedAt: string | null;
+    expiresAt: string | null;
+  };
 }
 export interface PublicWebDependencies {
   readonly entities: PublicEntityDirectory;
@@ -153,7 +159,7 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
       const causes = deps.causes ? await deps.causes.list() : fallbackCauses;
       return html(
         'Your feed. Your filters.',
-        `<section class="hero"><p class="eyebrow">Choose what reaches you</p><h1>Filter the feed.<br><span>Keep the receipts.</span></h1><p class="lede">Find the evidence behind people and companies. Choose the causes you care about, then decide what belongs in your browser.</p><div class="row"><a class="button primary" href="/download">Get the extension</a><a class="button" href="/how-it-works">See how it works</a></div></section>${searchForm()}<section><div class="section-title"><h2>Your causes. Not a preset worldview.</h2><a href="/causes">Explore criteria →</a></div><div class="grid">${causes.map((c) => `<a class="card cause" href="/causes/${escape(c.slug)}"><small>Independently selectable</small><h3>${escape(c.name)}</h3><p>${escape(c.description)}</p><span>${c.reasons.length ? `${c.reasons.length} reason definitions` : 'Definitions being prepared'}</span></a>`).join('')}</div></section><section class="card"><h2>A filter is not a verdict.</h2><p>Every reason describes a specific sourced fact. A petition signature, a business contract and a document mention are different things. You can inspect the source and submit missing context.</p></section>`,
+        `<section class="hero"><p class="eyebrow">Choose what reaches you</p><h1>Filter the feed.<br><span>Keep the receipts.</span></h1><p class="lede">Find the evidence behind people and companies. Choose the causes you care about, then decide what belongs in your browser.</p><div class="row"><a class="button primary" href="/download">Get the extension</a><a class="button" href="/how-it-works">See how it works</a></div></section>${searchForm()}<section><div class="section-title"><h2>Your causes. Not a preset worldview.</h2><a href="/causes">Explore criteria →</a></div><div class="grid">${causes.map((c) => `<a class="card cause" href="/causes/${escape(c.slug)}"><small>Independently selectable</small><h3>${escape(c.name)}</h3><p>${escape(c.description)}</p><span>${c.coverage?.state === 'available' ? `${c.reasons.length} reason definitions · published coverage` : c.reasons.length ? `${c.reasons.length} definitions · coverage unavailable` : 'Definitions being prepared'}</span></a>`).join('')}</div></section><section class="card"><h2>A filter is not a verdict.</h2><p>Every reason describes a specific sourced fact. A petition signature, a business contract and a document mention are different things. You can inspect the source and submit missing context.</p></section>`,
       );
     }
     if (pathname === '/download') {
@@ -201,7 +207,7 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
       if (!c) return missing();
       return html(
         c.name,
-        `<p class="eyebrow">Optional cause</p><h1>${escape(c.name)}</h1><p class="lede">${escape(c.description)}</p>${c.reasons.length ? c.reasons.map((r) => `<article class="card"><span class="tag">${escape(r.code)}</span><h2><a href="/reasons/${escape(r.code)}">${escape(r.label)}</a></h2><p>${escape(r.description)}</p></article>`).join('') : '<p class="notice">No published reason definitions are available yet. This is not comprehensive coverage.</p>'}`,
+        `<p class="eyebrow">Optional cause</p><h1>${escape(c.name)}</h1><p class="lede">${escape(c.description)}</p><p class="${c.coverage?.state === 'available' ? 'muted' : 'notice'}">${c.coverage?.state === 'available' ? `Published channels: ${escape(c.coverage.channels.join(', ') || 'none')}` : 'Coverage is not currently published. An empty result must not be read as comprehensive.'}</p>${c.reasons.length ? c.reasons.map((r) => `<article class="card"><span class="tag">${escape(r.code)}</span><h2><a href="/reasons/${escape(r.code)}">${escape(r.label)}</a></h2><p>${escape(r.description)}</p></article>`).join('') : '<p class="notice">No published reason definitions are available yet. This is not comprehensive coverage.</p>'}`,
         pathname,
       );
     }
