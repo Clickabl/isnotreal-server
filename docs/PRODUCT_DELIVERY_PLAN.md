@@ -200,7 +200,9 @@ Do not call the entire product done because a schema migrated, an import ran, a 
 - Chromium packaged-browser suite is mandatory in CI and uploads screenshots/traces on failure.
 - Current browser failure is isolated to the one-tab temporary allow navigation race after the block page; the override now uses a tab-scoped `allowAllRequests` rule and waits for rule visibility before navigating, with CI rerunning.
 - Server CI is green, including PostgreSQL migrations, signed cause-scoped publications, website/API delivery checks and source/evidence gates.
-- Runtime database grants now restrict the public API role to reads plus community-submission inserts; trusted editor DML remains separate.
+- Runtime database grants restrict the public API role to reads plus community-submission inserts; trusted editor DML remains separate.
+- Persisted extension snapshots and reason dictionaries are re-hashed against signed descriptors before reuse; corrupted cache falls through to signed artifact repair.
+- X, TikTok, Instagram and YouTube web-feed adapters plus local feed replacement/hide behavior are now implemented and entering packaged-browser verification.
 - Persisted extension snapshots and reason dictionaries are re-hashed against signed descriptors before reuse; corrupted cached labels fall through to signed artifact repair.
 
 ## Current implementation pulse
