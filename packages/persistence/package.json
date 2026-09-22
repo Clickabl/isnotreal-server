@@ -43,6 +43,10 @@
     "./identifiers": {
       "types": "./dist/identifiers.d.ts",
       "import": "./dist/identifiers.js"
+    },
+    "./source-watch": {
+      "types": "./dist/source-watch.d.ts",
+      "import": "./dist/source-watch.js"
     }
   },
   "files": [
