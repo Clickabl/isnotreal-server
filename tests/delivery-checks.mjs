@@ -324,3 +324,5 @@ async function checkOps(databaseUrl) {
     await admin.close();
   }
 }
+
+// Additional cause catalog migrations are covered by the PostgreSQL integration migration-count gate.
