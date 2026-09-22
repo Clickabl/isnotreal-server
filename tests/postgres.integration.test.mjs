@@ -488,15 +488,9 @@ test(
       assert.equal(rolledBack.assertionsWithdrawn, 2);
       const rollbackState = await db.query(
         `SELECT batch.state,
-                count(*) FILTER (WHERE row.resolution_state = 'approved')::integer AS approved_rows,
-                count(*) FILTER (WHERE assertion.state = 'withdrawn')::integer AS withdrawn_assertions
+                count(*) FILTER (WHERE row.resolution_state = 'approved')::integer AS approved_rows
          FROM official_import_batches batch
          JOIN official_import_rows row ON row.batch_id = batch.id
-         LEFT JOIN assertions assertion ON assertion.id = ANY(
-           SELECT reason.assertion_id
-           FROM membership_decision_reasons reason
-           WHERE false
-         )
          WHERE batch.id = $1
          GROUP BY batch.state`,
         [staged.batchId],
