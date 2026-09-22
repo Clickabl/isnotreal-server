@@ -42,7 +42,7 @@ VALUES
    'A released record contains a specific allegation naming the entity; the assertion must identify who made the allegation and preserve its procedural/contextual status.',
    'Do not convert an allegation into a factual finding, omit exculpatory/procedural context, or publish allegations about protected victims/minors/private people without heightened review.',
    true,1,NULL,'none'),
-  ('EP05','any','authoritative-list','historical-event',
+  ('EP05','any','documented-action','historical-event',
    'An official court or government record documents the exact charge, conviction, civil finding, disposition, or adjudicated outcome and its current procedural status.',
    'Do not treat an arrest, accusation, dismissed count, acquittal, settlement without admission, conviction, and final judgment as interchangeable.',
    true,1,NULL,'none'),
@@ -102,6 +102,12 @@ ON CONFLICT (canonical_url) DO UPDATE SET
   publisher = EXCLUDED.publisher,
   source_type = EXCLUDED.source_type,
   updated_at = now();
+
+INSERT INTO reason_authority_sources (reason_code, source_document_id, authority_role)
+SELECT 'RU01', source.id, 'authoritative-list'
+FROM source_documents source
+WHERE source.canonical_url = 'https://ofac.treasury.gov/sanctions-programs-and-country-information/russia-related-sanctions'
+ON CONFLICT DO NOTHING;
 
 INSERT INTO reason_causes (reason_code, cause_id)
 SELECT reason.code, cause.id
