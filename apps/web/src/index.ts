@@ -353,7 +353,7 @@ function submissions(items){
   const n=card(item.submissionType,item.narrative);n.append(h('small','Receipt '+item.id));
   if(item.entityPublicId)n.append(h('p','Entity '+item.entityPublicId));
   for(const url of item.sourceUrls||[]){const a=h('a',url,{href:url,target:'_blank',rel:'noopener noreferrer'});n.append(a);}
-  const row=h('div','',{class:'row'});for(const state of ['triaged','accepted','rejected','duplicate'])row.append(action(state,()=>reviewSubmission(item,state)));n.append(row);section.append(n);
+  const row=h('div','',{class:'row'});for(const state of ['triaged','accepted','rejected','duplicate','spam'])row.append(action(state,()=>reviewSubmission(item,state)));n.append(row);section.append(n);
  }return section;
 }
 async function importRows(batchId,container){
