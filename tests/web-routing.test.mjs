@@ -63,6 +63,7 @@ test('real public pages and static assets render without fabricated downloads', 
     '/causes',
     '/search',
     '/report',
+    '/admin-console',
   ]) {
     const r = await web(path);
     assert.equal(r.kind, 'html', path);
@@ -70,7 +71,11 @@ test('real public pages and static assets render without fabricated downloads', 
   }
   assert.match((await web('/download')).html, /Store release not yet published/);
   assert.equal((await web('/assets/site.css')).contentType, 'text/css; charset=utf-8');
+  assert.equal((await web('/assets/admin.js')).contentType, 'text/javascript; charset=utf-8');
   assert.match((await web('/report')).html, /data-submission/);
+  const admin = await web('/admin-console');
+  assert.match(admin.html, /Restricted editor surface/);
+  assert.doesNotMatch(admin.html, /Bearer [A-Za-z0-9._-]+/);
 });
 test('canonical numeric URLs and no-alternative state remain usable', async () => {
   assert.deepEqual(await web('/42'), { kind: 'redirect', status: 308, location: '/example' });
