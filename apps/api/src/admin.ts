@@ -17,6 +17,7 @@ import {
   rejectMembershipProposal,
 } from '@isnotreal/persistence/membership-review';
 import type { SqlExecutor } from '@isnotreal/persistence';
+import { assignVerifiedIdentifier } from '@isnotreal/persistence/identifiers';
 
 export interface AdminRequest {
   readonly method: string;
@@ -229,6 +230,18 @@ export function createAdminRouter(deps: AdminDependencies) {
       return response(200, { ok: true });
     }
 
+    if (request.method === 'POST' && request.pathname === '/admin/api/v1/identifiers/assign') {
+      const body = parseIdentifierBody(request.body);
+      if (!body) return response(400, { error: 'invalid_identifier_assignment' });
+      return response(
+        200,
+        await assignVerifiedIdentifier(deps.db, {
+          ...body,
+          reviewerId: request.actorId,
+        }),
+      );
+    }
+
     if (request.method === 'GET' && request.pathname === '/admin/api/v1/publication-issues') {
       const limit = parseLimit(request.query.limit, 500, 1000);
       if (limit === null) return response(400, { error: 'invalid_limit' });
@@ -299,6 +312,45 @@ function parseEntityReviewBody(
   const note = typeof body.note === 'string' ? body.note.trim() : '';
   if (!entityId || note.length > 10_000) return null;
   return { entityId, note };
+}
+
+function parseIdentifierBody(body: unknown): {
+  readonly entityPublicId: string;
+  readonly kind: 'domain' | 'x' | 'tiktok' | 'instagram' | 'youtube';
+  readonly value: string;
+  readonly displayValue?: string;
+  readonly matchScope?: 'exact' | 'include-subdomains';
+  readonly verificationAssertionId: string;
+} | null {
+  if (!isRecord(body)) return null;
+  const entityPublicId =
+      typeof body.entityPublicId === 'string' && /^[1-9]\d{0,19}$/.test(body.entityPublicId)
+        ? body.entityPublicId
+        : null,
+    kind =
+      typeof body.kind === 'string' &&
+      ['domain', 'x', 'tiktok', 'instagram', 'youtube'].includes(body.kind)
+        ? (body.kind as 'domain' | 'x' | 'tiktok' | 'instagram' | 'youtube')
+        : null,
+    value = typeof body.value === 'string' ? body.value.trim() : '',
+    verificationAssertionId = validUuid(
+      typeof body.verificationAssertionId === 'string' ? body.verificationAssertionId : undefined,
+    ),
+    displayValue = typeof body.displayValue === 'string' ? body.displayValue.trim() : undefined,
+    matchScope =
+      body.matchScope === 'include-subdomains' || body.matchScope === 'exact'
+        ? body.matchScope
+        : undefined;
+  if (!entityPublicId || !kind || !value || value.length > 500 || !verificationAssertionId)
+    return null;
+  return {
+    entityPublicId,
+    kind,
+    value,
+    verificationAssertionId,
+    ...(displayValue ? { displayValue } : {}),
+    ...(matchScope ? { matchScope } : {}),
+  };
 }
 
 function parseNoteBody(body: unknown, required: boolean): { readonly note: string } | null {
