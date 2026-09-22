@@ -371,7 +371,9 @@ function imports(items){
  const section=h('section');section.append(h('h2','Official imports'));
  if(!items.length)section.append(h('p','No import batches.'));
  for(const item of items){const n=card(item.sourceName,item.reasonCode+' · '+item.state+' · '+item.rowCount+' rows');const rows=h('div');
-  n.append(action('Review rows',()=>importRows(item.id,rows)),action('Prepare trusted batch',()=>request('/admin/api/v1/imports/'+item.id+'/prepare',{method:'POST',body:JSON.stringify({kind:'person',note:''})})),action('Mark ready',()=>request('/admin/api/v1/imports/'+item.id+'/ready',{method:'POST',body:'{}'})),action('Commit batch',()=>request('/admin/api/v1/imports/'+item.id+'/commit',{method:'POST',body:'{}'})),rows);section.append(n);}
+  n.append(action('Review rows',()=>importRows(item.id,rows)),action('Prepare trusted batch',()=>request('/admin/api/v1/imports/'+item.id+'/prepare',{method:'POST',body:JSON.stringify({kind:'person',note:''})})),action('Mark ready',()=>request('/admin/api/v1/imports/'+item.id+'/ready',{method:'POST',body:'{}'})),action('Commit batch',()=>request('/admin/api/v1/imports/'+item.id+'/commit',{method:'POST',body:'{}'})));
+  if(item.state==='committed')n.append(action('Rollback committed batch',()=>{const note=prompt('Rollback rationale');if(!note?.trim())return Promise.reject(Error('Rollback rationale required'));return request('/admin/api/v1/imports/'+item.id+'/rollback',{method:'POST',body:JSON.stringify({note})});}));
+  n.append(rows);section.append(n);}
  return section;
 }
 function proposals(items){
