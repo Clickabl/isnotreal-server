@@ -1,5 +1,6 @@
 import type { SqlExecutor } from './index.js';
-import { captureSourceDocument, type ArtifactStore } from './source-capture.js';
+import { captureSourceDocument } from './source-capture.js';
+import type { ArtifactStore } from './runtime.js';
 
 export interface SourceChangeEvent {
   readonly id: string;
