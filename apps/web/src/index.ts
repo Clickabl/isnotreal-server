@@ -386,6 +386,24 @@ function issues(items){
  if(!items.length)section.append(h('p','No active publication validation issues.'));
  for(const item of items)section.append(card(item.entityName,item.reasonCode+' · '+(item.issues||[]).join(', ')));return section;
 }
+function identifierEditor(){
+ const section=h('section');section.append(h('h2','Verified identifiers'));
+ const form=h('form','');const fields=[
+  ['entityPublicId','Entity public ID','text'],
+  ['value','Identifier value','text'],
+  ['verificationAssertionId','Published verification assertion UUID','text']
+ ];
+ for(const [name,label,type] of fields){const id='identifier-'+name;form.append(h('label',label,{for:id}),h('input','',{id,name,type,required:'required'}));}
+ const kind=h('select','',{name:'kind',id:'identifier-kind'});
+ for(const value of ['domain','x','tiktok','instagram','youtube'])kind.append(h('option',value,{value}));
+ form.append(h('label','Identifier kind',{for:'identifier-kind'}),kind);
+ const scope=h('select','',{name:'matchScope',id:'identifier-scope'});
+ scope.append(h('option','Exact',{value:'exact'}),h('option','Include subdomains (domain only)',{value:'include-subdomains'}));
+ form.append(h('label','Match scope',{for:'identifier-scope'}),scope);
+ const submit=h('button','Verify identifier',{type:'submit'});form.append(submit);
+ form.addEventListener('submit',async(event)=>{event.preventDefault();submit.disabled=true;try{const data=Object.fromEntries(new FormData(form));await request('/admin/api/v1/identifiers/assign',{method:'POST',body:JSON.stringify(data)});form.reset();alert('Verified identifier saved.');}catch(e){alert(e.message);}finally{submit.disabled=false;}});
+ section.append(h('p','Requires a published, sourced assertion belonging to the entity. The tool refuses an identifier already verified for another entity.'),form);return section;
+}
 async function load(){
  root.replaceChildren(h('p','Loading moderation queues…',{role:'status'}));
  try{
@@ -396,7 +414,7 @@ async function load(){
    request('/admin/api/v1/publication-issues?limit=500')
   ]);
   const bar=h('div','',{class:'row'});bar.append(action('Refresh',async()=>{}),action('Forget token',async()=>{sessionStorage.removeItem(key);location.reload();}));
-  root.replaceChildren(bar,submissions(s.submissions),imports(i.batches),proposals(p.proposals),issues(v.issues));
+  root.replaceChildren(bar,submissions(s.submissions),identifierEditor(),imports(i.batches),proposals(p.proposals),issues(v.issues));
  }catch(e){root.replaceChildren(card('Could not open moderation console',e.message));const b=action('Try another token',async()=>{sessionStorage.removeItem(key);location.reload();});root.append(b);}
 }
 const login=document.querySelector('#admin-login');
