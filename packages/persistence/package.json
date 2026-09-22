@@ -35,6 +35,10 @@
     "./causes": {
       "types": "./dist/causes.d.ts",
       "import": "./dist/causes.js"
+    },
+    "./official-source-parsers": {
+      "types": "./dist/official-source-parsers.d.ts",
+      "import": "./dist/official-source-parsers.js"
     }
   },
   "files": [
