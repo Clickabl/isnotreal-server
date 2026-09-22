@@ -18,6 +18,7 @@ export interface CommunitySubmissionQueueItem {
   readonly reviewedAt: string | null;
   readonly reviewedBy: string | null;
   readonly reviewNote: string;
+  readonly duplicateCount: number;
 }
 
 export interface OfficialImportBatchSummary {
@@ -92,6 +93,7 @@ interface SubmissionRow {
   readonly reviewed_at: string | null;
   readonly reviewed_by: string | null;
   readonly review_note: string;
+  readonly duplicate_count: string;
 }
 
 interface ImportBatchRow {
@@ -169,7 +171,16 @@ export class PostgresModerationQueue {
          submission.submitted_at::text,
          submission.reviewed_at::text,
          submission.reviewed_by,
-         submission.review_note
+         submission.review_note,
+         (
+           SELECT count(*)::text
+           FROM community_submissions peer
+           WHERE peer.id <> submission.id
+             AND peer.submission_type = submission.submission_type
+             AND peer.entity_id IS NOT DISTINCT FROM submission.entity_id
+             AND peer.proposed_reason_code IS NOT DISTINCT FROM submission.proposed_reason_code
+             AND lower(btrim(peer.narrative)) = lower(btrim(submission.narrative))
+         ) AS duplicate_count
        FROM community_submissions submission
        LEFT JOIN entities entity ON entity.id = submission.entity_id
        LEFT JOIN submission_sources source ON source.submission_id = submission.id
@@ -194,6 +205,7 @@ export class PostgresModerationQueue {
       reviewedAt: row.reviewed_at,
       reviewedBy: row.reviewed_by,
       reviewNote: row.review_note,
+      duplicateCount: Number(row.duplicate_count),
     }));
   }
 
