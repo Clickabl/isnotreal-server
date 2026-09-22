@@ -25,26 +25,33 @@ This document is an operational release gate, not a claim that an Internet servi
 ## Abuse cases
 
 ### Submission spam / coordinated reports
+
 Edge write throttling, bounded bodies, application backpressure and a moderation queue prevent direct publication. Moderators can reject/cluster abusive reports. Add provider-level bot/WAF challenges only if measured abuse requires them.
 
 ### DDoS / resource exhaustion
+
 The application is not the DDoS perimeter. CDN/WAF, origin isolation, Nginx limits, bounded request bodies/timeouts and the in-process concurrency ceiling are layered controls. Load-test before changing limits.
 
 ### Cache poisoning
+
 Immutable publication paths are content/version scoped. Do not cache authenticated admin responses or public write responses. Preserve canonical Host/TLS handling at the edge.
 
 ### Source-fetch SSRF / DNS rebinding
+
 Only curated source documents may be fetched. Production egress must restrict destination networks at the network/proxy layer as well as application validation so DNS cannot change between validation and connection.
 
 ### Malicious evidence / defamation
+
 A mention, allegation and adjudicated finding are distinct facts. Public submissions never publish directly. Protected/private people and victims require additional review/exclusion rules.
 
 ### Extension dataset compromise
+
 Clients verify signed manifests and artifact hashes, enforce replay watermarks, stage before activation and retain the previous verified dataset on failure. Executable extension code updates only through reviewed browser packages/store mechanisms.
 
 ## Release drill
 
 Before production launch:
+
 1. Restore the newest DB backup into a disposable database and run readiness plus integrity checks.
 2. Simulate a failed/corrupt publication and verify clients retain the previous dataset.
 3. Verify origin cannot be reached outside the intended edge/operator network.
