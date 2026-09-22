@@ -479,6 +479,13 @@ test(
         ],
       );
 
+      const importedAssertionIds = await db.query(
+        `SELECT assertion_id::text AS id
+         FROM official_import_rows
+         WHERE batch_id = $1 AND assertion_id IS NOT NULL
+         ORDER BY ordinal`,
+        [staged.batchId],
+      );
       const rolledBack = await rollbackOfficialImport(
         db,
         staged.batchId,
@@ -500,10 +507,10 @@ test(
       const withdrawn = await db.query(
         `SELECT count(*)::integer AS count
          FROM assertions
-         WHERE summary LIKE 'Verified signer entry on Artists4Ceasefire:%'
-           AND state = 'withdrawn'`,
+         WHERE id = ANY($1::uuid[]) AND state = 'withdrawn'`,
+        [importedAssertionIds.rows.map((row) => row.id)],
       );
-      assert.equal(withdrawn.rows[0].count, 2);
+      assert.equal(withdrawn.rows[0].count, importedAssertionIds.rows.length);
 
       const afterRollbackPublication = await publishCurrentState(db, store, {
         compilerVersion: 'integration-test',
