@@ -341,6 +341,7 @@ const adminScript = String.raw`
 const root=document.querySelector('#admin-app');
 const key='isnotreal-admin-token';
 let token=sessionStorage.getItem(key)||'';
+let submissionType='';
 const h=(tag,text,attrs={})=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);return n;};
 async function request(path,options={}){
  const response=await fetch(path,{...options,credentials:'omit',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(options.headers||{})}});
@@ -417,12 +418,17 @@ async function load(){
  root.replaceChildren(h('p','Loading moderation queues…',{role:'status'}));
  try{
   const [s,i,p,v]=await Promise.all([
-   request('/admin/api/v1/submissions?state=pending&limit=200'),
+   request('/admin/api/v1/submissions?state=pending&limit=200'+(submissionType?'&type='+encodeURIComponent(submissionType):'')),
    request('/admin/api/v1/imports?limit=100'),
    request('/admin/api/v1/membership-proposals?state=pending&limit=200'),
    request('/admin/api/v1/publication-issues?limit=500')
   ]);
-  const bar=h('div','',{class:'row'});bar.append(action('Refresh',async()=>{}),action('Forget token',async()=>{sessionStorage.removeItem(key);location.reload();}));
+  const bar=h('div','',{class:'row'});
+  const filter=h('select','',{ariaLabel:'Filter feedback type'});
+  filter.append(h('option','All feedback types',{value:''}));
+  for(const type of ['add-evidence','incorrect-information','changed-position','wrong-identifier','missing-identifier','company-relationship','suggest-alternative','new-entity','product-feedback','bug-report','accessibility-feedback','abuse-report'])filter.append(h('option',type.replaceAll('-',' '),{value:type}));
+  filter.value=submissionType;filter.addEventListener('change',()=>{submissionType=filter.value;load();});
+  bar.append(filter,action('Refresh',async()=>{}),action('Forget token',async()=>{sessionStorage.removeItem(key);location.reload();}));
   root.replaceChildren(bar,submissions(s.submissions),identifierEditor(),imports(i.batches),proposals(p.proposals),issues(v.issues));
  }catch(e){root.replaceChildren(card('Could not open moderation console',e.message));const b=action('Try another token',async()=>{sessionStorage.removeItem(key);location.reload();});root.append(b);}
 }
