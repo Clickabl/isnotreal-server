@@ -145,4 +145,65 @@ ON CONFLICT (cause_id, reason_code) DO UPDATE SET
   user_selectable = EXCLUDED.user_selectable,
   sort_order = EXCLUDED.sort_order;
 
+-- Publish a new immutable reason-catalog snapshot so these reasons are immediately
+-- usable by validation/publication after the migration.
+UPDATE reason_catalog_versions SET state = 'retired' WHERE state = 'active';
+
+INSERT INTO reason_catalog_versions (version, state, notes, published_at)
+SELECT COALESCE(max(version), 0) + 1,
+       'active',
+       'Adds factual Epstein-record, Trump/MAGA public-activity, and Russia/Ukraine reason vocabulary. User-selectable presentation remains informational by default.',
+       now()
+FROM reason_catalog_versions;
+
+INSERT INTO reason_catalog_entries (
+  catalog_version_id, reason_code, label, description, category, default_list,
+  publication_enabled, subject_scope, evidence_mode, validity_mode, public_criteria,
+  exclusion_criteria, primary_or_authoritative_required, minimum_evidence_items,
+  reverify_after_days, inheritance_policy, campaigns, authority_sources
+)
+SELECT
+  version.id,
+  reason.code,
+  reason.label,
+  reason.description,
+  reason.category,
+  reason.default_list,
+  reason.publication_enabled,
+  requirement.subject_scope,
+  requirement.evidence_mode,
+  requirement.validity_mode,
+  requirement.public_criteria,
+  requirement.exclusion_criteria,
+  requirement.primary_or_authoritative_required,
+  requirement.minimum_evidence_items,
+  requirement.reverify_after_days,
+  requirement.inheritance_policy,
+  COALESCE((
+    SELECT jsonb_agg(jsonb_build_object(
+      'slug', campaign.slug,
+      'name', campaign.name,
+      'membershipRole', binding.membership_role,
+      'assertionActionType', binding.assertion_action_type
+    ) ORDER BY campaign.slug)
+    FROM reason_campaign_bindings binding
+    JOIN campaigns campaign ON campaign.id = binding.campaign_id
+    WHERE binding.reason_code = reason.code
+  ), '[]'::jsonb),
+  COALESCE((
+    SELECT jsonb_agg(jsonb_build_object(
+      'url', document.canonical_url,
+      'title', document.title,
+      'publisher', document.publisher,
+      'role', authority.authority_role
+    ) ORDER BY authority.authority_role, document.canonical_url)
+    FROM reason_authority_sources authority
+    JOIN source_documents document ON document.id = authority.source_document_id
+    WHERE authority.reason_code = reason.code
+  ), '[]'::jsonb)
+FROM reason_catalog_versions version
+CROSS JOIN reason_definitions reason
+LEFT JOIN reason_evidence_requirements requirement ON requirement.reason_code = reason.code
+WHERE version.state = 'active' AND reason.active = true;
+
 COMMIT;
