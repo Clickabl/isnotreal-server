@@ -249,7 +249,7 @@ export function createAdminRouter(deps: AdminDependencies) {
           ? request.query.state
           : 'pending';
       return response(200, {
-        changes: await listSourceChanges(deps.db, state, boundedLimit(request.query.limit, 200)),
+        changes: await listSourceChanges(deps.db, state, limit(request.query.limit)),
       });
     }
 
