@@ -39,7 +39,10 @@ export async function runDeliveryChecks({
      WHERE cause.slug IN ('epstein-records', 'trump-maga', 'russia-ukraine')`,
   );
   for (const code of ['EP01', 'MAGA01', 'RU01'])
-    assert.ok(additionalReasons.rows.some((row) => row.reason_code === code), code);
+    assert.ok(
+      additionalReasons.rows.some((row) => row.reason_code === code),
+      code,
+    );
   assert.match(
     additionalReasons.rows.find((row) => row.reason_code === 'EP01').exclusion_criteria,
     /victims|minors/i,
