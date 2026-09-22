@@ -18,6 +18,7 @@ import {
 } from '@isnotreal/persistence/membership-review';
 import type { SqlExecutor } from '@isnotreal/persistence';
 import { assignVerifiedIdentifier } from '@isnotreal/persistence/identifiers';
+import { listSourceChanges, reviewSourceChange } from '@isnotreal/persistence/source-watch';
 
 export interface AdminRequest {
   readonly method: string;
@@ -242,6 +243,26 @@ export function createAdminRouter(deps: AdminDependencies) {
       );
     }
 
+    if (request.method === 'GET' && request.pathname === '/admin/api/v1/source-changes') {
+      const state =
+        request.query.state === 'reviewed' || request.query.state === 'ignored'
+          ? request.query.state
+          : 'pending';
+      return response(200, {
+        changes: await listSourceChanges(deps.db, state, boundedLimit(request.query.limit, 200)),
+      });
+    }
+
+    const sourceChangeReview =
+      /^\/admin\/api\/v1\/source-changes\/([0-9a-f-]+)\/review$/i.exec(request.pathname);
+    if (request.method === 'POST' && sourceChangeReview) {
+      const id = validUuid(sourceChangeReview[1]);
+      const body = parseSourceChangeReviewBody(request.body);
+      if (!id || !body) return response(400, { error: 'invalid_request' });
+      await reviewSourceChange(deps.db, id, body.state, request.actorId, body.note);
+      return response(200, { ok: true });
+    }
+
     if (request.method === 'GET' && request.pathname === '/admin/api/v1/publication-issues') {
       const limit = parseLimit(request.query.limit, 500, 1000);
       if (limit === null) return response(400, { error: 'invalid_limit' });
@@ -312,6 +333,16 @@ function parseEntityReviewBody(
   const note = typeof body.note === 'string' ? body.note.trim() : '';
   if (!entityId || note.length > 10_000) return null;
   return { entityId, note };
+}
+
+function parseSourceChangeReviewBody(body: unknown): {
+  readonly state: 'reviewed' | 'ignored';
+  readonly note: string;
+} | null {
+  if (!isRecord(body)) return null;
+  const state = body.state === 'reviewed' || body.state === 'ignored' ? body.state : null,
+    note = typeof body.note === 'string' ? body.note.trim() : '';
+  return state && note && note.length <= 4000 ? { state, note } : null;
 }
 
 function parseIdentifierBody(body: unknown): {
