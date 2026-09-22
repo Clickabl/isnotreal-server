@@ -121,9 +121,9 @@ All boxes below are open until demonstrated in the relevant runtime.
 
 ### Foundation and integration
 
-- [~] F01: Protocol v4 public-ID/reason/cause contracts are now aligned in both repos and extension CI passed; shared cross-repo fixture automation still remains.
-- [~] F02: Cause catalog, reason bindings, cause-scoped decisions/proposals/publications and candidate projection are implemented; publication runtime migration/tests are still being completed.
-- [~] F03: Pure local cause/reason evaluation is implemented in the extension core; persisted settings migrations and behavioral tests remain.
+- [x] F01: Shared protocol v5 public-ID/reason/cause/signature fixtures are enforced across repos, including canonical serializer digests and extension snapshot guards.
+- [x] F02: Cause catalog, reason bindings, cause-scoped decisions/publications and candidate projection are implemented and covered by green PostgreSQL delivery tests.
+- [x] F03: Local cause/reason evaluation and persisted settings sanitization/migration are implemented and covered by foundation tests.
 - [ ] F04: Define availability/coverage separately from membership; unavailable or empty data cannot be displayed as successfully comprehensive.
 
 ### Website
@@ -136,25 +136,25 @@ All boxes below are open until demonstrated in the relevant runtime.
 
 ### Installable extension and behavior
 
-- [ ] E01: Produce a genuinely loadable Chromium build with registered background/content/options/popup entry points. Scaffold tsc output does not satisfy this gate.
-- [ ] E02: Build onboarding and settings with independent causes, reason controls, permissions, local overrides and update status. Preferences persist across restart/upgrade.
-- [ ] E03: Build the extension-owned block page, original navigation handling, See why, See alternatives, lucky alternative and remembered allow/alternative choices.
-- [ ] E04: Install pre-request domain rules and prove blocked navigation sends no target HTTP request in the supported test case. Check browser quotas, existing site service workers, cached pages, redirects, missing permissions and restart behavior. No overlay fallback presented as hard blocking.
+- [x] E01: Chromium packaging produces a loadable MV3 extension with registered background, popup, options and block-page entry points; packaged Chromium is exercised in CI.
+- [x] E02: Onboarding/settings provide independent causes/reasons, permissions, overrides and update state with IndexedDB persistence and restart coverage.
+- [~] E03: Extension-owned block page, original navigation, evidence, alternatives and remembered choices are implemented; packaged Chromium restart/allow flow is in final CI verification.
+- [~] E04: Pre-request DNR domain blocking and zero-target-request coverage are implemented in packaged Chromium tests; final remembered-allow restart verification is rerunning.
 - [ ] E05: Implement X, TikTok, Instagram and YouTube adapters individually. Test stable ID extraction, recycled DOM nodes, SPA navigation, hide/replace/reveal, playback and accidental interaction prevention. Unknown IDs remain unresolved.
 - [ ] E06: Package and test Firefox plus Safari macOS/iOS. Publish a capability matrix; native social apps are not covered by a Safari browser extension.
 - [ ] E07: Add accessibility, keyboard navigation, localization, reduced motion, local diagnostics and permission-revocation recovery. Do not invent revenue-denied statistics.
 
 ### Data updates and releases
 
-- [ ] U01: Implement indexed local storage, full sync, bounded deltas and restart-safe activation with the matching reason/cause catalog.
-- [ ] U02: Implement alarm/startup/manual scheduling, jitter, backoff, expiry, partial-failure UI and correction removals.
+- [x] U01: IndexedDB storage, signed full/delta sync, reason dictionaries, rollback-safe staging, restart activation and cached-artifact rehash/repair are implemented and tested.
+- [x] U02: Startup/alarm/manual sync, retry backoff, expiry/staleness, partial-failure state and signed removals are implemented and covered by updater/browser tests.
 - [ ] U03: Implement isolated signing, key rotation, replay protection and compromised-key recovery in both publisher and client.
-- [ ] U04: Build extension release automation and store update procedures, with executable code kept inside reviewed packages.
+- [~] U04: Reproducible Chromium/Firefox packages, reviewed release-candidate workflow and store-update procedure docs are implemented; actual store publication remains an external release action.
 - [ ] U05: Deliver immutable artifacts through object storage/CDN; prove cache behavior, compression, origin shielding and recovery under measured rollout load.
 
 ### Evidence and editing
 
-- [ ] D01: Implement trusted batch preview/commit without a second per-person membership approval; keep ambiguous identity exceptions, idempotency, audit history and undo.
+- [~] D01: Trusted official-list commit now applies sourced assertions and cause membership in one reviewed batch without redundant per-person membership proposals; preview/undo polish remains.
 - [ ] D02: Import the requested official CCFP source with exact row counts and shared evidence, then enrich stable platform identifiers. Do not invent missing IDs or employer affiliations.
 - [ ] D03: Add reviewed source adapters and contextual reason definitions for the other causes. Keep protected-person exclusions and documented identity checks in the ingestion path.
 - [ ] D04: Build change detection for official source revisions, removals, withdrawals, expired relationships and disputed identity matches. New source content is not automatically true because it was downloaded.
@@ -163,10 +163,10 @@ All boxes below are open until demonstrated in the relevant runtime.
 
 ### Production and safety
 
-- [ ] O01: Replace blanket app-table write grants with least-privilege public-runtime, editor and publisher capabilities; separate admin exposure from the public service.
+- [x] O01: Runtime DB role is read-mostly with community-submission inserts only; editor DML and schema-owner roles are separate and admin routes require bearer auth/network isolation at deployment.
 - [ ] O02: Execute and test bootstrap/grants/backup/restore scripts against disposable PostgreSQL before the server handoff. Correct SQL/shell escaping and match /healthz and /readyz to the actual runtime.
 - [ ] O03: Complete source-fetcher egress isolation and DNS-rebinding protection. A DNS precheck followed by a separately resolving fetch is not sufficient by itself.
-- [ ] O04: Add request rate limits, bounded queues, retention, safe error handling, dependency/release scanning and secret-management procedures.
+- [~] O04: Edge public/write rate limits, connection/body/time budgets, application concurrency/submission backstops and safe release-secret procedures are implemented; retention/load validation remains.
 - [ ] O05: Add privacy-reviewed logs/metrics, crash diagnostics, restore drills, rollback instructions and public service status without collecting passive encounter history.
 - [ ] O06: Define target browser versions and measured latency, memory, dataset-size and distribution-capacity budgets. A billion-user target is not proof of billion-user readiness.
 
