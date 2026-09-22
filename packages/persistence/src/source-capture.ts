@@ -78,6 +78,30 @@ export async function captureSourceDocument(
   const storageKey = `source-captures/${document.id}/${hash}.bin`;
   await store.put(storageKey, fetched.bytes);
 
+  const existing = await db.query<CaptureInsertRow>(
+    `SELECT id::text, retrieved_at::text
+     FROM source_captures
+     WHERE document_id = $1
+       AND content_hash = $2
+       AND status = 'available'
+     ORDER BY retrieved_at DESC
+     LIMIT 1`,
+    [document.id, hash],
+  );
+  const prior = existing.rows[0];
+  if (prior) {
+    return {
+      captureId: prior.id,
+      documentId: document.id,
+      finalUrl: fetched.finalUrl,
+      sha256: hash,
+      byteSize: fetched.bytes.byteLength,
+      contentType: fetched.contentType,
+      storageKey,
+      retrievedAt: prior.retrieved_at,
+    };
+  }
+
   const inserted = await db.query<CaptureInsertRow>(
     `INSERT INTO source_captures (
        document_id,
