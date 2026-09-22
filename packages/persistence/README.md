@@ -1,5 +1,13 @@
 # Persistence boundary
 
-Reserved for database adapters implementing application ports. No database client, ORM, schema migrations, seed data, or connection behavior exists yet. Domain models are conceptual records, not a ready-to-run relational schema.
+Implemented PostgreSQL adapters/services cover public entities/search, reasons/causes, alternatives, community moderation, verified identifiers, official-list imports/rollback, source capture/watch, membership review and signed publication artifacts.
 
-Before implementation decide database/host, transaction boundaries, revision semantics, retention and backup policies. Enforce platform+stable-ID uniqueness, evidence/source foreign keys, and append-only moderation history. Separate immutable published blocklist snapshots from mutable editorial work; publishing/removing IDs must atomically advance versions and deltas. Keep private dispute/contact and reviewer details out of public projections.
+Key invariants:
+
+- application runtime, editor and schema-owner roles are separate;
+- source capture pins connections to validated public DNS results and stores immutable hashes;
+- public submissions never publish directly;
+- trusted official lists use one audited batch while ambiguous identities remain exceptions;
+- reason facts, entity identifiers and cause membership remain separate records;
+- signed publication activation is partition-scoped and rollback-safe;
+- public projections exclude internal reviewer/private operational data.
