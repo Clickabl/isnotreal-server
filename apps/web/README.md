@@ -1,3 +1,5 @@
-# Public site composition root
+# Public website and review UI
 
-Reserved for https://isnotreal.click and public /why/:platform/:accountId pages. No web framework, pages, deployment or evidence renderer exists. Why pages eventually show specific claims, sources, evidence dates, review status and correction/dispute pathways. Public projections must exclude private contact details and internal reviewer identifiers. No tracking or automatic link prefetch for Why navigation.
+`src/index.ts` renders the shared public layout, search, download availability, causes/reasons, evidence profiles and alternatives. `src/support.ts` and `src/support-assets.ts` implement the unified report/help/editor workflow. The API runtime mounts these routes and assets with CSP and appropriate cache controls.
+
+Public reports route to authenticated evidence/product/safety inboxes. Editor credentials stay only in tab memory. Browser tests cover receipts, error recovery, review actions, safe rendering, mobile widths and keyboard navigation. Store availability is configured rather than fabricated.
