@@ -352,6 +352,7 @@ function submissions(items){
  for(const item of items){
   const n=card(item.submissionType,item.narrative);n.append(h('small','Receipt '+item.id));
   if(item.entityPublicId)n.append(h('p','Entity '+item.entityPublicId));
+  if(item.duplicateCount)n.append(h('p',item.duplicateCount+' similar submission'+(item.duplicateCount===1?'':'s')+' detected'));
   for(const url of item.sourceUrls||[]){const a=h('a',url,{href:url,target:'_blank',rel:'noopener noreferrer'});n.append(a);}
   const row=h('div','',{class:'row'});for(const state of ['triaged','accepted','rejected','duplicate','spam'])row.append(action(state,()=>reviewSubmission(item,state)));n.append(row);section.append(n);
  }return section;
