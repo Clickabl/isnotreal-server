@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { request as httpRequest } from 'node:http';
+import type { IncomingMessage } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
@@ -282,7 +283,7 @@ async function requestPinned(
       'user-agent': options.userAgent,
       host: url.host,
     };
-    const onResponse = (response: import('node:http').IncomingMessage) => {
+    const onResponse = (response: IncomingMessage) => {
       const status = response.statusCode ?? 0;
       const header = (name: string): string | null => {
         const value = response.headers[name];
