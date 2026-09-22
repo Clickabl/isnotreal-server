@@ -722,18 +722,21 @@ export async function rollbackOfficialImport(
        WHERE assertion_id = ANY($1::uuid[])`,
       [assertionIds],
     );
-    const superseded = await tx.query<{ id: string }>(
-      `UPDATE membership_decisions decision
-       SET state = 'superseded'
-       WHERE decision.id = ANY($1::uuid[])
-         AND decision.state = 'active'
-         AND NOT EXISTS (
-           SELECT 1 FROM membership_decision_reasons remaining
-           WHERE remaining.decision_id = decision.id
-         )
-       RETURNING decision.id::text`,
-      [decisions.rows.map((row) => row.decision_id)],
-    );
+    const superseded =
+      decisions.rows.length === 0
+        ? { rows: [] as { id: string }[] }
+        : await tx.query<{ id: string }>(
+            `UPDATE membership_decisions decision
+             SET state = 'superseded'
+             WHERE decision.id = ANY($1::uuid[])
+               AND decision.state = 'active'
+               AND NOT EXISTS (
+                 SELECT 1 FROM membership_decision_reasons remaining
+                 WHERE remaining.decision_id = decision.id
+               )
+             RETURNING decision.id::text`,
+            [decisions.rows.map((row) => row.decision_id)],
+          );
     await tx.query(
       `UPDATE assertions
        SET state = 'withdrawn', updated_at = now()
