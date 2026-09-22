@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh signed isnotreal.click publications
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=30min
+RandomizedDelaySec=5min
+Persistent=true
+Unit=isnotreal-publisher.service
+
+[Install]
+WantedBy=timers.target
