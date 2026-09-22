@@ -2,20 +2,20 @@ BEGIN;
 
 INSERT INTO reason_definitions (code, label, description, category, default_list, publication_enabled)
 VALUES
-  ('EP01', 'Named in released Epstein-related record', 'The entity is explicitly named in a released Epstein-related record with an exact source and document locator. A mention alone is not an allegation or finding of wrongdoing.', 'epstein-record', 'filter', true),
-  ('EP02', 'Documented direct contact with Epstein or Maxwell', 'A released primary record documents direct communication, a meeting, appointment, address-book/contact entry, or comparable direct contact with Jeffrey Epstein or Ghislaine Maxwell. The record does not by itself establish misconduct.', 'epstein-record', 'filter', true),
-  ('EP03', 'Documented Epstein aircraft travel', 'A released primary flight or travel record identifies the person as a passenger or traveler connected to an Epstein aircraft. Travel alone does not establish misconduct.', 'epstein-record', 'filter', true),
-  ('EP04', 'Attributed allegation in released Epstein-related record', 'A released record contains a specific allegation about the entity, attributed to the person or proceeding that made it. This records the existence of the allegation, not that it is true.', 'epstein-record', 'filter', true),
-  ('EP05', 'Epstein-related charge, conviction, or adjudicated finding', 'An official court or government record documents a charge, conviction, civil finding, or other adjudicated outcome connected to Epstein-related conduct, with the procedural status stated precisely.', 'epstein-record', 'filter', true),
-  ('MAGA01', 'Public endorsement of Donald Trump', 'The person explicitly and publicly endorsed Donald Trump for president or another election, in an attributable statement or official endorsement record.', 'trump-maga', 'filter', true),
-  ('MAGA02', 'Official Trump campaign role', 'The person held a documented official role in a Donald Trump presidential campaign or an official campaign coalition.', 'trump-maga', 'filter', true),
-  ('MAGA03', 'Explicit MAGA / America First self-identification', 'The person explicitly described their own political identity or advocacy as MAGA, Make America Great Again, or America First in an attributable source.', 'trump-maga', 'filter', true),
-  ('MAGA04', 'Official Trump campaign event participant', 'The person was identified by the campaign as an official speaker, surrogate, tour participant, or featured campaign-event participant.', 'trump-maga', 'filter', true),
-  ('RU01', 'Russia-related sanctions designation', 'The entity is currently designated on an official sanctions list under a Russia-related program. The exact authority and program tag must be retained.', 'russia-ukraine', 'filter', true),
-  ('RU02', 'Documented Russian state ownership or control', 'Current primary or authoritative records document material ownership or control by the Russian state or a Russian state-controlled entity.', 'russia-ukraine', 'filter', true),
-  ('RU03', 'Documented continuing business operations in Russia', 'Current company disclosures or equivalent authoritative evidence document continuing material business operations in Russia.', 'russia-ukraine', 'filter', true),
-  ('RU04', 'Documented supply or contract supporting Russian military activity', 'Primary or authoritative evidence documents a material contract, supply relationship, or service supporting Russian military or defense activity.', 'russia-ukraine', 'filter', true),
-  ('RU05', 'Explicit public support for Russia’s invasion or military action in Ukraine', 'The person or organization explicitly supported Russia’s invasion of Ukraine or Russian military action in an attributable public statement.', 'russia-ukraine', 'filter', true),
+  ('EP01', 'Named in released Epstein-related record', 'The entity is explicitly named in a released Epstein-related record with an exact source and document locator. A mention alone is not an allegation or finding of wrongdoing.', 'epstein-record', 'highlight', true),
+  ('EP02', 'Documented direct contact with Epstein or Maxwell', 'A released primary record documents direct communication, a meeting, appointment, address-book/contact entry, or comparable direct contact with Jeffrey Epstein or Ghislaine Maxwell. The record does not by itself establish misconduct.', 'epstein-record', 'highlight', true),
+  ('EP03', 'Documented Epstein aircraft travel', 'A released primary flight or travel record identifies the person as a passenger or traveler connected to an Epstein aircraft. Travel alone does not establish misconduct.', 'epstein-record', 'highlight', true),
+  ('EP04', 'Attributed allegation in released Epstein-related record', 'A released record contains a specific allegation about the entity, attributed to the person or proceeding that made it. This records the existence of the allegation, not that it is true.', 'epstein-record', 'highlight', true),
+  ('EP05', 'Epstein-related charge, conviction, or adjudicated finding', 'An official court or government record documents a charge, conviction, civil finding, or other adjudicated outcome connected to Epstein-related conduct, with the procedural status stated precisely.', 'epstein-record', 'highlight', true),
+  ('MAGA01', 'Public endorsement of Donald Trump', 'The person explicitly and publicly endorsed Donald Trump for president or another election, in an attributable statement or official endorsement record.', 'trump-maga', 'highlight', true),
+  ('MAGA02', 'Official Trump campaign role', 'The person held a documented official role in a Donald Trump presidential campaign or an official campaign coalition.', 'trump-maga', 'highlight', true),
+  ('MAGA03', 'Explicit MAGA / America First self-identification', 'The person explicitly described their own political identity or advocacy as MAGA, Make America Great Again, or America First in an attributable source.', 'trump-maga', 'highlight', true),
+  ('MAGA04', 'Official Trump campaign event participant', 'The person was identified by the campaign as an official speaker, surrogate, tour participant, or featured campaign-event participant.', 'trump-maga', 'highlight', true),
+  ('RU01', 'Russia-related sanctions designation', 'The entity is currently designated on an official sanctions list under a Russia-related program. The exact authority and program tag must be retained.', 'russia-ukraine', 'highlight', true),
+  ('RU02', 'Documented Russian state ownership or control', 'Current primary or authoritative records document material ownership or control by the Russian state or a Russian state-controlled entity.', 'russia-ukraine', 'highlight', true),
+  ('RU03', 'Documented continuing business operations in Russia', 'Current company disclosures or equivalent authoritative evidence document continuing material business operations in Russia.', 'russia-ukraine', 'highlight', true),
+  ('RU04', 'Documented supply or contract supporting Russian military activity', 'Primary or authoritative evidence documents a material contract, supply relationship, or service supporting Russian military or defense activity.', 'russia-ukraine', 'highlight', true),
+  ('RU05', 'Explicit public support for Russia’s invasion or military action in Ukraine', 'The person or organization explicitly supported Russia’s invasion of Ukraine or Russian military action in an attributable public statement.', 'russia-ukraine', 'highlight', true),
   ('RU06', 'Documented exit or suspension of Russia operations', 'Current company disclosures or equivalent authoritative evidence document an exit from or material suspension of business operations in Russia.', 'russia-ukraine', 'highlight', true),
   ('RU07', 'Documented support for Ukraine', 'Primary or authoritative evidence documents material humanitarian, reconstruction, defensive, or other support provided to Ukraine.', 'russia-ukraine', 'highlight', true)
 ON CONFLICT (code) DO NOTHING;
@@ -128,15 +128,15 @@ INSERT INTO cause_reason_preferences (
 SELECT cause.id, seed.reason_code, seed.action, true, seed.sort_order
 FROM (
   VALUES
-    ('epstein-records','EP01','filter',10),('epstein-records','EP02','filter',20),
-    ('epstein-records','EP03','filter',30),('epstein-records','EP04','filter',40),
-    ('epstein-records','EP05','filter',50),
-    ('trump-maga','MAGA01','filter',10),('trump-maga','MAGA02','filter',20),
-    ('trump-maga','MAGA03','filter',30),('trump-maga','MAGA04','filter',40),
-    ('russia-ukraine','RU01','filter',10),('russia-ukraine','RU02','filter',20),
-    ('russia-ukraine','RU03','filter',30),('russia-ukraine','RU04','filter',40),
-    ('russia-ukraine','RU05','filter',50),('russia-ukraine','RU06','highlight',60),
-    ('russia-ukraine','RU07','highlight',70)
+    ('epstein-records','EP01','informational',10),('epstein-records','EP02','informational',20),
+    ('epstein-records','EP03','informational',30),('epstein-records','EP04','informational',40),
+    ('epstein-records','EP05','informational',50),
+    ('trump-maga','MAGA01','informational',10),('trump-maga','MAGA02','informational',20),
+    ('trump-maga','MAGA03','informational',30),('trump-maga','MAGA04','informational',40),
+    ('russia-ukraine','RU01','informational',10),('russia-ukraine','RU02','informational',20),
+    ('russia-ukraine','RU03','informational',30),('russia-ukraine','RU04','informational',40),
+    ('russia-ukraine','RU05','informational',50),('russia-ukraine','RU06','informational',60),
+    ('russia-ukraine','RU07','informational',70)
 ) AS seed(cause_slug, reason_code, action, sort_order)
 JOIN causes cause ON cause.slug = seed.cause_slug
 ON CONFLICT (cause_id, reason_code) DO UPDATE SET
