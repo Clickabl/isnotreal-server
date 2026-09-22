@@ -1,3 +1,7 @@
 # API composition root
 
-Reserved for HTTP routing, dependency wiring, runtime validation and explicit public projections. No HTTP framework, listening server, handlers or database calls exist. Planned public API is documented in ../../docs/protocol.md. Authentication, reviewer authorization, rate limits and idempotent publication belong in the implementation pass.
+The Node API runtime is implemented here. It exposes health/readiness, public cause/search/entity/reason/alternative/submission APIs, immutable signed publication artifacts, the public website, and an optional bearer-authenticated editor API backed by a separate editor-role database connection.
+
+Operational controls include bounded JSON bodies, request timeouts, application concurrency backpressure, public submission throttling and no-store admin responses. Nginx/CDN/firewall controls remain the Internet perimeter.
+
+CLI entry points also live here for migrations, publication, reason-catalog publication, source capture/watch and the trusted CCFP import.
