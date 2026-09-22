@@ -1,15 +1,15 @@
 # Database
 
-`migrations/0001_core.sql` is the initial PostgreSQL schema. It deliberately uses SQL as the authoritative migration format instead of coupling the model to an ORM.
+PostgreSQL migrations are the authoritative schema and are exercised from a clean PostgreSQL 17 service in CI. They cover entities/identifiers, evidence/source captures, cause-scoped reasons and membership, alternatives, community feedback/moderation, official-list imports, source-change review and signed publication metadata.
 
 Important invariants:
 
-- `entities.public_id` is stable, public and never recycled; internal UUIDs stay server-side.
-- Identifiers are separate from assignments so domains/accounts can change ownership without erasing history.
-- An assertion is a sourced factual record; a reason is a display classification; a membership decision is editorial policy. They are not interchangeable.
-- Company/brand relationships never automatically copy factual assertions to another entity.
-- Community submissions are quarantined from published data until reviewed.
-- `publication_candidates` is the only extension-facing compiler projection. It emits no names or evidence.
-- Submitted URLs are stored only. Fetching/capturing them must happen in an isolated worker with SSRF controls.
-
-Production should use separate migration, application-read/write and publication/signing roles. Publication signing authority must not live in the ordinary API process.
+- `entities.public_id` is stable and never recycled; internal UUIDs stay server-side.
+- Identifiers are separate from assignments so ownership can change without erasing history.
+- Assertions are sourced facts; reasons classify facts; membership decisions control publication. They are not interchangeable.
+- Each reason code has one owning cause. Users can choose local filter/highlight treatment independently.
+- Company/brand relationships never automatically copy factual assertions.
+- Community submissions are quarantined until review; trusted official imports are audited and reversible.
+- `publication_candidates` is the only compact extension-facing projection and emits no names/evidence.
+- Source fetching uses application SSRF/DNS controls and should also have production egress restrictions.
+- Production uses separate owner, runtime and editor roles; signing authority stays outside the public API process.
