@@ -1,0 +1,11 @@
+[Unit]
+Description=Run isnotreal.click retention cleanup
+
+[Timer]
+OnCalendar=weekly
+RandomizedDelaySec=2h
+Persistent=true
+Unit=isnotreal-retention.service
+
+[Install]
+WantedBy=timers.target
