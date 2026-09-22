@@ -27,7 +27,8 @@
     "db:shell": "bash ops/db-shell.sh",
     "db:backup": "bash ops/backup-db.sh",
     "start": "node apps/api/dist/serve.js",
-    "start:local": "npm run build && npm run start"
+    "start:local": "npm run build && npm run start",
+    "import:ccfp": "npm run build && node apps/api/dist/import-ccfp.js"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
