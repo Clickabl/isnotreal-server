@@ -16,6 +16,7 @@ import {
   commitCampaignImport,
   markCampaignImportReady,
   prepareTrustedOfficialImport,
+  rollbackOfficialImport,
   stageAuthorityImport,
   stageCampaignImport,
 } from '../packages/persistence/dist/campaign-import.js';
@@ -476,6 +477,50 @@ test(
             ['P03'],
           ],
         ],
+      );
+
+      const rolledBack = await rollbackOfficialImport(
+        db,
+        staged.batchId,
+        'integration-reviewer',
+        'Integration rollback verification.',
+      );
+      assert.equal(rolledBack.assertionsWithdrawn, 2);
+      const rollbackState = await db.query(
+        `SELECT batch.state,
+                count(*) FILTER (WHERE row.resolution_state = 'approved')::integer AS approved_rows,
+                count(*) FILTER (WHERE assertion.state = 'withdrawn')::integer AS withdrawn_assertions
+         FROM official_import_batches batch
+         JOIN official_import_rows row ON row.batch_id = batch.id
+         LEFT JOIN assertions assertion ON assertion.id = ANY(
+           SELECT reason.assertion_id
+           FROM membership_decision_reasons reason
+           WHERE false
+         )
+         WHERE batch.id = $1
+         GROUP BY batch.state`,
+        [staged.batchId],
+      );
+      assert.equal(rollbackState.rows[0].state, 'ready');
+      assert.equal(rollbackState.rows[0].approved_rows, 2);
+      const withdrawn = await db.query(
+        `SELECT count(*)::integer AS count
+         FROM assertions
+         WHERE summary LIKE 'Verified signer entry on Artists4Ceasefire:%'
+           AND state = 'withdrawn'`,
+      );
+      assert.equal(withdrawn.rows[0].count, 2);
+
+      const afterRollbackPublication = await publishCurrentState(db, store, {
+        compilerVersion: 'integration-test',
+        signing,
+        sourceRevision: 'after-rollback',
+        expiresInMs: 60 * 60 * 1_000,
+      });
+      assert.equal(afterRollbackPublication.activated, true);
+      assert.deepEqual(
+        (await published.full('israel-palestine', 'instagram', 'highlight')).entries,
+        [],
       );
 
       await runDeliveryChecks({
