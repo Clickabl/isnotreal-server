@@ -1,5 +1,7 @@
 import process from 'node:process';
 import { performance } from 'node:perf_hooks';
+import { URL } from 'node:url';
+const { fetch, AbortSignal, console } = globalThis;
 
 const origin = new URL(process.env.LOAD_ORIGIN ?? 'http://127.0.0.1:3000');
 const total = Number(process.env.LOAD_REQUESTS ?? 500);
