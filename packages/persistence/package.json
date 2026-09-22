@@ -39,6 +39,10 @@
     "./official-source-parsers": {
       "types": "./dist/official-source-parsers.d.ts",
       "import": "./dist/official-source-parsers.js"
+    },
+    "./identifiers": {
+      "types": "./dist/identifiers.d.ts",
+      "import": "./dist/identifiers.js"
     }
   },
   "files": [
