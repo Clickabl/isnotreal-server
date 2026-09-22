@@ -32,7 +32,7 @@ export async function runDeliveryChecks({
 }) {
   const reader = new PostgresPublishedArtifactReader(db, store);
   const additionalReasons = await db.query(
-    `SELECT cause.slug, pref.reason_code, requirement.public_criteria, requirement.exclusion_criteria
+    `SELECT cause.slug, pref.reason_code, pref.suggested_action, requirement.public_criteria, requirement.exclusion_criteria
      FROM cause_reason_preferences pref
      JOIN causes cause ON cause.id = pref.cause_id
      JOIN reason_evidence_requirements requirement ON requirement.reason_code = pref.reason_code
@@ -40,6 +40,14 @@ export async function runDeliveryChecks({
   );
   for (const code of ['EP01', 'MAGA01', 'RU01'])
     assert.ok(additionalReasons.rows.some((row) => row.reason_code === code), code);
+  assert.equal(
+    additionalReasons.rows.every((row) => row.suggested_action === 'informational'),
+    true,
+  );
+  const catalogReasons = await db.query(
+    `SELECT code FROM current_reason_catalog WHERE code IN ('EP01','MAGA01','RU01') ORDER BY code`,
+  );
+  assert.deepEqual(catalogReasons.rows.map((row) => row.code), ['EP01', 'MAGA01', 'RU01']);
   assert.match(
     additionalReasons.rows.find((row) => row.reason_code === 'EP01').exclusion_criteria,
     /victims|minors/i,
