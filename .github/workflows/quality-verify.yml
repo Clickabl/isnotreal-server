@@ -28,27 +28,22 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - name: Explicit Node and browser test globals
+      - name: Explicit browser test globals
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p=Path('tests/browser/support.spec.mjs');s=p.read_text()
-          if "from 'node:buffer'" not in s:s="import { Buffer } from 'node:buffer';\nimport { URL } from 'node:url';\n"+s
-          s=s.replace('Object.keys(localStorage)', 'Object.keys(globalThis.localStorage)').replace('Object.keys(sessionStorage)', 'Object.keys(globalThis.sessionStorage)')
-          s=s.replace('document.documentElement','globalThis.document.documentElement').replace('<= innerWidth','<= globalThis.innerWidth')
-          p.write_text(s)
-          p=Path('tests/feedback-checks.mjs');s=p.read_text()
-          if 'const { fetch } = globalThis;' not in s:s='const { fetch } = globalThis;\n'+s
+          s=s.replace('() => localStorage.length + sessionStorage.length', '() => globalThis.localStorage.length + globalThis.sessionStorage.length')
           p.write_text(s)
           PY
       - run: bash ops/ci-postgres-client.sh
       - run: npm ci
       - run: npx prettier --write .
-      - name: Commit verified-environment fixes
+      - name: Preserve formatted regression changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tests apps packages docs
+          git add tests apps packages docs .github
           git diff --cached --quiet || git commit -m "test: declare execution environments for feedback browser coverage"
           git push origin HEAD:quality/ui-feedback-20260922
       - run: npm run check
