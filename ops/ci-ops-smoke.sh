@@ -53,6 +53,11 @@ if psql "postgresql://$APP:$PW_APP@127.0.0.1:5432/$DB" -v ON_ERROR_STOP=1 -c "DE
   exit 1
 fi
 psql "postgresql://$EDITOR:$PW_EDITOR@127.0.0.1:5432/$DB" -v ON_ERROR_STOP=1 -Atqc "SELECT count(*) FROM causes" >/dev/null
+retention_id="$(psql "postgresql://$EDITOR:$PW_EDITOR@127.0.0.1:5432/$DB" -v ON_ERROR_STOP=1 -Atqc "INSERT INTO community_submissions(submission_type,narrative,state,reviewed_at) VALUES('product-feedback','sensitive spam body','spam',now()-interval '100 days') RETURNING id")"
+psql "postgresql://$EDITOR:$PW_EDITOR@127.0.0.1:5432/$DB" -v ON_ERROR_STOP=1 -c "INSERT INTO submission_sources(submission_id,url) VALUES('$retention_id','https://example.com/spam')" >/dev/null
+DATABASE_URL="postgresql://$EDITOR:$PW_EDITOR@127.0.0.1:5432/$DB" psql "postgresql://$EDITOR:$PW_EDITOR@127.0.0.1:5432/$DB" -v ON_ERROR_STOP=1 -f ops/retention.sql >/dev/null
+test "$(psql "postgresql://$EDITOR:$PW_EDITOR@127.0.0.1:5432/$DB" -Atqc "SELECT narrative FROM community_submissions WHERE id='$retention_id'")" = '[redacted after abuse-retention window]'
+test "$(psql "postgresql://$EDITOR:$PW_EDITOR@127.0.0.1:5432/$DB" -Atqc "SELECT count(*) FROM submission_sources WHERE submission_id='$retention_id'")" = '0'
 psql "postgresql://$PUBLISHER:$PW_PUBLISHER@127.0.0.1:5432/$DB" -v ON_ERROR_STOP=1 -Atqc "SELECT count(*) FROM publication_candidates" >/dev/null
 if psql "postgresql://$PUBLISHER:$PW_PUBLISHER@127.0.0.1:5432/$DB" -v ON_ERROR_STOP=1 -c "DELETE FROM causes" >/dev/null 2>&1; then
   echo "publisher role unexpectedly has broad DELETE privileges" >&2
