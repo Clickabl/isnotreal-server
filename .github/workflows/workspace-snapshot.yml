@@ -25,7 +25,7 @@ jobs:
           git archive --format=tar HEAD | gzip > "$RUNNER_TEMP/delivery-snapshot/source.tar.gz"
           tar -czf "$RUNNER_TEMP/delivery-snapshot/dependencies.tar.gz" node_modules
           git rev-parse HEAD > "$RUNNER_TEMP/delivery-snapshot/commit.txt"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: delivery-diagnostic-snapshot
           path: ${{ runner.temp }}/delivery-snapshot/

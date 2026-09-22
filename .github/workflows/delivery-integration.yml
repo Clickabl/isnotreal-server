@@ -54,7 +54,7 @@ jobs:
       - name: Save inspectable integration checkout
         if: always()
         run: tar --exclude=.git --exclude=.local --exclude=backups -czf /tmp/integration-checkout.tar.gz .
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: server-integration-checkout
