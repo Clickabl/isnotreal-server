@@ -128,6 +128,13 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
         body: script,
         contentType: 'text/javascript; charset=utf-8',
       };
+    if (pathname === '/assets/admin.js')
+      return {
+        kind: 'asset',
+        status: 200,
+        body: adminScript,
+        contentType: 'text/javascript; charset=utf-8',
+      };
     if (pathname === '/robots.txt')
       return {
         kind: 'asset',
@@ -135,6 +142,13 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
         body: 'User-agent: *\nDisallow: /admin/\nDisallow: /api/\nDisallow: /report\n',
         contentType: 'text/plain; charset=utf-8',
       };
+    if (pathname === '/admin-console') {
+      return html(
+        'Editor console',
+        `<p class="eyebrow">Restricted editor surface</p><h1>Review the queue.</h1><p>This page contains no privileged data until an editor supplies the admin bearer token. Keep the token in this browser session only.</p><div id="admin-app"><form id="admin-login" class="card"><label for="admin-token">Admin bearer token</label><input id="admin-token" type="password" autocomplete="off" required><button type="submit">Open moderation console</button><p id="admin-status" role="status" aria-live="polite"></p></form></div><script src="/assets/admin.js" defer></script>`,
+        pathname,
+      );
+    }
     if (pathname === '/' || pathname === '/index.html') {
       const causes = deps.causes ? await deps.causes.list() : fallbackCauses;
       return html(
@@ -314,5 +328,76 @@ if(form)form.addEventListener('submit',async(event)=>{
  const result=await response.json();status.textContent='Received for review. Receipt: '+result.id;form.reset();}
  catch(error){status.textContent=error.message;}finally{button.disabled=false;}
 });`;
+const adminScript = String.raw`
+const root=document.querySelector('#admin-app');
+const key='isnotreal-admin-token';
+let token=sessionStorage.getItem(key)||'';
+const h=(tag,text,attrs={})=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);return n;};
+async function request(path,options={}){
+ const response=await fetch(path,{...options,credentials:'omit',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(options.headers||{})}});
+ if(response.status===401){sessionStorage.removeItem(key);token='';throw Error('Admin token rejected.');}
+ const body=await response.json().catch(()=>({}));
+ if(!response.ok)throw Error(body.error||('Request failed: '+response.status));
+ return body;
+}
+function action(label,run){const b=h('button',label,{type:'button'});b.addEventListener('click',async()=>{b.disabled=true;try{await run();await load();}catch(e){alert(e.message);}finally{b.disabled=false;}});return b;}
+function card(title,body){const n=h('article','',{class:'card'});n.append(h('h3',title));if(body)n.append(h('p',body));return n;}
+async function reviewSubmission(item,state){
+ const note=prompt(state+' note',item.reviewNote||'')??'';if((state==='rejected'||state==='duplicate')&&!note.trim())return;
+ await request('/admin/api/v1/submissions/'+item.id+'/review',{method:'POST',body:JSON.stringify({state,note})});
+}
+function submissions(items){
+ const section=h('section');section.append(h('h2','Feedback & corrections'));
+ if(!items.length)section.append(h('p','No pending submissions.'));
+ for(const item of items){
+  const n=card(item.submissionType,item.narrative);n.append(h('small','Receipt '+item.id));
+  if(item.entityPublicId)n.append(h('p','Entity '+item.entityPublicId));
+  for(const url of item.sourceUrls||[]){const a=h('a',url,{href:url,target:'_blank',rel:'noopener noreferrer'});n.append(a);}
+  const row=h('div','',{class:'row'});for(const state of ['triaged','accepted','rejected','duplicate'])row.append(action(state,()=>reviewSubmission(item,state)));n.append(row);section.append(n);
+ }return section;
+}
+async function importRows(batchId,container){
+ const data=await request('/admin/api/v1/imports/'+batchId+'/rows?limit=1000');container.replaceChildren();
+ for(const row of data.rows){
+  const n=card(row.rawName,row.resolutionState);const actions=h('div','',{class:'row'});
+  for(const candidate of row.candidates||[])actions.append(action('Approve '+candidate.name,()=>request('/admin/api/v1/import-rows/'+row.id+'/approve',{method:'POST',body:JSON.stringify({entityId:candidate.entityId,note:'Approved from editor console'})})));
+  actions.append(action('Create person',()=>request('/admin/api/v1/import-rows/'+row.id+'/create-entity',{method:'POST',body:JSON.stringify({kind:'person',note:'Created from trusted import review'})})));
+  actions.append(action('Skip',()=>request('/admin/api/v1/import-rows/'+row.id+'/skip',{method:'POST',body:JSON.stringify({note:'Skipped by editor'})})));
+  n.append(actions);container.append(n);
+ }
+}
+function imports(items){
+ const section=h('section');section.append(h('h2','Official imports'));
+ if(!items.length)section.append(h('p','No import batches.'));
+ for(const item of items){const n=card(item.sourceName,item.reasonCode+' · '+item.state+' · '+item.rowCount+' rows');const rows=h('div');
+  n.append(action('Review rows',()=>importRows(item.id,rows)),action('Prepare trusted batch',()=>request('/admin/api/v1/imports/'+item.id+'/prepare',{method:'POST',body:JSON.stringify({kind:'person',note:''})})),action('Mark ready',()=>request('/admin/api/v1/imports/'+item.id+'/ready',{method:'POST',body:'{}'})),action('Commit batch',()=>request('/admin/api/v1/imports/'+item.id+'/commit',{method:'POST',body:'{}'})),rows);section.append(n);}
+ return section;
+}
+function proposals(items){
+ const section=h('section');section.append(h('h2','Membership proposals'));
+ if(!items.length)section.append(h('p','No pending proposals.'));
+ for(const item of items){const n=card(item.entityName,item.reasonCode+' · '+item.proposedList);n.append(h('p',item.assertionSummary),action('Approve',()=>request('/admin/api/v1/membership-proposals/'+item.id+'/approve',{method:'POST',body:JSON.stringify({note:'Approved from editor console'})})),action('Reject',()=>request('/admin/api/v1/membership-proposals/'+item.id+'/reject',{method:'POST',body:JSON.stringify({note:prompt('Rejection rationale')||'Rejected by editor'})})));section.append(n);}return section;
+}
+function issues(items){
+ const section=h('section');section.append(h('h2','Publication validation issues'));
+ if(!items.length)section.append(h('p','No active publication validation issues.'));
+ for(const item of items)section.append(card(item.entityName,item.reasonCode+' · '+(item.issues||[]).join(', ')));return section;
+}
+async function load(){
+ root.replaceChildren(h('p','Loading moderation queues…',{role:'status'}));
+ try{
+  const [s,i,p,v]=await Promise.all([
+   request('/admin/api/v1/submissions?state=pending&limit=200'),
+   request('/admin/api/v1/imports?limit=100'),
+   request('/admin/api/v1/membership-proposals?state=pending&limit=200'),
+   request('/admin/api/v1/publication-issues?limit=500')
+  ]);
+  const bar=h('div','',{class:'row'});bar.append(action('Refresh',async()=>{}),action('Forget token',async()=>{sessionStorage.removeItem(key);location.reload();}));
+  root.replaceChildren(bar,submissions(s.submissions),imports(i.batches),proposals(p.proposals),issues(v.issues));
+ }catch(e){root.replaceChildren(card('Could not open moderation console',e.message));const b=action('Try another token',async()=>{sessionStorage.removeItem(key);location.reload();});root.append(b);}
+}
+const login=document.querySelector('#admin-login');
+if(token){load();}else if(login)login.addEventListener('submit',(event)=>{event.preventDefault();token=document.querySelector('#admin-token').value.trim();if(!token)return;sessionStorage.setItem(key,token);load();});
+`;
 const css = String.raw`
 :root{color-scheme:dark;--bg:#0c0d10;--panel:#17181e;--text:#f4f2ec;--muted:#b1b1bc;--line:#343540;--accent:#ff657b;--gold:#efca74;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0,#331e2b,transparent 45rem),var(--bg);color:var(--text)}a{color:inherit;text-underline-offset:4px}header,main,footer{width:min(1120px,calc(100% - 40px));margin:auto}header{display:flex;gap:20px;justify-content:space-between;align-items:center;min-height:84px;border-bottom:1px solid var(--line)}nav{display:flex;gap:20px;flex-wrap:wrap}nav a,.brand{text-decoration:none}.brand{font-size:1.3rem;font-weight:900;letter-spacing:-.06em}.brand span,h1 span{color:var(--accent)}main{min-height:65vh;padding:48px 0}h1{font-size:clamp(2.8rem,8vw,6.8rem);letter-spacing:-.065em;line-height:.99;max-width:1000px;margin:24px 0 36px;overflow-wrap:anywhere}h2{font-size:clamp(1.4rem,3vw,2rem);letter-spacing:-.035em}h3{font-size:1.4rem;line-height:1.2}.hero{padding:45px 0 64px}.eyebrow,.tag{text-transform:uppercase;letter-spacing:.12em;font-size:.78rem;color:var(--gold);font-weight:750}.lede{max-width:760px;font-size:1.3rem;line-height:1.6;color:var(--muted)}p,li{line-height:1.65}p,small,.muted{color:var(--muted)}small{display:block;font-size:.84rem;line-height:1.5}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{background:linear-gradient(135deg,var(--panel),#111218);border:1px solid var(--line);border-radius:20px;padding:28px;overflow-wrap:anywhere;margin:16px 0}.grid .card{margin:0}a.card{text-decoration:none}a.card:hover{border-color:var(--accent)}section{margin-top:36px}.evidence{border-top:1px solid var(--line);padding-top:14px;margin-top:16px}.evidence a{color:var(--gold)}.row,.section-title{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.section-title{justify-content:space-between}.button,button{border:1px solid var(--line);border-radius:999px;padding:13px 20px;font:inherit;font-weight:750;text-decoration:none;cursor:pointer;color:var(--text);background:var(--panel)}.primary,button{background:var(--text);color:var(--bg)}button:disabled{opacity:.55;cursor:wait}.notice{border-left:3px solid var(--gold);padding:12px 18px;background:#242119}form{max-width:800px;background:var(--panel);border:1px solid var(--line);padding:28px;border-radius:20px}label{display:block;margin:16px 0 8px;font-weight:650}input,select,textarea{width:100%;border:1px solid #5c5c69;border-radius:10px;background:#0d0e12;color:var(--text);padding:12px;font:inherit}textarea{resize:vertical}form button{margin-top:16px}.search{max-width:none;margin:16px 0 40px}.search label{margin-top:0}.search .row input{flex:1;min-width:150px}.search button{margin:0}code{font-size:.9em;overflow-wrap:anywhere}footer{border-top:1px solid var(--line);padding:32px 0 50px;display:grid;gap:18px;margin-top:40px}.skip{position:absolute;top:-100px;left:20px;padding:12px;background:var(--text);color:var(--bg);z-index:10}.skip:focus{top:10px}:focus-visible{outline:3px solid var(--gold);outline-offset:5px}#form-status{min-height:2em}@media(max-width:680px){header{align-items:flex-start;flex-direction:column;padding:20px 0}header nav{font-size:.88rem;gap:16px}.grid{grid-template-columns:1fr}.hero{padding:8px 0 28px}main{padding-top:24px}form,.card{padding:22px}.lede{font-size:1.13rem}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}`;
