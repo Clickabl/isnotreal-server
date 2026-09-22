@@ -8,6 +8,7 @@ import {
   createOfficialImportEntity,
   markOfficialImportReady,
   prepareTrustedOfficialImport,
+  rollbackOfficialImport,
   markOfficialImportRow,
 } from '@isnotreal/persistence/campaign-import';
 import {
@@ -168,6 +169,19 @@ export function createAdminRouter(deps: AdminDependencies) {
       const batchId = validUuid(importCommit[1]);
       if (!batchId) return response(400, { error: 'invalid_request' });
       return response(200, await commitOfficialImport(deps.db, batchId, request.actorId));
+    }
+
+    const importRollback = /^\/admin\/api\/v1\/imports\/([0-9a-f-]+)\/rollback$/i.exec(
+      request.pathname,
+    );
+    if (request.method === 'POST' && importRollback) {
+      const batchId = validUuid(importRollback[1]);
+      const body = parseNoteBody(request.body, true);
+      if (!batchId || !body) return response(400, { error: 'invalid_request' });
+      return response(
+        200,
+        await rollbackOfficialImport(deps.db, batchId, request.actorId, body.note),
+      );
     }
 
     if (request.method === 'GET' && request.pathname === '/admin/api/v1/membership-proposals') {
