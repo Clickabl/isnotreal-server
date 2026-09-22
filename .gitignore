@@ -17,3 +17,6 @@ DerivedData/
 backups/
 *.dump
 *.sql.gz
+
+test-results/
+playwright-report/

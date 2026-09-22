@@ -1,3 +1,8 @@
+import {
+  submissionCatalog,
+  SubmissionConflictError,
+  SubmissionTargetNotFoundError,
+} from '@isnotreal/application';
 import type {
   AlternativeDirectory,
   PublicationReader,
@@ -49,20 +54,9 @@ const channels = new Set<PublicationChannel>([
   'domain-subdomains',
 ]);
 const lists = new Set<ListKind>(['filter', 'highlight']);
-const submissionTypes = new Set<SubmissionInput['submissionType']>([
-  'add-evidence',
-  'incorrect-information',
-  'changed-position',
-  'wrong-identifier',
-  'missing-identifier',
-  'company-relationship',
-  'suggest-alternative',
-  'new-entity',
-  'product-feedback',
-  'bug-report',
-  'accessibility-feedback',
-  'abuse-report',
-]);
+const submissionTypes = new Set<SubmissionInput['submissionType']>(
+  submissionCatalog.map((item) => item.code),
+);
 
 export function createApiRouter(deps: ApiDependencies) {
   return async (request: ApiRequest): Promise<ApiResponse> => {
@@ -85,7 +79,7 @@ export function createApiRouter(deps: ApiDependencies) {
 
     if (request.method === 'GET' && request.pathname === '/api/v1/search') {
       const q = request.query.q?.trim() ?? '';
-      if (q.length < 2) return response(400, { error: 'query_too_short' });
+      if (q.length < 2 || q.length > 200) return response(400, { error: 'invalid_query_length' });
       const requestedLimit = Number.parseInt(request.query.limit ?? '20', 10);
       const limit = Number.isFinite(requestedLimit)
         ? Math.min(50, Math.max(1, requestedLimit))
@@ -225,7 +219,15 @@ export function createApiRouter(deps: ApiDependencies) {
       ) {
         return response(400, { error: 'unknown_reason_code' });
       }
-      return response(202, await deps.submissions.create(input));
+      try {
+        return response(202, await deps.submissions.create(input));
+      } catch (error) {
+        if (error instanceof SubmissionConflictError)
+          return response(409, { error: 'submission_conflict' });
+        if (error instanceof SubmissionTargetNotFoundError)
+          return response(400, { error: 'unknown_entity' });
+        throw error;
+      }
     }
 
     const publicationMatch =
@@ -288,12 +290,16 @@ function parseSubmission(body: unknown): SubmissionInput | null {
   if (proposedList !== null && proposedList !== undefined && !isListValue(proposedList))
     return null;
 
-  const sourceUrls = body.sourceUrls;
+  const sourceUrls = body.sourceUrls ?? [];
   if (!Array.isArray(sourceUrls) || sourceUrls.length > 20) return null;
   if (sourceUrls.some((url) => typeof url !== 'string' || !isHttpUrl(url))) return null;
 
   const entityPublicId = nullableString(body.entityPublicId);
-  if (entityPublicId !== null && !/^\d+$/.test(entityPublicId)) return null;
+  if (
+    entityPublicId !== null &&
+    (!/^[1-9]\d{0,18}$/.test(entityPublicId) || BigInt(entityPublicId) > 9223372036854775807n)
+  )
+    return null;
 
   const identifierKind = nullableString(body.identifierKind);
   const identifierValue = nullableString(body.identifierValue);
@@ -306,7 +312,22 @@ function parseSubmission(body: unknown): SubmissionInput | null {
   const submitterContactRef = nullableString(body.submitterContactRef);
   if (submitterContactRef && submitterContactRef.length > 512) return null;
 
+  const clientRequestId = nullableString(body.clientRequestId);
+  if (
+    body.clientRequestId !== undefined &&
+    body.clientRequestId !== null &&
+    typeof body.clientRequestId !== 'string'
+  )
+    return null;
+  if (
+    clientRequestId &&
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      clientRequestId,
+    )
+  )
+    return null;
   return {
+    clientRequestId,
     entityPublicId,
     identifierKind,
     identifierValue,
@@ -344,7 +365,13 @@ function isListValue(value: unknown): value is ListKind | null {
 }
 
 function isHttpUrl(value: string): boolean {
-  if (value.length > 2_048 || /\s/.test(value)) return false;
-  const schemeLength = value.startsWith('https://') ? 8 : value.startsWith('http://') ? 7 : 0;
-  return schemeLength > 0 && value.length > schemeLength;
+  if (value.length > 2048 || /\s/.test(value)) return false;
+  try {
+    const url = new URL(value);
+    return (
+      ['http:', 'https:'].includes(url.protocol) && !!url.hostname && !url.username && !url.password
+    );
+  } catch {
+    return false;
+  }
 }

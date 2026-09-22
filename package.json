@@ -27,7 +27,8 @@
     "db:shell": "bash ops/db-shell.sh",
     "db:backup": "bash ops/backup-db.sh",
     "start": "node apps/api/dist/serve.js",
-    "start:local": "npm run build && npm run start"
+    "start:local": "npm run build && npm run start",
+    "test:browser": "npm run build && playwright test"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -36,6 +37,7 @@
     "eslint": "10.10.0",
     "prettier": "3.9.6",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.70.0"
+    "typescript-eslint": "8.70.0",
+    "@playwright/test": "1.63.0"
   }
 }

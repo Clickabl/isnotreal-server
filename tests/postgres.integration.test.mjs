@@ -1,3 +1,4 @@
+import { runFeedbackChecks } from './feedback-checks.mjs';
 import { generateKeyPairSync } from 'node:crypto';
 import { readdir } from 'node:fs/promises';
 import { runDeliveryChecks } from './delivery-checks.mjs';
@@ -491,6 +492,7 @@ test(
         policyRevisionId: policyRevision.rows[0].id,
       });
 
+      await runFeedbackChecks({ db, databaseUrl, artifactRoot });
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
       assert.deepEqual(secondMigration.applied, []);
       assert.equal(secondMigration.alreadyApplied.length, firstMigration.applied.length);

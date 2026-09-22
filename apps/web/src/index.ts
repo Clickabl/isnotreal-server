@@ -1,3 +1,5 @@
+import { feedbackBody, editorBody, helpBody } from './support.js';
+import { feedbackScript, editorScript, supportCss } from './support-assets.js';
 import type {
   AlternativeDirectory,
   PublicEntityDirectory,
@@ -74,7 +76,7 @@ const fallbackCauses: readonly Cause[] = [
   },
 ];
 function layout(title: string, body: string, path = '/'): string {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>${escape(title)} · isnotreal.click</title><meta name="description" content="Choose your filters. Inspect the evidence. A source-backed directory and browser extension."><link rel="canonical" href="https://isnotreal.click${escape(path)}"><link rel="stylesheet" href="/assets/site.css"><script src="/assets/site.js" defer></script></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="/">is<span>not</span>real.click</a><nav aria-label="Main"><a href="/search">Search</a><a href="/causes">Causes</a><a href="/download">Get the extension</a></nav></header><main id="main">${body}</main><footer><strong>Local choices. Public evidence.</strong><nav aria-label="Footer"><a href="/how-it-works">How it works</a><a href="/privacy">Privacy</a><a href="/report">Feedback & corrections</a></nav><small>Coverage depends on verified identifiers and the browser features available. No claim of wrongdoing follows from a document mention alone.</small></footer></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>${escape(title)} · isnotreal.click</title><meta name="description" content="Choose your filters. Inspect the evidence. A source-backed directory and browser extension."><link rel="canonical" href="https://isnotreal.click${escape(path)}"><link rel="stylesheet" href="/assets/site.css"><script src="/assets/site.js" defer></script></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="/">is<span>not</span>real.click</a><nav aria-label="Main"><a href="/search">Search</a><a href="/causes">Causes</a><a href="/download">Get the extension</a><a href="/report">Feedback & corrections</a><a href="/help">Help</a></nav></header><main id="main">${body}</main><footer><strong>Local choices. Public evidence.</strong><nav aria-label="Footer"><a href="/how-it-works">How it works</a><a href="/privacy">Privacy</a><a href="/report">Feedback & corrections</a><a href="/help">Help</a></nav><small>Coverage depends on verified identifiers and the browser features available. No claim of wrongdoing follows from a document mention alone.</small></footer></body></html>`;
 }
 const html = (
   title: string,
@@ -119,8 +121,30 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
     pathname: string,
     query: Readonly<Record<string, string | undefined>> = {},
   ): Promise<WebRouteResult | null> => {
+    if (pathname === '/assets/feedback.js')
+      return {
+        kind: 'asset',
+        status: 200,
+        body: feedbackScript,
+        contentType: 'text/javascript; charset=utf-8',
+      };
+    if (pathname === '/assets/editor.js')
+      return {
+        kind: 'asset',
+        status: 200,
+        body: editorScript,
+        contentType: 'text/javascript; charset=utf-8',
+      };
+    if (pathname === '/editor') return html('Editor workspace', editorBody(), pathname);
+    if (pathname === '/help') return html('Help', helpBody(), pathname);
+    if (pathname === '/feedback') return { kind: 'redirect', status: 302, location: '/report' };
     if (pathname === '/assets/site.css')
-      return { kind: 'asset', status: 200, body: css, contentType: 'text/css; charset=utf-8' };
+      return {
+        kind: 'asset',
+        status: 200,
+        body: css + supportCss,
+        contentType: 'text/css; charset=utf-8',
+      };
     if (pathname === '/assets/site.js')
       return {
         kind: 'asset',
@@ -208,29 +232,12 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
         pathname,
       );
     }
-    if (pathname === '/report') {
-      const reasons = (await deps.reasons?.list()) ?? [];
-      const id = /^[1-9]\d{0,19}$/.test(query.entity ?? '') ? query.entity! : '';
-      const types = [
-        'add-evidence',
-        'incorrect-information',
-        'changed-position',
-        'wrong-identifier',
-        'missing-identifier',
-        'company-relationship',
-        'suggest-alternative',
-        'new-entity',
-        'product-feedback',
-        'bug-report',
-        'accessibility-feedback',
-        'abuse-report',
-      ];
+    if (pathname === '/report')
       return html(
-        'Submit evidence or a correction',
-        `<h1>Feedback, evidence & corrections.</h1><p>Use one review queue for factual corrections, missing context, identifiers, alternatives and general product feedback. Evidence claims should include an original or reliable source, not a crowd-sourced accusation.</p><form data-submission><label for="entity">Entity ID (optional)</label><input id="entity" name="entityPublicId" value="${id}" inputmode="numeric" pattern="[0-9]*"><label for="type">What are you submitting?</label><select id="type" name="submissionType">${types.map((t) => `<option value="${t}"${query.type === t ? ' selected' : ''}>${t.replaceAll('-', ' ')}</option>`).join('')}</select><label for="reason">Proposed reason (optional)</label><select id="reason" name="proposedReasonCode"><option value="">Let the editor classify it</option>${reasons.map((r) => `<option value="${escape(r.code)}">${escape(r.code + ' · ' + r.label)}</option>`).join('')}</select><label for="notes">What should we know?</label><textarea id="notes" name="narrative" minlength="3" maxlength="10000" rows="6" required></textarea><label for="sources">Source URLs, one per line</label><textarea id="sources" name="sources" rows="4" placeholder="https://…"></textarea><p class="muted">Do not include home addresses, private contacts, victims’ identities or information hidden by redactions.</p><button type="submit">Send for review</button><p id="form-status" role="status" aria-live="polite"></p><noscript>JavaScript is needed to submit this form. The evidence directory can be read without it.</noscript></form>`,
+        'Feedback & corrections',
+        feedbackBody(query, (await deps.reasons?.list()) ?? []),
         pathname,
       );
-    }
     if (pathname === '/privacy' || pathname === '/how-it-works') {
       const privacy = pathname === '/privacy';
       return html(

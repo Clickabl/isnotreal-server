@@ -3,3 +3,6 @@ dist/
 coverage/
 package-lock.json
 *.tsbuildinfo
+
+test-results/
+playwright-report/

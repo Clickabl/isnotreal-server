@@ -1,3 +1,5 @@
+import type { SubmissionType, FeedbackState } from './feedback.js';
+export * from './feedback.js';
 import type { EntityKind } from '@isnotreal/domain';
 export { PROTOCOL_SCHEMA_VERSION } from '@isnotreal/protocol';
 export type { ListKind, PublicationChannel, PublicEntityId } from '@isnotreal/protocol';
@@ -132,19 +134,8 @@ export interface SubmissionInput {
   readonly entityPublicId: PublicEntityId | null;
   readonly identifierKind: string | null;
   readonly identifierValue: string | null;
-  readonly submissionType:
-    | 'add-evidence'
-    | 'incorrect-information'
-    | 'changed-position'
-    | 'wrong-identifier'
-    | 'missing-identifier'
-    | 'company-relationship'
-    | 'suggest-alternative'
-    | 'new-entity'
-    | 'product-feedback'
-    | 'bug-report'
-    | 'accessibility-feedback'
-    | 'abuse-report';
+  readonly submissionType: SubmissionType;
+  readonly clientRequestId?: string | null;
   readonly proposedList: ListKind | null;
   readonly proposedReasonCode: ReasonCode | null;
   readonly narrative: string;
@@ -155,7 +146,7 @@ export interface SubmissionInput {
 export interface SubmissionReceipt {
   readonly id: string;
   readonly submittedAt: string;
-  readonly state: 'pending';
+  readonly state: FeedbackState;
 }
 
 export interface PublicEntityDirectory {

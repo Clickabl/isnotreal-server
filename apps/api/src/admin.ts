@@ -1,3 +1,4 @@
+import { createFeedbackAdminRouter } from './feedback-admin.js';
 import type {
   CommunitySubmissionState,
   PostgresModerationQueue,
@@ -45,7 +46,10 @@ const submissionStates = new Set<CommunitySubmissionState>([
 ]);
 
 export function createAdminRouter(deps: AdminDependencies) {
+  const feedback = createFeedbackAdminRouter(deps.db);
   return async (request: AdminRequest): Promise<AdminResponse> => {
+    const feedbackResult = await feedback(request);
+    if (feedbackResult) return feedbackResult;
     if (request.method === 'GET' && request.pathname === '/admin/api/v1/submissions') {
       const state = optionalSubmissionState(request.query.state);
       if (state === false) return response(400, { error: 'invalid_state' });

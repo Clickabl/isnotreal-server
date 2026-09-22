@@ -35,6 +35,10 @@
     "./causes": {
       "types": "./dist/causes.d.ts",
       "import": "./dist/causes.js"
+    },
+    "./feedback-inbox": {
+      "types": "./dist/feedback-inbox.d.ts",
+      "import": "./dist/feedback-inbox.js"
     }
   },
   "files": [

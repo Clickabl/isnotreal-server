@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import { SubmissionConflictError, SubmissionTargetNotFoundError } from '@isnotreal/application';
 import type {
   AlternativeDirectory,
   AlternativeOption,
@@ -106,7 +108,12 @@ type AlternativeRow = {
   destination_channel: string | null;
 };
 
-type SubmissionRow = { id: string; submitted_at: string };
+type SubmissionRow = {
+  id: string;
+  submitted_at: string;
+  state: SubmissionReceipt['state'];
+  content_fingerprint: string;
+};
 
 type CandidateRow = {
   cause_slug: string;
@@ -531,26 +538,10 @@ export class PostgresAlternativeDirectory implements AlternativeDirectory {
 
 export class PostgresSubmissionWriter implements SubmissionWriter {
   constructor(private readonly db: SqlExecutor) {}
-
   async create(input: SubmissionInput): Promise<SubmissionReceipt> {
-    return this.db.transaction(async (tx) => {
-      const inserted = await tx.query<SubmissionRow>(
-        `INSERT INTO community_submissions (
-           entity_id,
-           identifier_kind,
-           identifier_value,
-           submission_type,
-           proposed_list,
-           proposed_reason_code,
-           narrative,
-           submitter_contact_ref
-         )
-         VALUES (
-           (SELECT id FROM entities WHERE public_id = $1),
-           $2, $3, $4, $5, $6, $7, $8
-         )
-         RETURNING id::text, submitted_at::text`,
-        [
+    const fingerprint = createHash('sha256')
+      .update(
+        JSON.stringify([
           input.entityPublicId,
           input.identifierKind,
           input.identifierValue,
@@ -558,20 +549,57 @@ export class PostgresSubmissionWriter implements SubmissionWriter {
           input.proposedList,
           input.proposedReasonCode,
           input.narrative,
+          [...new Set(input.sourceUrls)].sort(),
           input.submitterContactRef,
+        ]),
+      )
+      .digest('hex');
+    return this.db.transaction(async (tx) => {
+      let entityId: string | null = null;
+      if (input.entityPublicId !== null) {
+        const target = await tx.query<{ id: string }>(
+          'SELECT id::text FROM entities WHERE public_id=$1',
+          [input.entityPublicId],
+        );
+        if (!target.rows[0]) throw new SubmissionTargetNotFoundError();
+        entityId = target.rows[0].id;
+      }
+      const inserted = await tx.query<SubmissionRow>(
+        `INSERT INTO community_submissions (
+          entity_id,identifier_kind,identifier_value,submission_type,proposed_list,
+          proposed_reason_code,narrative,submitter_contact_ref,client_request_id,content_fingerprint
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         ON CONFLICT (client_request_id) DO NOTHING
+         RETURNING id::text,submitted_at::text,state,content_fingerprint`,
+        [
+          entityId,
+          input.identifierKind,
+          input.identifierValue,
+          input.submissionType,
+          input.proposedList,
+          input.proposedReasonCode,
+          input.narrative,
+          input.submitterContactRef,
+          input.clientRequestId ?? null,
+          fingerprint,
         ],
       );
-      const row = inserted.rows[0];
-      if (!row) throw new Error('submission insert did not return a row');
-
-      for (const url of input.sourceUrls) {
-        await tx.query(`INSERT INTO submission_sources (submission_id, url) VALUES ($1, $2)`, [
-          row.id,
-          url,
-        ]);
+      let row = inserted.rows[0];
+      if (!row) {
+        const existing = await tx.query<SubmissionRow>(
+          'SELECT id::text,submitted_at::text,state,content_fingerprint FROM community_submissions WHERE client_request_id=$1',
+          [input.clientRequestId],
+        );
+        row = existing.rows[0];
+        if (!row || row.content_fingerprint !== fingerprint) throw new SubmissionConflictError();
+      } else {
+        for (const url of new Set(input.sourceUrls))
+          await tx.query('INSERT INTO submission_sources(submission_id,url) VALUES($1,$2)', [
+            row.id,
+            url,
+          ]);
       }
-
-      return { id: row.id, submittedAt: row.submitted_at, state: 'pending' };
+      return { id: row.id, submittedAt: row.submitted_at, state: row.state };
     });
   }
 }

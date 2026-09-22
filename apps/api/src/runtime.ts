@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+import { RequestGuard, RequestMetrics, clientAddress, routeClass } from './request-guard.js';
 import { Buffer } from 'node:buffer';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
@@ -30,6 +32,8 @@ export interface NodeApiRuntimeOptions {
   readonly adminActorId?: string;
   readonly adminDatabaseUrl?: string;
   readonly downloads?: Readonly<Record<string, string>>;
+  readonly trustedProxyAddresses?: readonly string[];
+  readonly publicOrigin?: string;
 }
 export interface RunningNodeApiRuntime {
   readonly host: string;
@@ -43,6 +47,7 @@ class HttpError extends Error {
 }
 function headers(response: ServerResponse, admin = false): void {
   response.setHeader('x-content-type-options', 'nosniff');
+  response.setHeader('permissions-policy', 'camera=(), microphone=(), geolocation=()');
   response.setHeader('referrer-policy', 'no-referrer');
   response.setHeader(
     'content-security-policy',
@@ -51,7 +56,7 @@ function headers(response: ServerResponse, admin = false): void {
   if (!admin) {
     response.setHeader('access-control-allow-origin', '*');
     response.setHeader('access-control-allow-methods', 'GET, HEAD, POST, OPTIONS');
-    response.setHeader('access-control-allow-headers', 'content-type');
+    response.setHeader('access-control-allow-headers', 'content-type, if-none-match');
   }
 }
 function send(
@@ -88,6 +93,14 @@ async function body(request: IncomingMessage, limit: number): Promise<unknown> {
   if (request.method === 'GET' || request.method === 'HEAD') return null;
   const declared = Number(request.headers['content-length'] ?? 0);
   if (declared > limit) throw new HttpError(413);
+  if (request.headers['content-encoding'] && request.headers['content-encoding'] !== 'identity')
+    throw new HttpError(415);
+  if (
+    !String(request.headers['content-type'] ?? '')
+      .toLowerCase()
+      .startsWith('application/json')
+  )
+    throw new HttpError(415);
   const chunks: Buffer[] = [];
   let size = 0;
   for await (const chunk of request) {
@@ -177,23 +190,42 @@ export async function startNodeApiRuntime(
   const admin = adminDb
     ? createAdminRouter({ db: adminDb, moderation: new PostgresModerationQueue(adminDb) })
     : null;
-  let submissionWindow = Date.now(),
-    submissionCount = 0,
-    inFlight = 0;
-  const server = createServer((request, response) => {
-    // Bound application work even if the reverse proxy/CDN is bypassed on a
-    // private or development deployment. The edge remains responsible for
-    // per-client rate limiting.
-    if (inFlight >= 200) {
+  const guard = new RequestGuard(),
+    metrics = new RequestMetrics();
+  const publicOrigin = options.publicOrigin ?? 'https://isnotreal.click';
+  const server = createServer({ maxHeaderSize: 16384 }, (request, response) => {
+    const started = Date.now();
+    const raw = request.url ?? '/';
+    if (raw.length > 4096 || !raw.startsWith('/') || raw.startsWith('//')) {
       headers(response);
-      response.setHeader('retry-after', '1');
-      json(response, request, 503, { error: 'busy' });
+      json(response, request, 414, { error: 'invalid_target' });
       return;
     }
-    inFlight += 1;
-    response.once('close', () => {
-      inFlight = Math.max(0, inFlight - 1);
-    });
+    const family = routeClass(raw.split('?')[0]!, request.method ?? 'GET');
+    response.setHeader('x-request-id', randomUUID());
+    const peer = clientAddress(
+      request.socket.remoteAddress ?? '',
+      typeof request.headers['x-real-ip'] === 'string' ? request.headers['x-real-ip'] : undefined,
+      options.trustedProxyAddresses ?? [],
+    );
+    const admission = guard.admit(peer, family);
+    if (!admission.ok) {
+      headers(response, family === 'admin');
+      response.setHeader('retry-after', String(admission.retryAfter));
+      json(response, request, admission.status, { error: admission.error });
+      metrics.observe(family, admission.status, Date.now() - started);
+      return;
+    }
+    let recorded = false;
+    const finish = () => {
+      admission.release();
+      if (!recorded) {
+        recorded = true;
+        metrics.observe(family, response.statusCode, Date.now() - started);
+      }
+    };
+    response.once('close', finish);
+    response.once('finish', finish);
     void (async () => {
       const url = new URL(request.url ?? '/', 'http://localhost');
       const isAdmin = url.pathname === '/admin' || url.pathname.startsWith('/admin/');
@@ -205,6 +237,21 @@ export async function startNodeApiRuntime(
       if (isAdmin && !authorized(request, options.adminToken!)) {
         response.setHeader('www-authenticate', 'Bearer realm="isnotreal-admin"');
         json(response, request, 401, { error: 'unauthorized' });
+        return;
+      }
+      if (request.method === 'POST') {
+        response.removeHeader('access-control-allow-origin');
+        if (request.headers.origin && request.headers.origin !== publicOrigin) {
+          json(response, request, 403, { error: 'origin_not_allowed' });
+          return;
+        }
+      }
+      if (
+        isAdmin &&
+        url.pathname === '/admin/api/v1/metrics' &&
+        ['GET', 'HEAD'].includes(request.method ?? '')
+      ) {
+        json(response, request, 200, metrics.snapshot(guard.activeRequests));
         return;
       }
       if (request.method === 'OPTIONS') {
@@ -227,18 +274,12 @@ export async function startNodeApiRuntime(
         }
         return;
       }
-      if (url.pathname === '/api/v1/submissions' && request.method === 'POST') {
-        if (Date.now() - submissionWindow > 60000) {
-          submissionCount = 0;
-          submissionWindow = Date.now();
-        }
-        if (++submissionCount > 60) {
-          response.setHeader('retry-after', '60');
-          throw new HttpError(429);
-        }
-      }
       const query: Record<string, string> = {};
-      for (const [key, value] of url.searchParams) query[key] = value;
+      if ([...url.searchParams].length > 20) throw new HttpError(400);
+      for (const [key, value] of url.searchParams) {
+        if (key.length > 64 || value.length > 2048) throw new HttpError(400);
+        query[key] = value;
+      }
       const method = request.method === 'HEAD' ? 'GET' : (request.method ?? 'GET');
       if (isAdmin) {
         const result = await admin!({
@@ -298,7 +339,9 @@ export async function startNodeApiRuntime(
             result.status,
             result.html,
             'text/html; charset=utf-8',
-            result.status === 200 ? 'public, max-age=60' : 'no-store',
+            result.status === 200 && !['/report', '/editor'].includes(url.pathname)
+              ? 'public, max-age=60'
+              : 'no-store',
           );
           return;
         }
@@ -343,6 +386,8 @@ export async function startNodeApiRuntime(
   server.headersTimeout = 10000;
   server.keepAliveTimeout = 5000;
   server.maxHeadersCount = 100;
+  server.maxRequestsPerSocket = 100;
+  server.maxConnections = 1000;
   try {
     await new Promise<void>((resolve, reject) => {
       server.once('error', reject);

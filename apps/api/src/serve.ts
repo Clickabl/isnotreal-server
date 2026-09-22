@@ -11,6 +11,11 @@ async function main(): Promise<void> {
   const adminActorId = process.env.ADMIN_ACTOR_ID?.trim() || undefined;
   const runtime = await startNodeApiRuntime({
     databaseUrl,
+    trustedProxyAddresses: (process.env.TRUSTED_PROXY_ADDRESSES ?? '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean),
+    publicOrigin: process.env.PUBLIC_ORIGIN ?? 'https://isnotreal.click',
     artifactRoot,
     host: process.env.HOST ?? '0.0.0.0',
     port,
