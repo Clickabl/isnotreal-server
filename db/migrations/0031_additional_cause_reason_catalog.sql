@@ -2,7 +2,8 @@ BEGIN;
 
 INSERT INTO source_documents (canonical_url, title, publisher, source_type) VALUES
   ('https://www.justice.gov/epstein', 'Department of Justice Epstein Library', 'U.S. Department of Justice', 'primary'),
-  ('https://ofac.treasury.gov/sanctions-list-service', 'OFAC Sanctions List Service', 'U.S. Department of the Treasury', 'primary')
+  ('https://ofac.treasury.gov/sanctions-list-service', 'OFAC Sanctions List Service', 'U.S. Department of the Treasury', 'primary'),
+  ('https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML', 'OFAC Specially Designated Nationals XML', 'U.S. Department of the Treasury', 'primary')
 ON CONFLICT (canonical_url) DO UPDATE SET
   title = EXCLUDED.title,
   publisher = EXCLUDED.publisher,
@@ -120,7 +121,7 @@ ON CONFLICT DO NOTHING;
 INSERT INTO reason_authority_sources (reason_code, source_document_id, authority_role)
 SELECT 'R01', document.id, 'authoritative-list'
 FROM source_documents document
-WHERE document.canonical_url = 'https://ofac.treasury.gov/sanctions-list-service'
+WHERE document.canonical_url = 'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML'
 ON CONFLICT DO NOTHING;
 
 UPDATE reason_catalog_versions SET state = 'retired' WHERE state = 'active';
