@@ -1,25 +1,26 @@
 # isnotreal-server
 
-Backend, public data model, publication compiler and public routing foundations for **https://isnotreal.click**.
+Backend, public website, moderation/import tooling and signed publication service for **https://isnotreal.click**.
 Companion extension repository: https://github.com/Clickabl/isnotreal.
 
 ## Current status
 
-Implemented foundations now include:
+Implemented and continuously tested components include:
 
-- PostgreSQL schema and first migration in `db/migrations/0001_core.sql`.
-- Canonical entities with stable public IDs, aliases, unlimited external identifiers and assignment history.
-- Assertions, reusable source documents/captures, campaigns, versioned reason definitions, policy revisions and reviewed list decisions.
-- Explicit per-reason evidence qualification, exclusion and re-verification rules with immutable public catalog snapshots.
-- Reviewed official-list imports for named campaigns and authoritative institutional lists; raw rows never publish from name matching alone.
-- Membership proposals that separate verified facts from the human decision to place an entity on a filter/highlight list.
-- Community submissions/corrections, moderation queues, alternatives and publication metadata.
-- A compiler projection that strips server data to `[identifier, publicEntityId, reasonCodes]` tuples.
-- Typed persistence adapters over a small `SqlExecutor` boundary.
-- Transport-neutral API routing for search, entity profiles, alternatives, submissions and list delivery.
-- Public route resolution for `/{publicId} -> /{slug}` and `/go-to-alt/{publicId}`.
+- PostgreSQL entities, aliases, stable public IDs, verified identifiers and assignment history.
+- Cause-scoped factual reason catalog with qualification/exclusion criteria and publication availability.
+- Immutable source capture with public-IP validation, DNS-pinned fetching, hashes and reusable captures.
+- Trusted official-list staging, identity review, one-batch commit and audited rollback.
+- Public feedback/corrections/abuse queue with moderation states and duplicate clustering.
+- Verified identifier enrichment requiring a published sourced assertion.
+- Alternatives with public browsing and local extension eligibility checks.
+- Signed cause/channel/list publications with full/delta artifacts, dictionaries, expiry and activation history.
+- Public API plus responsive website for search, entities/evidence, causes/reasons, alternatives, downloads, privacy and feedback.
+- Bearer-authenticated editor console for submissions, identifiers, imports, proposals and publication issues.
+- Least-privilege runtime/editor/owner DB roles, Nginx rate limits/timeouts, application backpressure, backup/restore smoke gates and production runbooks.
+- Idempotent CCFP source capture/stage/prepare command for the first requested official-list import.
 
-The repository now includes a bounded authoritative-source capture worker, a Node HTTP runtime, filesystem publication storage, and an optional bearer-authenticated moderation API. There is still no production database/object storage provisioned, cryptographic signing/TUF implementation, graphical admin UI, public page renderer, or deployment configuration.
+Production infrastructure, store listings and populated live data require the actual server/cloud/browser-store credentials; they are deployment actions rather than hidden code scaffolds.
 
 ## Local development
 
@@ -36,8 +37,8 @@ npm run check
 
 ```text
 apps/
-  api/                  public API router, Node runtime and authenticated moderation routes
-  web/                  canonical entity and alternative redirect resolver
+  api/                  public API, runtime, admin routes and import/publisher CLIs
+  web/                  responsive public website and editor console
 packages/
   config/               production defaults
   protocol/             minimized extension publication contract
@@ -58,28 +59,27 @@ PostgreSQL is the source of truth. The extension never receives names, biographi
 
 ## Reason and evidence workflow
 
-The public list pipeline intentionally separates factual ingestion from editorial membership:
+Trusted official lists use one reviewed batch rather than redundant per-person editorial approvals:
 
 ```text
 official/primary source
   -> immutable source capture
-  -> reviewed entity resolution
-  -> published factual assertion + reason code
-  -> pending membership proposal
-  -> human approval/rejection
-  -> evidence validation gate
-  -> immutable compact publication
+  -> reviewed/automatic unambiguous identity resolution
+  -> sourced factual assertions
+  -> cause/list membership in one trusted batch
+  -> validation gate
+  -> signed compact publication
 ```
 
-A source import cannot directly place an entity on a filter or highlight list. Current-status reasons also expire from compact publications when their catalog-defined re-verification window is exceeded; the historical evidence remains in PostgreSQL.
+Ambiguous identities remain exceptions; they do not hold the rest of a trusted batch hostage. Community submissions never publish directly. Historical evidence remains in PostgreSQL when a membership is rolled back or a current-status reason expires.
 
-See `docs/reason-catalog.md` for the public vocabulary and qualification rules.
+See `docs/reason-catalog.md` and `docs/PRODUCT_DELIVERY_PLAN.md`.
 
 ## Moderation API
 
 Set `ADMIN_BEARER_TOKEN` to enable `/admin/api/v1/*` routes. If it is unset, the admin surface returns 404. Admin responses are always `no-store`; use `ADMIN_ACTOR_ID` to identify the reviewer in audit records.
 
-The moderation surface covers community submissions, official-import identity review, membership proposals and publication-validation failures. It is an API foundation, not a graphical admin UI.
+The moderation surface covers community submissions/abuse reports, verified identifier enrichment, official-import identity review/commit/rollback, membership proposals and publication-validation failures. `/admin-console` is the graphical editor UI and keeps the bearer token in browser session storage only.
 
 ## Production/server handoff
 
