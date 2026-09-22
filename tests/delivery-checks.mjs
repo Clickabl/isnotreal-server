@@ -31,6 +31,27 @@ export async function runDeliveryChecks({
   policyRevisionId,
 }) {
   const reader = new PostgresPublishedArtifactReader(db, store);
+  const additionalReasons = await db.query(
+    `SELECT cause.slug, pref.reason_code, requirement.public_criteria, requirement.exclusion_criteria
+     FROM cause_reason_preferences pref
+     JOIN causes cause ON cause.id = pref.cause_id
+     JOIN reason_evidence_requirements requirement ON requirement.reason_code = pref.reason_code
+     WHERE cause.slug IN ('epstein-records', 'trump-maga', 'russia-ukraine')`,
+  );
+  for (const code of ['EP01', 'MAGA01', 'RU01'])
+    assert.ok(additionalReasons.rows.some((row) => row.reason_code === code), code);
+  assert.match(
+    additionalReasons.rows.find((row) => row.reason_code === 'EP01').exclusion_criteria,
+    /victims|minors/i,
+  );
+  assert.match(
+    additionalReasons.rows.find((row) => row.reason_code === 'MAGA01').exclusion_criteria,
+    /Do not infer endorsement/i,
+  );
+  assert.match(
+    additionalReasons.rows.find((row) => row.reason_code === 'RU01').public_criteria,
+    /official sanctions list/i,
+  );
   const cause = 'israel-palestine';
   const manifest = await reader.manifest(cause, 'domain-subdomains', 'filter');
   const { signature, ...unsigned } = manifest;
