@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto';
+import { request as httpRequest } from 'node:http';
+import { request as httpsRequest } from 'node:https';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { URL } from 'node:url';
@@ -162,24 +164,14 @@ async function fetchTrustedSource(
   let current = new URL(initialUrl);
 
   for (let redirectCount = 0; redirectCount <= options.maxRedirects; redirectCount += 1) {
-    await assertPublicHttpUrl(current);
-
-    const response = await fetch(current, {
-      method: 'GET',
-      redirect: 'manual',
-      signal: AbortSignal.timeout(options.timeoutMs),
-      headers: {
-        accept:
-          'text/html,application/xhtml+xml,application/json,text/plain,application/pdf,*/*;q=0.1',
-        'user-agent': options.userAgent,
-      },
-    });
+    const target = await resolvePublicTarget(current);
+    const response = await requestPinned(current, target, options);
 
     if (isRedirect(response.status)) {
       if (redirectCount === options.maxRedirects) {
         throw new Error('source capture redirect limit exceeded');
       }
-      const location = response.headers.get('location');
+      const location = response.location;
       if (!location) throw new Error('source capture redirect missing location');
       current = new URL(location, current);
       continue;
@@ -189,29 +181,25 @@ async function fetchTrustedSource(
       throw new Error(`source capture returned HTTP ${response.status}`);
     }
 
-    const declaredLength = response.headers.get('content-length');
-    if (declaredLength !== null) {
-      const length = Number(declaredLength);
-      if (Number.isFinite(length) && length > options.maxBytes) {
-        throw new Error('source capture exceeds size limit');
-      }
-    }
-
-    const bytes = await readLimitedBody(response, options.maxBytes);
     return {
-      bytes,
+      bytes: response.bytes,
       finalUrl: current.toString(),
       status: response.status,
-      contentType: response.headers.get('content-type'),
-      etag: response.headers.get('etag'),
-      lastModified: response.headers.get('last-modified'),
+      contentType: response.contentType,
+      etag: response.etag,
+      lastModified: response.lastModified,
     };
   }
 
   throw new Error('source capture redirect loop');
 }
 
-async function assertPublicHttpUrl(url: URL): Promise<void> {
+interface ResolvedTarget {
+  readonly address: string;
+  readonly family: 4 | 6;
+}
+
+async function resolvePublicTarget(url: URL): Promise<ResolvedTarget> {
   if (url.protocol !== 'https:' && url.protocol !== 'http:') {
     throw new Error('source capture only supports HTTP(S)');
   }
@@ -230,10 +218,11 @@ async function assertPublicHttpUrl(url: URL): Promise<void> {
     throw new Error('source capture local hostname is forbidden');
   }
 
-  if (isIP(hostname)) {
+  const literal = isIP(hostname);
+  if (literal) {
     if (!isPublicIpAddress(hostname))
       throw new Error('source capture private/reserved IP is forbidden');
-    return;
+    return { address: hostname, family: literal as 4 | 6 };
   }
 
   const addresses = await lookup(hostname, { all: true, verbatim: true });
@@ -241,6 +230,110 @@ async function assertPublicHttpUrl(url: URL): Promise<void> {
   if (addresses.some((entry) => !isPublicIpAddress(entry.address))) {
     throw new Error('source capture hostname resolves to private/reserved IP');
   }
+  const selected = addresses[0];
+  if (!selected || (selected.family !== 4 && selected.family !== 6)) {
+    throw new Error('source capture hostname has no usable address');
+  }
+  return { address: selected.address, family: selected.family };
+}
+
+interface PinnedResponse {
+  readonly status: number;
+  readonly bytes: Uint8Array;
+  readonly location: string | null;
+  readonly contentType: string | null;
+  readonly etag: string | null;
+  readonly lastModified: string | null;
+}
+
+async function requestPinned(
+  url: URL,
+  target: ResolvedTarget,
+  options: TrustedFetchOptions,
+): Promise<PinnedResponse> {
+  return new Promise<PinnedResponse>((resolve, reject) => {
+    const headers = {
+      accept:
+        'text/html,application/xhtml+xml,application/json,text/plain,application/pdf,*/*;q=0.1',
+      'user-agent': options.userAgent,
+      host: url.host,
+    };
+    const onResponse = (response: import('node:http').IncomingMessage) => {
+      const status = response.statusCode ?? 0;
+      const header = (name: string): string | null => {
+        const value = response.headers[name];
+        return Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
+      };
+      const location = header('location');
+      if (isRedirect(status)) {
+        response.resume();
+        resolve({
+          status,
+          bytes: new Uint8Array(),
+          location,
+          contentType: header('content-type'),
+          etag: header('etag'),
+          lastModified: header('last-modified'),
+        });
+        return;
+      }
+      const declaredLength = header('content-length');
+      if (declaredLength !== null) {
+        const length = Number(declaredLength);
+        if (Number.isFinite(length) && length > options.maxBytes) {
+          response.destroy();
+          reject(new Error('source capture exceeds size limit'));
+          return;
+        }
+      }
+      const chunks: Uint8Array[] = [];
+      let total = 0;
+      response.on('data', (chunk: Buffer | Uint8Array) => {
+        const bytes = chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk);
+        total += bytes.byteLength;
+        if (total > options.maxBytes) {
+          response.destroy(new Error('source capture exceeds size limit'));
+          return;
+        }
+        chunks.push(bytes);
+      });
+      response.on('error', reject);
+      response.on('end', () => {
+        const bytes = new Uint8Array(total);
+        let offset = 0;
+        for (const chunk of chunks) {
+          bytes.set(chunk, offset);
+          offset += chunk.byteLength;
+        }
+        resolve({
+          status,
+          bytes,
+          location,
+          contentType: header('content-type'),
+          etag: header('etag'),
+          lastModified: header('last-modified'),
+        });
+      });
+    };
+    const common = {
+      hostname: target.address,
+      family: target.family,
+      port: url.port || (url.protocol === 'https:' ? 443 : 80),
+      path: url.pathname + url.search,
+      method: 'GET',
+      headers,
+      agent: false as const,
+    };
+    const request =
+      url.protocol === 'https:'
+        ? httpsRequest({ ...common, servername: url.hostname }, onResponse)
+        : httpRequest(common, onResponse);
+    request.setTimeout(options.timeoutMs, () => {
+      request.destroy(new Error('source capture timed out'));
+    });
+    request.on('error', reject);
+    request.end();
+  });
 }
 
 export function isPublicIpAddress(address: string): boolean {
@@ -295,34 +388,6 @@ function isPublicIpv6(address: string): boolean {
   if (mapped?.[1]) return isPublicIpv4(mapped[1]);
   if (value.startsWith('::ffff:')) return false;
   return true;
-}
-
-async function readLimitedBody(response: Response, maxBytes: number): Promise<Uint8Array> {
-  if (!response.body) return new Uint8Array();
-
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let total = 0;
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (!value) continue;
-    total += value.byteLength;
-    if (total > maxBytes) {
-      await reader.cancel();
-      throw new Error('source capture exceeds size limit');
-    }
-    chunks.push(value);
-  }
-
-  const result = new Uint8Array(total);
-  let offset = 0;
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return result;
 }
 
 function isRedirect(status: number): boolean {
