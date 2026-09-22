@@ -17,10 +17,7 @@ test('CCFP parser extracts signer names only inside the signed list', () => {
 
 test('CCFP parser refuses a partial or structurally changed source', () => {
   assert.throws(
-    () =>
-      parseCcfpOctober2023Html(
-        '<html><body>' + '<p>noise</p>'.repeat(600) + '</body></html>',
-      ),
+    () => parseCcfpOctober2023Html('<html><body>' + '<p>noise</p>'.repeat(600) + '</body></html>'),
     /signer boundaries/,
   );
 });

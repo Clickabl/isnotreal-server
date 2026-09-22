@@ -39,7 +39,10 @@ export async function runDeliveryChecks({
      WHERE cause.slug IN ('epstein-records', 'trump-maga', 'russia-ukraine')`,
   );
   for (const code of ['EP01', 'MAGA01', 'RU01'])
-    assert.ok(additionalReasons.rows.some((row) => row.reason_code === code), code);
+    assert.ok(
+      additionalReasons.rows.some((row) => row.reason_code === code),
+      code,
+    );
   assert.equal(
     additionalReasons.rows.every((row) => row.suggested_action === 'informational'),
     true,
@@ -47,7 +50,10 @@ export async function runDeliveryChecks({
   const catalogReasons = await db.query(
     `SELECT code FROM current_reason_catalog WHERE code IN ('EP01','MAGA01','RU01') ORDER BY code`,
   );
-  assert.deepEqual(catalogReasons.rows.map((row) => row.code), ['EP01', 'MAGA01', 'RU01']);
+  assert.deepEqual(
+    catalogReasons.rows.map((row) => row.code),
+    ['EP01', 'MAGA01', 'RU01'],
+  );
   assert.match(
     additionalReasons.rows.find((row) => row.reason_code === 'EP01').exclusion_criteria,
     /victims|minors/i,

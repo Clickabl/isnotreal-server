@@ -253,8 +253,9 @@ export function createAdminRouter(deps: AdminDependencies) {
       });
     }
 
-    const sourceChangeReview =
-      /^\/admin\/api\/v1\/source-changes\/([0-9a-f-]+)\/review$/i.exec(request.pathname);
+    const sourceChangeReview = /^\/admin\/api\/v1\/source-changes\/([0-9a-f-]+)\/review$/i.exec(
+      request.pathname,
+    );
     if (request.method === 'POST' && sourceChangeReview) {
       const id = validUuid(sourceChangeReview[1]);
       const body = parseSourceChangeReviewBody(request.body);

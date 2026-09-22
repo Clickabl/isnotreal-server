@@ -15,7 +15,11 @@ export interface SourceChangeEvent {
 export async function watchOfficialSources(
   db: SqlExecutor,
   store: ArtifactStore,
-): Promise<{ readonly checked: number; readonly changed: number; readonly changes: readonly SourceChangeEvent[] }> {
+): Promise<{
+  readonly checked: number;
+  readonly changed: number;
+  readonly changes: readonly SourceChangeEvent[];
+}> {
   const documents = await db.query<{ id: string }>(
     `SELECT DISTINCT document.id::text
      FROM source_documents document
@@ -36,7 +40,8 @@ export async function watchOfficialSources(
     );
     const captured = await captureSourceDocument(db, store, document.id);
     const prior = previous.rows[0];
-    if (!prior || prior.id === captured.captureId || prior.content_hash === captured.sha256) continue;
+    if (!prior || prior.id === captured.captureId || prior.content_hash === captured.sha256)
+      continue;
     await db.query(
       `INSERT INTO source_change_events (
          document_id, previous_capture_id, new_capture_id
