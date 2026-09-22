@@ -29,7 +29,8 @@
     "start": "node apps/api/dist/serve.js",
     "start:local": "npm run build && npm run start",
     "import:ccfp": "npm run build && node apps/api/dist/import-ccfp.js",
-    "sources:watch": "npm run build && node apps/api/dist/watch-sources.js"
+    "sources:watch": "npm run build && node apps/api/dist/watch-sources.js",
+    "load:smoke": "node ops/load-smoke.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
