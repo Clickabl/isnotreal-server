@@ -161,3 +161,15 @@ A new reason should be added only when:
 6. tests cover the new catalog count/code and any publication behavior.
 
 Do not create a new reason merely because a new person or company is controversial. Add evidence to an existing factual reason whenever that is accurate.
+
+## Additional causes
+
+Catalog version 2+ adds neutral factual vocabulary for the independently selectable Epstein-related records, Trump/MAGA, and Russia/Ukraine causes.
+
+- `E01`–`E04` distinguish a released-record mention, documented direct contact, an attributable allegation, and an adjudicated finding. These are deliberately not interchangeable. Victims, minors, private/redacted identities and name collisions are excluded from `E01`.
+- `M01`–`M04` cover attributable public endorsements, formal roles, explicit self-identification, and official campaign-event participation. They do not infer ideology from party registration, policy similarity, relatives, employers or audiences.
+- `R01`–`R06` cover current OFAC Russia-related designation, Russian state ownership/control, current Russia operations, Russian military/defense supply, attributable support for Russia's invasion, and attributable support/humanitarian aid for Ukraine.
+
+These newer causes use an informational/highlight publication default. The extension lets the user choose whether a cause should be treated locally as a filter or a highlight. This keeps factual classification separate from the user's browsing choice.
+
+Individual FEC contributor data is intentionally not a reason source for the commercial product. FEC public-record data has statutory sale/use restrictions; political support reasons should use attributable public statements, official roles, or other sources cleared for the intended use.
