@@ -69,10 +69,18 @@ test('real public pages and static assets render without fabricated downloads', 
     assert.equal(r.kind, 'html', path);
     assert.equal(r.status, 200, path);
   }
-  assert.match((await web('/download')).html, /Store release not yet published/);
+  const download = await web('/download');
+  assert.match(download.html, /Store release not yet published/);
+  assert.match(download.html, /data-platform="chromium"/);
+  assert.match(download.html, /data-platform="firefox"/);
+  assert.match(download.html, /data-platform="safari"/);
   assert.equal((await web('/assets/site.css')).contentType, 'text/css; charset=utf-8');
   assert.equal((await web('/assets/admin.js')).contentType, 'text/javascript; charset=utf-8');
-  assert.match((await web('/report')).html, /data-submission/);
+  const report = await web('/report');
+  assert.match(report.html, /data-submission/);
+  assert.match(report.html, /product-feedback/);
+  assert.match(report.html, /accessibility-feedback/);
+  assert.match(report.html, /abuse-report/);
   const admin = await web('/admin-console');
   assert.match(admin.html, /Restricted editor surface/);
   assert.doesNotMatch(admin.html, /Bearer [A-Za-z0-9._-]+/);
