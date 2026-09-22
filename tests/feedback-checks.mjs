@@ -1,3 +1,4 @@
+const { fetch } = globalThis;
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { PostgresSubmissionWriter } from '../packages/persistence/dist/index.js';

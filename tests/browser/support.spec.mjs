@@ -1,3 +1,5 @@
+import { Buffer } from 'node:buffer';
+import { URL } from 'node:url';
 import { test, expect } from '@playwright/test';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
@@ -158,9 +160,11 @@ for (const width of [375, 768, 1280])
     await page.setViewportSize({ width, height: 900 });
     for (const path of ['/', '/report', '/help', '/editor', '/download', '/causes']) {
       await page.goto(origin + path);
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-        true,
-      );
+      expect(
+        await page.evaluate(
+          () => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth,
+        ),
+      ).toBe(true);
       await page.screenshot({
         path: info.outputPath((path === '/' ? 'home' : path.slice(1)) + '-' + width + '.png'),
         fullPage: true,
