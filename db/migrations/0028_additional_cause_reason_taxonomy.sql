@@ -96,7 +96,8 @@ INSERT INTO source_documents (canonical_url, title, publisher, source_type, firs
 VALUES
   ('https://www.justice.gov/epstein', 'Epstein Library', 'United States Department of Justice', 'primary', NULL),
   ('https://www.donaldjtrump.com/news/news-yx8fwpugn60', 'Donald J. Trump campaign news archive', 'Donald J. Trump for President', 'campaign', NULL),
-  ('https://ofac.treasury.gov/sanctions-programs-and-country-information/russia-related-sanctions', 'Russia-related Sanctions Programs', 'U.S. Department of the Treasury, Office of Foreign Assets Control', 'primary', NULL)
+  ('https://ofac.treasury.gov/sanctions-programs-and-country-information/russia-related-sanctions', 'Russia-related Sanctions Programs', 'U.S. Department of the Treasury, Office of Foreign Assets Control', 'primary', NULL),
+  ('https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML', 'OFAC Specially Designated Nationals XML', 'U.S. Department of the Treasury, Office of Foreign Assets Control', 'primary', NULL)
 ON CONFLICT (canonical_url) DO UPDATE SET
   title = EXCLUDED.title,
   publisher = EXCLUDED.publisher,
@@ -106,7 +107,7 @@ ON CONFLICT (canonical_url) DO UPDATE SET
 INSERT INTO reason_authority_sources (reason_code, source_document_id, authority_role)
 SELECT 'RU01', source.id, 'authoritative-list'
 FROM source_documents source
-WHERE source.canonical_url = 'https://ofac.treasury.gov/sanctions-programs-and-country-information/russia-related-sanctions'
+WHERE source.canonical_url = 'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO reason_causes (reason_code, cause_id)
