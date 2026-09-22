@@ -42,6 +42,7 @@ const submissionStates = new Set<CommunitySubmissionState>([
   'accepted',
   'rejected',
   'duplicate',
+  'spam',
 ]);
 
 export function createAdminRouter(deps: AdminDependencies) {
