@@ -139,7 +139,7 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
       return {
         kind: 'asset',
         status: 200,
-        body: 'User-agent: *\nDisallow: /admin/\nDisallow: /api/\nDisallow: /report\n',
+        body: 'User-agent: *\nDisallow: /admin/\nDisallow: /admin-console\nDisallow: /api/\nDisallow: /report\n',
         contentType: 'text/plain; charset=utf-8',
       };
     if (pathname === '/admin-console') {
