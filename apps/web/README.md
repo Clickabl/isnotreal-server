@@ -1,3 +1,5 @@
-# Public site composition root
+# Public website and editor console
 
-Reserved for https://isnotreal.click and public /why/:platform/:accountId pages. No web framework, pages, deployment or evidence renderer exists. Why pages eventually show specific claims, sources, evidence dates, review status and correction/dispute pathways. Public projections must exclude private contact details and internal reviewer identifiers. No tracking or automatic link prefetch for Why navigation.
+This package renders the responsive isnotreal.click website without a client framework: homepage/downloads, search, canonical entity/evidence pages, cause/reason pages, alternatives, methodology/privacy/how-it-works, feedback/corrections, and the authenticated editor console.
+
+Public pages escape user/database content, avoid tracking/prefetch, and link exact evidence sources. The editor console covers feedback/abuse triage, source-change review, verified identifier enrichment, trusted imports/rollback, membership proposals and publication issues.
