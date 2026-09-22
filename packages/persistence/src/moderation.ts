@@ -1,7 +1,7 @@
 import type { SqlExecutor } from './index.js';
 
 export type CommunitySubmissionState =
-  'pending' | 'triaged' | 'accepted' | 'rejected' | 'duplicate';
+  'pending' | 'triaged' | 'accepted' | 'rejected' | 'duplicate' | 'spam';
 
 export interface CommunitySubmissionQueueItem {
   readonly id: string;
@@ -199,14 +199,14 @@ export class PostgresModerationQueue {
 
   async reviewCommunitySubmission(
     submissionId: string,
-    state: 'triaged' | 'accepted' | 'rejected' | 'duplicate',
+    state: 'triaged' | 'accepted' | 'rejected' | 'duplicate' | 'spam',
     reviewerId: string,
     note: string,
   ): Promise<void> {
     const reviewer = reviewerId.trim();
     const rationale = note.trim();
     if (!reviewer) throw new Error('reviewerId is required');
-    if ((state === 'rejected' || state === 'duplicate') && !rationale) {
+    if ((state === 'rejected' || state === 'duplicate' || state === 'spam') && !rationale) {
       throw new Error('a rationale is required when rejecting or marking a duplicate');
     }
 
