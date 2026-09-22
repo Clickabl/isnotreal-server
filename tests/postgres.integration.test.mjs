@@ -273,7 +273,7 @@ test(
         notes: 'Integration-test catalog revision',
       });
       assert.equal(nextCatalog.version, 2);
-      assert.equal(nextCatalog.entryCount, 60);
+      assert.equal(nextCatalog.entryCount, 76);
       assert.equal(await reasonCatalog.version(), 2);
       assert.equal(
         (await reasonCatalog.byCode('P14', 2))?.label,
