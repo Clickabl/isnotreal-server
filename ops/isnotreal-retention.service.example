@@ -1,0 +1,14 @@
+[Unit]
+Description=isnotreal.click privacy retention cleanup
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=isnotreal-editor
+Group=isnotreal-editor
+EnvironmentFile=/etc/isnotreal/source-watch.env
+ExecStart=/bin/sh -c 'psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f /srv/isnotreal-server/ops/retention.sql'
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
