@@ -48,6 +48,18 @@ server {
         proxy_read_timeout 15s;
     }
 
+    # Admin console contains no secret by itself, but keep the editor surface on
+    # the same restricted operator network as the authenticated admin API.
+    location = /admin-console {
+        limit_req zone=isnotreal_write burst=5 nodelay;
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 3s;
+        proxy_read_timeout 15s;
+    }
+
     # Admin endpoints should additionally be network restricted at deployment
     # (VPN/private network/firewall). Bearer auth in the app is not the only layer.
     location ^~ /admin/ {
