@@ -1,0 +1,63 @@
+name: Feedback workflow regression gate
+on:
+  push:
+    branches: [quality/ui-feedback-20260922]
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/isnotreal_test
+      RUN_DB_INTEGRATION: '1'
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: isnotreal_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d isnotreal_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Explicit Node and browser test globals
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('tests/browser/support.spec.mjs');s=p.read_text()
+          if "from 'node:buffer'" not in s:s="import { Buffer } from 'node:buffer';\nimport { URL } from 'node:url';\n"+s
+          s=s.replace('Object.keys(localStorage)', 'Object.keys(globalThis.localStorage)').replace('Object.keys(sessionStorage)', 'Object.keys(globalThis.sessionStorage)')
+          s=s.replace('document.documentElement','globalThis.document.documentElement').replace('<= innerWidth','<= globalThis.innerWidth')
+          p.write_text(s)
+          p=Path('tests/feedback-checks.mjs');s=p.read_text()
+          if 'const { fetch } = globalThis;' not in s:s='const { fetch } = globalThis;\n'+s
+          p.write_text(s)
+          PY
+      - run: bash ops/ci-postgres-client.sh
+      - run: npm ci
+      - run: npx prettier --write .
+      - name: Commit verified-environment fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests apps packages docs
+          git diff --cached --quiet || git commit -m "test: declare execution environments for feedback browser coverage"
+          git push origin HEAD:quality/ui-feedback-20260922
+      - run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: feedback-ui-browser-evidence
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7
