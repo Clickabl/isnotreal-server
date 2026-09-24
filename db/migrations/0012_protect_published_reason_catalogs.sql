@@ -30,7 +30,7 @@ $$;
 CREATE TRIGGER reason_catalog_entries_immutable_after_draft
 BEFORE INSERT OR UPDATE OR DELETE ON reason_catalog_entries
 FOR EACH ROW
-EXECUTE FUNCTION protect_reason_catalog_entry();
+EXECUTE PROCEDURE protect_reason_catalog_entry();
 
 CREATE FUNCTION protect_reason_catalog_version()
 RETURNS trigger
@@ -60,6 +60,6 @@ $$;
 CREATE TRIGGER reason_catalog_versions_immutable_metadata
 BEFORE UPDATE ON reason_catalog_versions
 FOR EACH ROW
-EXECUTE FUNCTION protect_reason_catalog_version();
+EXECUTE PROCEDURE protect_reason_catalog_version();
 
 COMMIT;
