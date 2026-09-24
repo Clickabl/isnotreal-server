@@ -68,9 +68,9 @@ point() {
 healthy() {
   local i
   for ((i = 1; i <= HEALTH_TRIES; i++)); do
-    if curl -fsS --max-time 10 -o /dev/null ${ISNOTREAL_HEALTH_RESOLVE:+--resolve "$ISNOTREAL_HEALTH_RESOLVE"} "$HEALTH_URL"; then
-      return 0
-    fi
+    # Only a 200 counts: a redirect (e.g. a host-level HTTP->HTTPS rule) proves nothing.
+    code="$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' ${ISNOTREAL_HEALTH_RESOLVE:+--resolve "$ISNOTREAL_HEALTH_RESOLVE"} "$HEALTH_URL" || true)"
+    if [[ "$code" == 200 ]]; then return 0; fi
     sleep "$HEALTH_DELAY"
   done
   return 1
@@ -80,6 +80,9 @@ restart() {
   mkdir -p "$APP_ROOT/tmp"
   cp "$HOME_DIR/current/ops/cpanel/entrypoint.mjs" "$HOME_DIR/current/ops/cpanel/config.mjs" "$APP_ROOT/"
   touch "$APP_ROOT/tmp/restart.txt"
+  # LiteSpeed keeps a detached lsnode process that ignores restart.txt; stop it and the
+  # next request starts the new release.
+  pkill -u "$(id -u)" -f "^lsnode:$APP_ROOT/" || true
 }
 
 # 1. Fetch and resolve the ref.
