@@ -18,11 +18,13 @@ for value in "$ISNOTREAL_OWNER_PASSWORD" "$ISNOTREAL_APP_PASSWORD" "$ISNOTREAL_E
   [[ ${#value} -ge 24 ]] || { echo 'Generate passwords of at least 24 characters' >&2; exit 1; }
 done
 # Secrets enter psql through environment, not command arguments or SQL string concatenation.
+# psql reads them with a backquoted shell builtin (printf) because \getenv needs psql 15+
+# and production's client is psql 10.
 node ops/libpq-run.mjs PG_ADMIN_URL psql -X -v ON_ERROR_STOP=1 -v db="$DB" -v owner="$OWNER" -v app="$APP" -v editor="$EDITOR" -v publisher="$PUBLISHER" <<'SQL'
-\getenv owner_password ISNOTREAL_OWNER_PASSWORD
-\getenv app_password ISNOTREAL_APP_PASSWORD
-\getenv editor_password ISNOTREAL_EDITOR_PASSWORD
-\getenv publisher_password ISNOTREAL_PUBLISHER_PASSWORD
+\set owner_password `printf '%s' "$ISNOTREAL_OWNER_PASSWORD"`
+\set app_password `printf '%s' "$ISNOTREAL_APP_PASSWORD"`
+\set editor_password `printf '%s' "$ISNOTREAL_EDITOR_PASSWORD"`
+\set publisher_password `printf '%s' "$ISNOTREAL_PUBLISHER_PASSWORD"`
 SELECT format('CREATE ROLE %I LOGIN PASSWORD %L NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION', :'owner', :'owner_password') WHERE NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=:'owner') \gexec
 SELECT format('CREATE ROLE %I LOGIN PASSWORD %L NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION', :'app', :'app_password') WHERE NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=:'app') \gexec
 SELECT format('CREATE ROLE %I LOGIN PASSWORD %L NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION', :'editor', :'editor_password') WHERE NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=:'editor') \gexec
