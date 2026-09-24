@@ -18,6 +18,7 @@ import {
 import { createPublicWebsite } from '@isnotreal/web';
 import { createAdminRouter } from './admin.js';
 import { createApiRouter } from './index.js';
+import { firefoxUpdateManifest, readExtensionReleases } from './extension-releases.js';
 
 export interface NodeApiRuntimeOptions {
   readonly databaseUrl: string;
@@ -30,6 +31,8 @@ export interface NodeApiRuntimeOptions {
   readonly adminActorId?: string;
   readonly adminDatabaseUrl?: string;
   readonly downloads?: Readonly<Record<string, string>>;
+  /** JSON file describing released extension versions (see extension-releases.ts). */
+  readonly extensionReleasesFile?: string;
 }
 export interface RunningNodeApiRuntime {
   readonly host: string;
@@ -224,6 +227,28 @@ export async function startNodeApiRuntime(
           json(response, request, 200, { ready: true });
         } catch {
           json(response, request, 503, { ready: false });
+        }
+        return;
+      }
+      if (
+        request.method !== 'POST' &&
+        (url.pathname === '/api/v1/extension/releases' ||
+          url.pathname === '/extension/firefox/updates.json')
+      ) {
+        const releases = await readExtensionReleases(options.extensionReleasesFile);
+        const cache = 'public, max-age=300';
+        if (url.pathname === '/api/v1/extension/releases') {
+          json(response, request, 200, { browsers: releases.browsers }, cache);
+        } else if (releases.firefoxSelfDistribution) {
+          json(
+            response,
+            request,
+            200,
+            firefoxUpdateManifest(releases.firefoxSelfDistribution),
+            cache,
+          );
+        } else {
+          json(response, request, 404, { error: 'not_found' });
         }
         return;
       }
