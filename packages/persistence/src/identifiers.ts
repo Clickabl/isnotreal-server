@@ -49,7 +49,9 @@ export async function assignVerifiedIdentifier(
       [input.verificationAssertionId, entityId],
     );
     if (!evidence.rows[0]) {
-      throw new Error('identifier verification assertion must be published, sourced, and belong to the entity');
+      throw new Error(
+        'identifier verification assertion must be published, sourced, and belong to the entity',
+      );
     }
 
     const identifier = await tx.query<{ id: string }>(
@@ -95,7 +97,11 @@ export async function assignVerifiedIdentifier(
       `INSERT INTO review_events (
          subject_type, subject_id, action, reviewer_id, rationale
        ) VALUES ('identifier-assignment', $1, 'approved', $2, $3)`,
-      [identifierId, reviewer, `Verified ${input.kind} identifier for entity ${input.entityPublicId}`],
+      [
+        identifierId,
+        reviewer,
+        `Verified ${input.kind} identifier for entity ${input.entityPublicId}`,
+      ],
     );
     return { identifierId, entityId };
   });

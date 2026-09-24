@@ -55,15 +55,13 @@ try {
   );
 
   let batchId = existing.rows[0]?.id;
-  let staged:
-    | {
-        readonly batchId: string;
-        readonly rowCount: number;
-        readonly candidateRows: number;
-        readonly ambiguousRows: number;
-        readonly unresolvedRows: number;
-      }
-    | null = null;
+  let staged: {
+    readonly batchId: string;
+    readonly rowCount: number;
+    readonly candidateRows: number;
+    readonly ambiguousRows: number;
+    readonly unresolvedRows: number;
+  } | null = null;
   if (!batchId) {
     staged = await stageCampaignImport(db, {
       campaignVersionId: row.campaign_version_id,
