@@ -4,6 +4,12 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # Types must match the Node major we run. The production host (cPanel
+      # CloudLinux Node selector) offers at most Node 24; bump this together
+      # with .nvmrc and package.json engines when the host offers a newer major.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:
