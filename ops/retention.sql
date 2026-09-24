@@ -8,10 +8,8 @@ WHERE source.submission_id = submission.id
 
 UPDATE community_submissions
 SET narrative = '[redacted after abuse-retention window]',
-    proposed_identifier = NULL,
-    source_locator = NULL,
-    submitter_contact_ref = NULL,
-    updated_at = now()
+    identifier_value = NULL,
+    submitter_contact_ref = NULL
 WHERE state IN ('spam','duplicate')
   AND reviewed_at < now() - interval '90 days'
   AND narrative <> '[redacted after abuse-retention window]';

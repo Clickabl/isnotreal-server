@@ -1,6 +1,6 @@
 import { URL } from 'node:url';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 const coreMigration = await readFile(
@@ -53,4 +53,13 @@ test('identifier aliases preserve human-facing account history', () => {
   assert.match(aliasMigration, /CREATE TABLE identifier_aliases/);
   assert.match(aliasMigration, /verification_assertion_id/);
   assert.match(aliasMigration, /alternative_destinations_verified_idx/);
+});
+
+test('migration numbers are unique so apply order never depends on the name suffix', async () => {
+  const names = (await readdir(new URL('../db/migrations/', import.meta.url))).filter((name) =>
+    name.endsWith('.sql'),
+  );
+  const prefixes = names.map((name) => name.slice(0, 4));
+  const duplicates = prefixes.filter((prefix, index) => prefixes.indexOf(prefix) !== index);
+  assert.deepEqual(duplicates, []);
 });

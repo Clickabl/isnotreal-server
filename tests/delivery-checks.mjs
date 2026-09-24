@@ -39,7 +39,10 @@ export async function runDeliveryChecks({
      WHERE cause.slug IN ('epstein-records', 'trump-maga', 'russia-ukraine')`,
   );
   for (const code of ['EP01', 'MAGA01', 'RU01'])
-    assert.ok(additionalReasons.rows.some((row) => row.reason_code === code), code);
+    assert.ok(
+      additionalReasons.rows.some((row) => row.reason_code === code),
+      code,
+    );
   assert.equal(
     additionalReasons.rows.every((row) => row.suggested_action === 'informational'),
     true,
@@ -47,7 +50,10 @@ export async function runDeliveryChecks({
   const catalogReasons = await db.query(
     `SELECT code FROM current_reason_catalog WHERE code IN ('EP01','MAGA01','RU01') ORDER BY code`,
   );
-  assert.deepEqual(catalogReasons.rows.map((row) => row.code), ['EP01', 'MAGA01', 'RU01']);
+  assert.deepEqual(
+    catalogReasons.rows.map((row) => row.code),
+    ['EP01', 'MAGA01', 'RU01'],
+  );
   assert.match(
     additionalReasons.rows.find((row) => row.reason_code === 'EP01').exclusion_criteria,
     /victims|minors/i,
@@ -264,8 +270,10 @@ async function checkOps(databaseUrl) {
     dbName = `isnotreal_ops_test_${suffix}`;
   const owner = `inr_owner_${suffix}`,
     app = `inr_app_${suffix}`,
-    editor = `inr_editor_${suffix}`;
+    editor = `inr_editor_${suffix}`,
+    publisher = `inr_publisher_${suffix}`;
   const passwords = [
+    randomBytes(24).toString('hex'),
     randomBytes(24).toString('hex'),
     randomBytes(24).toString('hex'),
     randomBytes(24).toString('hex'),
@@ -277,9 +285,11 @@ async function checkOps(databaseUrl) {
     ISNOTREAL_OWNER_ROLE: owner,
     ISNOTREAL_APP_ROLE: app,
     ISNOTREAL_EDITOR_ROLE: editor,
+    ISNOTREAL_PUBLISHER_ROLE: publisher,
     ISNOTREAL_OWNER_PASSWORD: passwords[0],
     ISNOTREAL_APP_PASSWORD: passwords[1],
     ISNOTREAL_EDITOR_PASSWORD: passwords[2],
+    ISNOTREAL_PUBLISHER_PASSWORD: passwords[3],
   };
   const run = (file, extra = {}, args = []) => {
     const result = spawnSync('bash', [`ops/${file}.sh`, ...args], {
@@ -328,7 +338,8 @@ async function checkOps(databaseUrl) {
     await appDb?.close();
     await ownerDb?.close();
     await admin.query(`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE)`);
-    for (const role of [app, editor, owner]) await admin.query(`DROP ROLE IF EXISTS "${role}"`);
+    for (const role of [app, editor, publisher, owner])
+      await admin.query(`DROP ROLE IF EXISTS "${role}"`);
     await admin.close();
   }
 }

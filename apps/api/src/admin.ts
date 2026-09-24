@@ -248,13 +248,16 @@ export function createAdminRouter(deps: AdminDependencies) {
         request.query.state === 'reviewed' || request.query.state === 'ignored'
           ? request.query.state
           : 'pending';
+      const limit = parseLimit(request.query.limit, 100, 500);
+      if (limit === null) return response(400, { error: 'invalid_limit' });
       return response(200, {
-        changes: await listSourceChanges(deps.db, state, limit(request.query.limit)),
+        changes: await listSourceChanges(deps.db, state, limit),
       });
     }
 
-    const sourceChangeReview =
-      /^\/admin\/api\/v1\/source-changes\/([0-9a-f-]+)\/review$/i.exec(request.pathname);
+    const sourceChangeReview = /^\/admin\/api\/v1\/source-changes\/([0-9a-f-]+)\/review$/i.exec(
+      request.pathname,
+    );
     if (request.method === 'POST' && sourceChangeReview) {
       const id = validUuid(sourceChangeReview[1]);
       const body = parseSourceChangeReviewBody(request.body);

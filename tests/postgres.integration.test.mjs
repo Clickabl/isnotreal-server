@@ -57,10 +57,12 @@ test(
         (await readdir('db/migrations')).filter((x) => /^\d{4}_.*\.sql$/.test(x)).sort(),
       );
 
+      // 0008 seeds catalog v1; 0029 publishes v2 with the additional-cause reasons.
       const reasonCatalog = new PostgresReasonCatalogReader(db);
-      assert.equal(await reasonCatalog.version(), 1);
+      assert.equal(await reasonCatalog.version(), 2);
+      assert.equal((await reasonCatalog.list(1)).length, 60);
       const catalog = await reasonCatalog.list();
-      assert.equal(catalog.length, 60);
+      assert.equal(catalog.length, 76);
       const artists4Ceasefire = catalog.find((reason) => reason.code === 'P03');
       assert.equal(artists4Ceasefire?.campaigns[0]?.slug, 'artists4ceasefire');
       assert.equal(
@@ -214,7 +216,7 @@ test(
 
       const published = new PostgresPublishedArtifactReader(db, store);
       const firstFull = await published.full('israel-palestine', 'domain-subdomains', 'filter');
-      assert.equal(firstFull.reasonCatalogVersion, 1);
+      assert.equal(firstFull.reasonCatalogVersion, 2);
       assert.deepEqual(firstFull.entries, [['example.com', publicId, ['C03']]]);
       assert.deepEqual((await published.full('israel-palestine', 'domain', 'filter')).entries, []);
 
@@ -261,26 +263,26 @@ test(
       assert.deepEqual(delta.added, [['example.com', publicId, ['C03', 'C05']]]);
       assert.deepEqual(delta.removed, []);
 
-      const originalP14 = await reasonCatalog.byCode('P14', 1);
+      const originalP14 = await reasonCatalog.byCode('P14', 2);
       assert.ok(originalP14);
       await db.query(
         `UPDATE reason_definitions
          SET label = 'Documented Palestine solidarity action', updated_at = now()
          WHERE code = 'P14'`,
       );
-      assert.equal((await reasonCatalog.byCode('P14', 1))?.label, originalP14.label);
+      assert.equal((await reasonCatalog.byCode('P14', 2))?.label, originalP14.label);
 
       const nextCatalog = await publishReasonCatalogVersion(db, {
         notes: 'Integration-test catalog revision',
       });
-      assert.equal(nextCatalog.version, 2);
+      assert.equal(nextCatalog.version, 3);
       assert.equal(nextCatalog.entryCount, 76);
-      assert.equal(await reasonCatalog.version(), 2);
+      assert.equal(await reasonCatalog.version(), 3);
       assert.equal(
-        (await reasonCatalog.byCode('P14', 2))?.label,
+        (await reasonCatalog.byCode('P14', 3))?.label,
         'Documented Palestine solidarity action',
       );
-      assert.equal((await reasonCatalog.byCode('P14', 1))?.label, originalP14.label);
+      assert.equal((await reasonCatalog.byCode('P14', 2))?.label, originalP14.label);
 
       const thirdPublication = await publishCurrentState(db, store, {
         compilerVersion: 'integration-test',
@@ -292,7 +294,7 @@ test(
       assert.equal(
         (await published.full('israel-palestine', 'domain-subdomains', 'filter'))
           .reasonCatalogVersion,
-        2,
+        3,
       );
 
       const artist = await db.query(

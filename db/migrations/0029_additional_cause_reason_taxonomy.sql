@@ -146,14 +146,13 @@ ON CONFLICT (cause_id, reason_code) DO UPDATE SET
   sort_order = EXCLUDED.sort_order;
 
 -- Publish a new immutable reason-catalog snapshot so these reasons are immediately
--- usable by validation/publication after the migration.
-UPDATE reason_catalog_versions SET state = 'retired' WHERE state = 'active';
-
-INSERT INTO reason_catalog_versions (version, state, notes, published_at)
+-- usable by validation/publication after the migration. Entries can only be added
+-- while the version is a draft (0012), so follow publishReasonCatalogVersion:
+-- draft, fill, retire the old active version, then activate.
+INSERT INTO reason_catalog_versions (version, state, notes)
 SELECT COALESCE(max(version), 0) + 1,
-       'active',
-       'Adds factual Epstein-record, Trump/MAGA public-activity, and Russia/Ukraine reason vocabulary. User-selectable presentation remains informational by default.',
-       now()
+       'draft',
+       'Adds factual Epstein-record, Trump/MAGA public-activity, and Russia/Ukraine reason vocabulary. User-selectable presentation remains informational by default.'
 FROM reason_catalog_versions;
 
 INSERT INTO reason_catalog_entries (
@@ -204,6 +203,14 @@ SELECT
 FROM reason_catalog_versions version
 CROSS JOIN reason_definitions reason
 LEFT JOIN reason_evidence_requirements requirement ON requirement.reason_code = reason.code
-WHERE version.state = 'active' AND reason.active = true;
+WHERE version.version = (SELECT max(version) FROM reason_catalog_versions)
+  AND version.state = 'draft'
+  AND reason.active = true;
+
+UPDATE reason_catalog_versions SET state = 'retired' WHERE state = 'active';
+
+UPDATE reason_catalog_versions
+SET state = 'active', published_at = now()
+WHERE version = (SELECT max(version) FROM reason_catalog_versions) AND state = 'draft';
 
 COMMIT;
