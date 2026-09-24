@@ -755,8 +755,8 @@ export async function rollbackOfficialImport(
            committed_at = NULL,
            metadata = metadata || jsonb_build_object(
              'lastRollbackAt', now(),
-             'lastRollbackBy', $2,
-             'lastRollbackNote', $3
+             'lastRollbackBy', $2::text,
+             'lastRollbackNote', $3::text
            )
        WHERE id = $1`,
       [batchId, reviewer, rationale],
