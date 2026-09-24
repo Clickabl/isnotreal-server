@@ -270,8 +270,10 @@ async function checkOps(databaseUrl) {
     dbName = `isnotreal_ops_test_${suffix}`;
   const owner = `inr_owner_${suffix}`,
     app = `inr_app_${suffix}`,
-    editor = `inr_editor_${suffix}`;
+    editor = `inr_editor_${suffix}`,
+    publisher = `inr_publisher_${suffix}`;
   const passwords = [
+    randomBytes(24).toString('hex'),
     randomBytes(24).toString('hex'),
     randomBytes(24).toString('hex'),
     randomBytes(24).toString('hex'),
@@ -283,9 +285,11 @@ async function checkOps(databaseUrl) {
     ISNOTREAL_OWNER_ROLE: owner,
     ISNOTREAL_APP_ROLE: app,
     ISNOTREAL_EDITOR_ROLE: editor,
+    ISNOTREAL_PUBLISHER_ROLE: publisher,
     ISNOTREAL_OWNER_PASSWORD: passwords[0],
     ISNOTREAL_APP_PASSWORD: passwords[1],
     ISNOTREAL_EDITOR_PASSWORD: passwords[2],
+    ISNOTREAL_PUBLISHER_PASSWORD: passwords[3],
   };
   const run = (file, extra = {}, args = []) => {
     const result = spawnSync('bash', [`ops/${file}.sh`, ...args], {
@@ -334,7 +338,8 @@ async function checkOps(databaseUrl) {
     await appDb?.close();
     await ownerDb?.close();
     await admin.query(`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE)`);
-    for (const role of [app, editor, owner]) await admin.query(`DROP ROLE IF EXISTS "${role}"`);
+    for (const role of [app, editor, publisher, owner])
+      await admin.query(`DROP ROLE IF EXISTS "${role}"`);
     await admin.close();
   }
 }
