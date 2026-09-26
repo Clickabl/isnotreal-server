@@ -80,7 +80,7 @@ const fallbackCauses: readonly Cause[] = [
   },
 ];
 function layout(title: string, body: string, path = '/'): string {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>${escape(title)} · isnotreal.click</title><meta name="description" content="Choose your filters. Inspect the evidence. A source-backed directory and browser extension."><link rel="canonical" href="https://isnotreal.click${escape(path)}"><link rel="stylesheet" href="/assets/site.css"><script src="/assets/site.js" defer></script></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="/">is<span>not</span>real.click</a><nav aria-label="Main"><a href="/search">Search</a><a href="/causes">Causes</a><a href="/download">Get the extension</a></nav></header><main id="main">${body}</main><footer><strong>Local choices. Public evidence.</strong><nav aria-label="Footer"><a href="/how-it-works">How it works</a><a href="/privacy">Privacy</a><a href="/report">Feedback & corrections</a></nav><small>Coverage depends on verified identifiers and the browser features available. No claim of wrongdoing follows from a document mention alone.</small></footer></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>${escape(title)} · isnotreal.click</title><meta name="description" content="Some people are not real. At least not in your feed. A browser extension that makes them disappear, with receipts."><link rel="canonical" href="https://isnotreal.click${escape(path)}"><link rel="stylesheet" href="/assets/site.css"><script src="/assets/site.js" defer></script></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="/">is<span>not</span>real.click</a><nav aria-label="Main"><a href="/search">Search</a><a href="/causes">Causes</a><a href="/download">Get the extension</a></nav></header><main id="main">${body}</main><footer><strong>Local choices. Public evidence.</strong><nav aria-label="Footer"><a href="/how-it-works">How it works</a><a href="/privacy">Privacy</a><a href="/report">Feedback & corrections</a></nav><small>Coverage depends on verified identifiers and the browser features available. No claim of wrongdoing follows from a document mention alone.</small></footer></body></html>`;
 }
 const html = (
   title: string,
@@ -158,8 +158,8 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
     if (pathname === '/' || pathname === '/index.html') {
       const causes = deps.causes ? await deps.causes.list() : fallbackCauses;
       return html(
-        'Stop paying for what you stand against.',
-        `<section class="hero"><p class="eyebrow">Your attention is your vote</p><h1>Stop paying for<br><span>what you stand against.</span></h1><p class="lede">Every click, every view, every purchase feeds someone. Some of them are funding things you would never stand behind. isnotreal lets you take your support back and put it somewhere that deserves it.</p><div class="row"><a class="button primary" href="/download">Take it back</a><a class="button" href="/how-it-works">How it works</a></div></section>${searchForm()}<section><div class="section-title"><h2>Pick what you won’t fund.</h2><a href="/causes">All causes →</a></div><div class="grid">${causes.map((c) => `<a class="card cause" href="/causes/${escape(c.slug)}"><small>Your call</small><h3>${escape(c.name)}</h3><p>${escape(c.description)}</p><span>${c.coverage?.state === 'available' ? `${c.reasons.length} reason definitions · published coverage` : c.reasons.length ? `${c.reasons.length} definitions · coverage unavailable` : 'Definitions being prepared'}</span></a>`).join('')}</div></section><section class="card"><h2>Silence is a choice too.</h2><p>You can’t fix everything. But you can stop feeding what you believe is wrong, one feed, one site, one purchase at a time. Every listing links to where it came from, so you know exactly why, and you can always choose an alternative that earns your support.</p></section>`,
+        'Some people are not real.',
+        `<section class="hero"><p class="eyebrow">Out of feed, out of mind</p><h1>Some people<br><span>are not real.</span></h1><p class="lede">At least, not anymore. Not in your feed, not in your tabs, not getting your clicks. Pick who you’re done with, and isnotreal makes them vanish from your browser. Poof.</p><div class="row"><a class="button primary" href="/download">Make them not real</a><a class="button" href="/how-it-works">How the trick works</a></div></section>${searchForm()}<section><div class="section-title"><h2>Pick who stops existing.</h2><a href="/causes">All causes →</a></div><div class="grid">${causes.map((c) => `<a class="card cause" href="/causes/${escape(c.slug)}"><small>Off until you say so</small><h3>${escape(c.name)}</h3><p>${escape(c.description)}</p><span>${c.coverage?.state === 'available' ? `${c.reasons.length} reason definitions · published coverage` : c.reasons.length ? `${c.reasons.length} definitions · coverage unavailable` : 'Definitions being prepared'}</span></a>`).join('')}</div></section><section class="card"><h2>Petty? Sure. Sloppy? Never.</h2><p>Everyone on a list is there for something they actually did or said, and every listing links to the source. So when someone asks why their favorite brand ghosted your feed, you’ve got the receipts. Think we got one wrong? Tell us and we’ll fix it.</p></section>`,
       );
     }
     if (pathname === '/download') {
@@ -169,8 +169,8 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
         ['safari', 'Safari', 'apps.apple.com'],
       ];
       return html(
-        'Get the extension',
-        `<p class="eyebrow">Install & updates</p><h1>Take your choices<br>into your browser.</h1><p class="lede">Release availability is shown per browser. A development build is not a reviewed store release.</p><div class="grid">${stores
+        'Make them not real',
+        `<p class="eyebrow">Get the extension</p><h1>Install the<br><span>disappearing act.</span></h1><p class="lede">Pick your browser. Store releases are on the way; we’ll put the real install buttons here the moment they’re approved.</p><div class="grid">${stores
           .map(([key, name, host]) => {
             const candidate = safeUrl(deps.downloads?.[key!]);
             const ready = candidate && new URL(candidate).hostname === host;
@@ -187,7 +187,7 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
       const results = q.length >= 2 ? await deps.entities.search(q, 50) : [];
       return html(
         'Search',
-        `<h1>Look it up.</h1>${searchForm(q)}${q.length >= 2 ? `<p role="status">${results.length} result${results.length === 1 ? '' : 's'}${results.length === 50 ? ' (showing the first 50)' : ''}</p><div class="grid">${results.map((e) => `<a class="card" href="/${escape(e.slug)}"><small>${escape(e.kind)}</small><h2>${escape(e.name)}</h2><span>Inspect reasons and sources →</span></a>`).join('') || '<p>No matching record. That does not establish a position.</p>'}</div>` : '<p>Enter at least two characters.</p>'}<a href="/report?type=new-entity">Suggest a missing record</a>`,
+        `<h1>Look it up.</h1>${searchForm(q)}${q.length >= 2 ? `<p role="status">${results.length} result${results.length === 1 ? '' : 's'}${results.length === 50 ? ' (showing the first 50)' : ''}</p><div class="grid">${results.map((e) => `<a class="card" href="/${escape(e.slug)}"><small>${escape(e.kind)}</small><h2>${escape(e.name)}</h2><span>Inspect reasons and sources →</span></a>`).join('') || '<p>Nobody by that name yet. Know something we don’t? <a href="/report?type=new-entity">Tell us.</a></p>'}</div>` : '<p>Enter at least two characters.</p>'}<a href="/report?type=new-entity">Suggest a missing record</a>`,
         pathname,
       );
     }
@@ -195,7 +195,7 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
       const causes = deps.causes ? await deps.causes.list() : fallbackCauses;
       return html(
         'Causes',
-        `<h1>Choose the criteria.</h1><p class="lede">Causes start off until you select them. New causes do not silently switch themselves on.</p><div class="grid">${causes.map((c) => `<article class="card"><h2><a href="/causes/${escape(c.slug)}">${escape(c.name)}</a></h2><p>${escape(c.description)}</p></article>`).join('')}</div>`,
+        `<h1>Choose your<br><span>unreal people.</span></h1><p class="lede">Nothing’s on until you turn it on. We don’t pick your battles for you, and new causes never sneak themselves in.</p><div class="grid">${causes.map((c) => `<article class="card"><h2><a href="/causes/${escape(c.slug)}">${escape(c.name)}</a></h2><p>${escape(c.description)}</p></article>`).join('')}</div>`,
         pathname,
       );
     }
