@@ -69,7 +69,7 @@ backup="$(bash ops/backup-db.sh)"
 test -s "$backup"
 
 psql "$ADMIN_ROOT" -v ON_ERROR_STOP=1 -c "CREATE DATABASE $RESTORE OWNER $OWNER" >/dev/null
-pg_restore --no-owner --no-acl --dbname="postgresql://$OWNER:$PW_OWNER@127.0.0.1:5432/$RESTORE" "$backup"
+RESTORE_DATABASE_URL="postgresql://$OWNER:$PW_OWNER@127.0.0.1:5432/$RESTORE" bash ops/restore-db.sh "$backup"
 count="$(psql "postgresql://$OWNER:$PW_OWNER@127.0.0.1:5432/$RESTORE" -Atqc "SELECT count(*) FROM schema_migrations")"
 test "$count" -gt 0
 

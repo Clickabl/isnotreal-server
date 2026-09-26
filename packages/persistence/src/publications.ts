@@ -350,9 +350,7 @@ export async function publishCurrentState(
       }
     }
     const activated = await db.transaction(async (tx) => {
-      await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [
-        `publication:${cause}`,
-      ]);
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1::text))', [`publication:${cause}`]);
       for (const r of records)
         await tx.query(
           `INSERT INTO publication_artifacts

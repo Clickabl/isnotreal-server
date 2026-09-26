@@ -18,6 +18,9 @@ async function main(): Promise<void> {
     ...(adminToken ? { adminToken } : {}),
     ...(adminActorId ? { adminActorId } : {}),
     ...(process.env.ADMIN_DATABASE_URL ? { adminDatabaseUrl: process.env.ADMIN_DATABASE_URL } : {}),
+    ...(process.env.EXTENSION_RELEASES_FILE
+      ? { extensionReleasesFile: process.env.EXTENSION_RELEASES_FILE }
+      : {}),
     downloads: {
       chromium: process.env.CHROME_WEB_STORE_URL ?? '',
       firefox: process.env.FIREFOX_ADDON_URL ?? '',

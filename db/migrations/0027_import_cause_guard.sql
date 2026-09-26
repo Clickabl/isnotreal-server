@@ -16,5 +16,5 @@ BEGIN
   RETURN NEW;
 END $$;
 CREATE TRIGGER membership_proposal_cause BEFORE INSERT OR UPDATE ON membership_proposals
-FOR EACH ROW EXECUTE FUNCTION fill_unique_proposal_cause();
+FOR EACH ROW EXECUTE PROCEDURE fill_unique_proposal_cause();
 COMMIT;

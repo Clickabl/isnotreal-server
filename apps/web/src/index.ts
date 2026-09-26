@@ -80,7 +80,7 @@ const fallbackCauses: readonly Cause[] = [
   },
 ];
 function layout(title: string, body: string, path = '/'): string {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>${escape(title)} · isnotreal.click</title><meta name="description" content="Choose your filters. Inspect the evidence. A source-backed directory and browser extension."><link rel="canonical" href="https://isnotreal.click${escape(path)}"><link rel="stylesheet" href="/assets/site.css"><script src="/assets/site.js" defer></script></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="/">is<span>not</span>real.click</a><nav aria-label="Main"><a href="/search">Search</a><a href="/causes">Causes</a><a href="/download">Get the extension</a></nav></header><main id="main">${body}</main><footer><strong>Local choices. Public evidence.</strong><nav aria-label="Footer"><a href="/how-it-works">How it works</a><a href="/privacy">Privacy</a><a href="/report">Feedback & corrections</a></nav><small>Coverage depends on verified identifiers and the browser features available. No claim of wrongdoing follows from a document mention alone.</small></footer></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>${escape(title)} · isnotreal.click</title><meta name="description" content="Some people are not real. At least not in your feed. A browser extension that makes them disappear, with receipts."><link rel="canonical" href="https://isnotreal.click${escape(path)}"><link rel="stylesheet" href="/assets/site.css"><script src="/assets/site.js" defer></script></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="/">is<span>not</span>real.click</a><nav aria-label="Main"><a href="/search">Search</a><a href="/causes">Causes</a><a href="/download">Get the extension</a></nav></header><main id="main">${body}</main><footer><strong>Local choices. Public evidence.</strong><nav aria-label="Footer"><a href="/how-it-works">How it works</a><a href="/privacy">Privacy</a><a href="/report">Feedback & corrections</a></nav><small>Coverage depends on verified identifiers and the browser features available. No claim of wrongdoing follows from a document mention alone.</small></footer></body></html>`;
 }
 const html = (
   title: string,
@@ -158,8 +158,8 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
     if (pathname === '/' || pathname === '/index.html') {
       const causes = deps.causes ? await deps.causes.list() : fallbackCauses;
       return html(
-        'Your feed. Your filters.',
-        `<section class="hero"><p class="eyebrow">Choose what reaches you</p><h1>Filter the feed.<br><span>Keep the receipts.</span></h1><p class="lede">Find the evidence behind people and companies. Choose the causes you care about, then decide what belongs in your browser.</p><div class="row"><a class="button primary" href="/download">Get the extension</a><a class="button" href="/how-it-works">See how it works</a></div></section>${searchForm()}<section><div class="section-title"><h2>Your causes. Not a preset worldview.</h2><a href="/causes">Explore criteria →</a></div><div class="grid">${causes.map((c) => `<a class="card cause" href="/causes/${escape(c.slug)}"><small>Independently selectable</small><h3>${escape(c.name)}</h3><p>${escape(c.description)}</p><span>${c.coverage?.state === 'available' ? `${c.reasons.length} reason definitions · published coverage` : c.reasons.length ? `${c.reasons.length} definitions · coverage unavailable` : 'Definitions being prepared'}</span></a>`).join('')}</div></section><section class="card"><h2>A filter is not a verdict.</h2><p>Every reason describes a specific sourced fact. A petition signature, a business contract and a document mention are different things. You can inspect the source and submit missing context.</p></section>`,
+        'Some people are not real.',
+        `<section class="hero"><p class="eyebrow">Out of feed, out of mind</p><h1>Some people<br><span>are not real.</span></h1><p class="lede">At least, not anymore. Not in your feed, not in your tabs, not getting your clicks. Pick who you’re done with, and isnotreal makes them vanish from your browser. Poof.</p><div class="row"><a class="button primary" href="/download">Make them not real</a><a class="button" href="/how-it-works">How it works</a></div></section>${searchForm()}<section><div class="section-title"><h2>Pick your dealbreakers.</h2><a href="/causes">All causes →</a></div><div class="grid">${causes.map((c) => `<a class="card cause" href="/causes/${escape(c.slug)}"><small>Off until you say so</small><h3>${escape(c.name)}</h3><p>${escape(c.description)}</p><span>${c.coverage?.state === 'available' ? `${c.reasons.length} reason definitions · published coverage` : c.reasons.length ? `${c.reasons.length} definitions · coverage unavailable` : 'Definitions being prepared'}</span></a>`).join('')}</div></section><section class="card"><h2>We bring receipts.</h2><p>Whenever someone gets blocked, click their block box to see exactly why, with links to the proof.</p><p><strong>Are we missing someone?</strong> <a href="/report?type=new-entity">Spill the tea →</a></p></section>`,
       );
     }
     if (pathname === '/download') {
@@ -169,12 +169,12 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
         ['safari', 'Safari', 'apps.apple.com'],
       ];
       return html(
-        'Get the extension',
-        `<p class="eyebrow">Install & updates</p><h1>Take your choices<br>into your browser.</h1><p class="lede">Release availability is shown per browser. A development build is not a reviewed store release.</p><div class="grid">${stores
+        'Make them not real',
+        `<p class="eyebrow">Get the extension</p><h1>Install the<br><span>disappearing act.</span></h1><p class="lede">Pick your browser. Store releases are on the way; we’ll put the real install buttons here the moment they’re approved.</p><div class="grid">${stores
           .map(([key, name, host]) => {
             const candidate = safeUrl(deps.downloads?.[key!]);
             const ready = candidate && new URL(candidate).hostname === host;
-            return `<article class="card" data-platform="${escape(key!)}"><span class="tag">${escape(name!)}</span><h2>${escape(name!)}</h2>${ready ? `<a class="button primary" href="${escape(candidate)}" rel="noreferrer">Install from the official store</a>` : '<p class="notice">Store release not yet published.</p>'}<p>Software updates use the browser’s normal extension/app update mechanism. Filtering data updates separately.</p></article>`;
+            return `<article class="card" data-platform="${escape(key!)}"><span class="tag">${escape(name!)}</span><h2>${escape(name!)}</h2>${ready ? `<a class="button primary" href="${escape(candidate)}" rel="noreferrer">Install from the official store</a>` : '<p class="notice">Store release not yet published.</p>'}<p>Updates install themselves, and new block lists show up on their own.</p></article>`;
           })
           .join(
             '',
@@ -187,7 +187,7 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
       const results = q.length >= 2 ? await deps.entities.search(q, 50) : [];
       return html(
         'Search',
-        `<h1>Look it up.</h1>${searchForm(q)}${q.length >= 2 ? `<p role="status">${results.length} result${results.length === 1 ? '' : 's'}${results.length === 50 ? ' (showing the first 50)' : ''}</p><div class="grid">${results.map((e) => `<a class="card" href="/${escape(e.slug)}"><small>${escape(e.kind)}</small><h2>${escape(e.name)}</h2><span>Inspect reasons and sources →</span></a>`).join('') || '<p>No matching record. That does not establish a position.</p>'}</div>` : '<p>Enter at least two characters.</p>'}<a href="/report?type=new-entity">Suggest a missing record</a>`,
+        `<h1>Look it up.</h1>${searchForm(q)}${q.length >= 2 ? `<p role="status">${results.length} result${results.length === 1 ? '' : 's'}${results.length === 50 ? ' (showing the first 50)' : ''}</p><div class="grid">${results.map((e) => `<a class="card" href="/${escape(e.slug)}"><small>${escape(e.kind)}</small><h2>${escape(e.name)}</h2><span>Inspect reasons and sources →</span></a>`).join('') || '<p>Nobody by that name yet. Know something we don’t? <a href="/report?type=new-entity">Tell us.</a></p>'}</div>` : '<p>Enter at least two characters.</p>'}<a href="/report?type=new-entity">Suggest a missing record</a>`,
         pathname,
       );
     }
@@ -195,7 +195,7 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
       const causes = deps.causes ? await deps.causes.list() : fallbackCauses;
       return html(
         'Causes',
-        `<h1>Choose the criteria.</h1><p class="lede">Causes start off until you select them. New causes do not silently switch themselves on.</p><div class="grid">${causes.map((c) => `<article class="card"><h2><a href="/causes/${escape(c.slug)}">${escape(c.name)}</a></h2><p>${escape(c.description)}</p></article>`).join('')}</div>`,
+        `<h1>Choose your<br><span>unreal people.</span></h1><p class="lede">Nothing’s on until you turn it on. We don’t pick your battles for you, and new causes never sneak themselves in.</p><div class="grid">${causes.map((c) => `<article class="card"><h2><a href="/causes/${escape(c.slug)}">${escape(c.name)}</a></h2><p>${escape(c.description)}</p></article>`).join('')}</div>`,
         pathname,
       );
     }
@@ -245,9 +245,24 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
         'accessibility-feedback',
         'abuse-report',
       ];
+      const labels: Record<string, string> = {
+        'new-entity': 'Someone you’re missing',
+        'add-evidence': 'More receipts on someone already listed',
+        'incorrect-information': 'You got something wrong',
+        'changed-position': 'They changed their tune',
+        'wrong-identifier': 'Wrong account or website',
+        'missing-identifier': 'Another account or website of theirs',
+        'company-relationship': 'Who owns who',
+        'suggest-alternative': 'A better alternative',
+        'product-feedback': 'Feedback on isnotreal',
+        'bug-report': 'Something’s broken',
+        'accessibility-feedback': 'Accessibility problem',
+        'abuse-report': 'Someone is abusing this form',
+      };
+      const selected = query.type && types.includes(query.type) ? query.type : 'new-entity';
       return html(
-        'Submit evidence or a correction',
-        `<h1>Feedback, evidence & corrections.</h1><p>Use one review queue for factual corrections, missing context, identifiers, alternatives and general product feedback. Evidence claims should include an original or reliable source, not a crowd-sourced accusation.</p><form data-submission><label for="entity">Entity ID (optional)</label><input id="entity" name="entityPublicId" value="${id}" inputmode="numeric" pattern="[0-9]*"><label for="type">What are you submitting?</label><select id="type" name="submissionType">${types.map((t) => `<option value="${t}"${query.type === t ? ' selected' : ''}>${t.replaceAll('-', ' ')}</option>`).join('')}</select><label for="reason">Proposed reason (optional)</label><select id="reason" name="proposedReasonCode"><option value="">Let the editor classify it</option>${reasons.map((r) => `<option value="${escape(r.code)}">${escape(r.code + ' · ' + r.label)}</option>`).join('')}</select><label for="notes">What should we know?</label><textarea id="notes" name="narrative" minlength="3" maxlength="10000" rows="6" required></textarea><label for="sources">Source URLs, one per line</label><textarea id="sources" name="sources" rows="4" placeholder="https://…"></textarea><p class="muted">Do not include home addresses, private contacts, victims’ identities or information hidden by redactions.</p><button type="submit">Send for review</button><p id="form-status" role="status" aria-live="polite"></p><noscript>JavaScript is needed to submit this form. The evidence directory can be read without it.</noscript></form>`,
+        'Spill the tea',
+        `<p class="eyebrow">Are we missing someone?</p><h1>Spill<br><span>the tea.</span></h1><p class="lede">Tell us who, link their profile, and bring the receipts. We check every tip before anyone gets blocked.</p><form data-submission><input type="hidden" name="entityPublicId" value="${id}"><label for="type">What’s this about?</label><select id="type" name="submissionType">${types.map((t) => `<option value="${t}"${selected === t ? ' selected' : ''}>${escape(labels[t] ?? t)}</option>`).join('')}</select><label for="notes">Who is it, and what did they do?</label><textarea id="notes" name="narrative" minlength="3" maxlength="10000" rows="5" required></textarea><label for="profile">Link to their profile</label><input id="profile" name="profileUrl" type="url" placeholder="https://x.com/…, https://instagram.com/…, their website"><label for="evidence">Link to the receipts</label><input id="evidence" name="evidenceUrl" type="url" placeholder="The article, post, filing or document that shows it"><label for="sources">More links (optional, one per line)</label><textarea id="sources" name="sources" rows="3" placeholder="https://…"></textarea><label for="reason">Which cause? (optional)</label><select id="reason" name="proposedReasonCode"><option value="">Not sure, you pick</option>${reasons.map((r) => `<option value="${escape(r.code)}">${escape(r.label)}</option>`).join('')}</select><p class="muted">No home addresses, phone numbers or private stuff. We block people, we don’t dox them.</p><button type="submit">Send it</button><p id="form-status" role="status" aria-live="polite"></p><noscript>JavaScript is needed to submit this form. The evidence directory can be read without it.</noscript></form>`,
         pathname,
       );
     }
@@ -328,13 +343,13 @@ const form=document.querySelector('form[data-submission]');
 if(form)form.addEventListener('submit',async(event)=>{
  event.preventDefault();if(!form.reportValidity())return;
  const button=form.querySelector('button');const status=document.querySelector('#form-status');
- const data=new FormData(form);const urls=String(data.get('sources')||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+ const data=new FormData(form);const urls=[data.get('profileUrl'),data.get('evidenceUrl'),...String(data.get('sources')||'').split(/\r?\n/)].map(s=>String(s||'').trim()).filter(Boolean);
  try{if(urls.length>20)throw Error('Use at most 20 source URLs.');for(const text of urls){const u=new URL(text);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)throw Error('Use public HTTP(S) source links without credentials.');}}
  catch(error){status.textContent=error.message;return;}
  button.disabled=true;status.textContent='Submitting…';
  try{const response=await fetch('/api/v1/submissions',{method:'POST',credentials:'omit',headers:{'Content-Type':'application/json'},body:JSON.stringify({entityPublicId:data.get('entityPublicId')||null,submissionType:data.get('submissionType'),proposedReasonCode:data.get('proposedReasonCode')||null,narrative:data.get('narrative'),sourceUrls:urls})});
  if(!response.ok)throw Error(response.status===429?'Submission limit reached. Please try later.':'The submission was not accepted. Check your fields and try again.');
- const result=await response.json();status.textContent='Received for review. Receipt: '+result.id;form.reset();}
+ const result=await response.json();status.textContent='Got it, thanks for the tea. Receipt: '+result.id;form.reset();}
  catch(error){status.textContent=error.message;}finally{button.disabled=false;}
 });`;
 const adminScript = String.raw`

@@ -34,5 +34,5 @@ BEGIN
   RETURN NEW;
 END $$;
 CREATE TRIGGER publication_artifact_cause BEFORE INSERT OR UPDATE ON publication_artifacts
-FOR EACH ROW EXECUTE FUNCTION bind_artifact_cause();
+FOR EACH ROW EXECUTE PROCEDURE bind_artifact_cause();
 COMMIT;

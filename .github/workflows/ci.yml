@@ -13,12 +13,18 @@ jobs:
   foundations:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # 10 is production (Namecheap cPanel, no contrib extensions); 17 keeps the
+        # upgrade path honest.
+        postgres: ['10', '17']
     env:
       DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/isnotreal_test
       RUN_DB_INTEGRATION: '1'
     services:
       postgres:
-        image: postgres:17-alpine
+        image: postgres:${{ matrix.postgres }}-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres

@@ -1,7 +1,5 @@
 BEGIN;
 
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-
 CREATE VIEW entity_resolution AS
 WITH RECURSIVE chain AS (
   SELECT
@@ -32,11 +30,21 @@ COMMENT ON VIEW entity_resolution IS
 DROP INDEX IF EXISTS entities_name_fts_idx;
 DROP INDEX IF EXISTS entity_names_normalized_idx;
 
-CREATE INDEX entities_canonical_name_trgm_idx
-  ON entities USING gin (canonical_name gin_trgm_ops);
-
-CREATE INDEX entity_names_name_trgm_idx
-  ON entity_names USING gin (name gin_trgm_ops);
+-- Trigram indexes only accelerate substring search; queries do not depend on
+-- pg_trgm. cPanel's PostgreSQL 10 ships no contrib extensions and does not let
+-- the database owner create them, so build these indexes only where possible.
+DO $trgm$
+BEGIN
+  CREATE EXTENSION IF NOT EXISTS pg_trgm;
+  CREATE INDEX entities_canonical_name_trgm_idx
+    ON entities USING gin (canonical_name gin_trgm_ops);
+  CREATE INDEX entity_names_name_trgm_idx
+    ON entity_names USING gin (name gin_trgm_ops);
+EXCEPTION
+  WHEN undefined_file OR insufficient_privilege OR feature_not_supported THEN
+    RAISE NOTICE 'pg_trgm unavailable (%); substring search runs without trigram indexes', SQLERRM;
+END
+$trgm$;
 
 CREATE INDEX entity_names_normalized_btree_idx
   ON entity_names(normalized_name);

@@ -337,7 +337,12 @@ async function checkOps(databaseUrl) {
   } finally {
     await appDb?.close();
     await ownerDb?.close();
-    await admin.query(`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE)`);
+    // DROP DATABASE ... WITH (FORCE) needs PostgreSQL 13; production runs 10.
+    await admin.query(
+      'SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()',
+      [dbName],
+    );
+    await admin.query(`DROP DATABASE IF EXISTS "${dbName}"`);
     for (const role of [app, editor, publisher, owner])
       await admin.query(`DROP ROLE IF EXISTS "${role}"`);
     await admin.close();

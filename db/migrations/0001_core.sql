@@ -1,6 +1,26 @@
 BEGIN;
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+-- gen_random_uuid() is built in from PostgreSQL 13. Production runs cPanel's
+-- PostgreSQL 10 without contrib extensions (no pgcrypto), so define an equivalent
+-- version-4 UUID generator only when the built-in one is missing. These UUIDs are
+-- row identifiers, not secrets.
+DO $uuid$
+BEGIN
+  IF to_regprocedure('gen_random_uuid()') IS NULL THEN
+    CREATE FUNCTION public.gen_random_uuid() RETURNS uuid
+    LANGUAGE sql VOLATILE PARALLEL SAFE AS $fn$
+      SELECT (
+        substr(h, 1, 12) || '4' || substr(h, 14, 3)
+        || substr('89ab', get_byte(decode(substr(h, 17, 2), 'hex'), 0) % 4 + 1, 1)
+        || substr(h, 18, 15)
+      )::uuid
+      FROM (
+        SELECT md5(random()::text || clock_timestamp()::text || pg_backend_pid()::text) AS h
+      ) AS seed
+    $fn$;
+  END IF;
+END
+$uuid$;
 
 CREATE TABLE entities (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

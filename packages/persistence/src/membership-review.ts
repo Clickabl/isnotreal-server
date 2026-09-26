@@ -82,7 +82,7 @@ export async function approveMembershipProposal(
     const p = found.rows[0];
     if (!p || !['pending', 'approved'].includes(p.state))
       throw new Error('proposal is not reviewable');
-    await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [
+    await tx.query('SELECT pg_advisory_xact_lock(hashtext($1::text))', [
       `${p.entity_id}:${p.cause_id}:${p.proposed_list}`,
     ]);
     const binding = await tx.query<{ id: string }>(
