@@ -1,0 +1,3157 @@
+### diagnostics/check2 tip=2525918
+### diagnostics/domain-runtime-channel tip=95c36bb
+From d89114b57b3181526c3d7f2346333b4116b0bd40 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Tue, 15 Sep 2026 19:38:30 -0600
+Subject: [PATCH 1/2] chore: diagnostic domain runtime channel patch
+
+---
+ .github/workflows/domain-runtime-channel.yml | 36 ++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+ create mode 100644 .github/workflows/domain-runtime-channel.yml
+
+diff --git a/.github/workflows/domain-runtime-channel.yml b/.github/workflows/domain-runtime-channel.yml
+new file mode 100644
+index 0000000..1871ce4
+--- /dev/null
++++ b/.github/workflows/domain-runtime-channel.yml
+@@ -0,0 +1,36 @@
++name: Domain runtime channel patch
++on:
++  push:
++    branches: [diagnostics/domain-runtime-channel]
++permissions:
++  contents: write
++jobs:
++  patch:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++      - uses: actions/setup-node@v6
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - run: npm ci
++      - name: Add domain subtree channel
++        run: |
++          python3 - <<'PY'
++          from pathlib import Path
++          p = Path('packages/persistence/src/runtime.ts')
++          s = p.read_text()
++          old = "  'youtube',\n  'domain',\n];"
++          new = "  'youtube',\n  'domain',\n  'domain-subdomains',\n];"
++          if old not in s:
++              raise SystemExit('channel list pattern not found')
++          p.write_text(s.replace(old, new, 1))
++          PY
++          npx prettier --write packages/persistence/src/runtime.ts
++      - name: Commit patch
++        run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add packages/persistence/src/runtime.ts
++          git commit -m "fix: publish domain subtree channel"
++          git push
+-- 
+2.55.0
+
+
+From 95c36bb33dbcdf2759fc6bc2b6b97219d7ee6f9b Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Wed, 16 Sep 2026 01:38:45 +0000
+Subject: [PATCH 2/2] fix: publish domain subtree channel
+
+---
+ packages/persistence/src/runtime.ts | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/packages/persistence/src/runtime.ts b/packages/persistence/src/runtime.ts
+index 691818e..f67846f 100644
+--- a/packages/persistence/src/runtime.ts
++++ b/packages/persistence/src/runtime.ts
+@@ -391,6 +391,7 @@ const publicationChannels: readonly PublicationChannel[] = [
+   'instagram',
+   'youtube',
+   'domain',
++  'domain-subdomains',
+ ];
+ const publicationLists: readonly ListKind[] = ['filter', 'highlight'];
+ 
+-- 
+2.55.0
+
+### diagnostics/final-check tip=bb2a810
+From bb2a8104232ba79337c2ebe9b9e0d2219e7298ca Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Sat, 19 Sep 2026 13:11:04 -0600
+Subject: [PATCH] chore: temporary isolated final check
+
+---
+ .github/workflows/final-check.yml | 43 +++++++++++++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
+ create mode 100644 .github/workflows/final-check.yml
+
+diff --git a/.github/workflows/final-check.yml b/.github/workflows/final-check.yml
+new file mode 100644
+index 0000000..70fef7e
+--- /dev/null
++++ b/.github/workflows/final-check.yml
+@@ -0,0 +1,43 @@
++name: Final check
++on:
++  push:
++    branches: [diagnostics/final-check]
++permissions:
++  contents: write
++jobs:
++  check:
++    runs-on: ubuntu-latest
++    timeout-minutes: 15
++    env:
++      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/isnotreal_test
++      RUN_DB_INTEGRATION: '1'
++    services:
++      postgres:
++        image: postgres:17-alpine
++        env:
++          POSTGRES_USER: postgres
++          POSTGRES_PASSWORD: postgres
++          POSTGRES_DB: isnotreal_test
++        ports: ['5432:5432']
++        options: >-
++          --health-cmd "pg_isready -U postgres -d isnotreal_test"
++          --health-interval 5s
++          --health-timeout 5s
++          --health-retries 10
++    steps:
++      - uses: actions/checkout@v6
++        with: { persist-credentials: true }
++      - uses: actions/setup-node@v6
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - run: npm ci
++      - run: npx prettier --write .
++      - name: Commit formatting
++        run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add .
++          git diff --cached --quiet || git commit -m "style: final canonical formatting"
++          git push
++      - run: npm run check
+-- 
+2.55.0
+
+### diagnostics/prettier-causes tip=b8b76f7
+From a12841dd7cb44a2deb63a65bc93ff04ae465237b Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Sun, 20 Sep 2026 15:58:24 -0600
+Subject: [PATCH 1/2] chore: temporary cause formatter
+
+---
+ .github/workflows/prettier-causes.yml | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 .github/workflows/prettier-causes.yml
+
+diff --git a/.github/workflows/prettier-causes.yml b/.github/workflows/prettier-causes.yml
+new file mode 100644
+index 0000000..868d8a8
+--- /dev/null
++++ b/.github/workflows/prettier-causes.yml
+@@ -0,0 +1,22 @@
++name: Prettier causes
++on:
++  push:
++    branches: [diagnostics/prettier-causes]
++permissions:
++  contents: write
++jobs:
++  format:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++        with: { persist-credentials: true }
++      - uses: actions/setup-node@v6
++        with: { node-version-file: .nvmrc, cache: npm }
++      - run: npm ci
++      - run: npx prettier --write apps/api/src/index.ts packages/application/src/index.ts packages/protocol/src/index.ts packages/persistence/src/causes.ts
++      - run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add apps packages
++          git diff --cached --quiet || git commit -m "style: format cause stack"
++          git push
+-- 
+2.55.0
+
+
+From b8b76f72d60450d8a96b870fbd9dcdede1e13c04 Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Sun, 20 Sep 2026 21:58:35 +0000
+Subject: [PATCH 2/2] style: format cause stack
+
+---
+ apps/api/src/index.ts             | 4 +---
+ packages/application/src/index.ts | 6 +-----
+ 2 files changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/apps/api/src/index.ts b/apps/api/src/index.ts
+index 9abd66b..15bc67f 100644
+--- a/apps/api/src/index.ts
++++ b/apps/api/src/index.ts
+@@ -69,9 +69,7 @@ export function createApiRouter(deps: ApiDependencies) {
+       });
+     }
+ 
+-    const causeMatch = /^\/api\/v1\/causes\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(
+-      request.pathname,
+-    );
++    const causeMatch = /^\/api\/v1\/causes\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(request.pathname);
+     if (request.method === 'GET' && causeMatch) {
+       const slug = causeMatch[1];
+       if (!slug) return response(404, { error: 'not_found' });
+diff --git a/packages/application/src/index.ts b/packages/application/src/index.ts
+index e3c50ea..d625033 100644
+--- a/packages/application/src/index.ts
++++ b/packages/application/src/index.ts
+@@ -222,11 +222,7 @@ export function compileEntries(
+   >();
+ 
+   for (const candidate of candidates) {
+-    if (
+-      candidate.cause !== cause ||
+-      candidate.channel !== channel ||
+-      candidate.list !== list
+-    )
++    if (candidate.cause !== cause || candidate.channel !== channel || candidate.list !== list)
+       continue;
+     if (candidate.reasonCodes.length === 0) {
+       throw new Error(`publication candidate ${candidate.identifier} has no reason codes`);
+-- 
+2.55.0
+
+### diagnostics/prettier-full-pass tip=2d73b64
+From 995adc5e10e9b2731a9a3dc85dd5f22227d163d2 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Fri, 18 Sep 2026 08:43:29 -0600
+Subject: [PATCH 1/2] chore: add temporary full-pass formatter
+
+---
+ .github/workflows/prettier-full-pass.yml | 26 ++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+ create mode 100644 .github/workflows/prettier-full-pass.yml
+
+diff --git a/.github/workflows/prettier-full-pass.yml b/.github/workflows/prettier-full-pass.yml
+new file mode 100644
+index 0000000..2e19222
+--- /dev/null
++++ b/.github/workflows/prettier-full-pass.yml
+@@ -0,0 +1,26 @@
++name: Prettier full pass
++on:
++  push:
++    branches: [diagnostics/prettier-full-pass]
++permissions:
++  contents: write
++jobs:
++  format:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++        with:
++          persist-credentials: true
++      - uses: actions/setup-node@v6
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - run: npm ci
++      - run: npx prettier --write .
++      - name: Commit canonical formatting
++        run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add .
++          git diff --cached --quiet || git commit -m "style: canonical full-pass formatting"
++          git push
+-- 
+2.55.0
+
+
+From 2d73b64203e90dcd3815b85698fc481cbf1168bd Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Fri, 18 Sep 2026 14:43:42 +0000
+Subject: [PATCH 2/2] style: canonical full-pass formatting
+
+---
+ apps/api/src/capture-source.ts              |  4 +---
+ packages/persistence/src/campaign-import.ts |  6 +-----
+ packages/persistence/src/source-capture.ts  | 11 ++++++++---
+ tests/api.test.mjs                          |  5 +----
+ 4 files changed, 11 insertions(+), 15 deletions(-)
+
+diff --git a/apps/api/src/capture-source.ts b/apps/api/src/capture-source.ts
+index d0cbaf0..727bbbf 100644
+--- a/apps/api/src/capture-source.ts
++++ b/apps/api/src/capture-source.ts
+@@ -13,9 +13,7 @@ async function main(): Promise<void> {
+   const captureAllReasonAuthorities = process.env.CAPTURE_REASON_AUTHORITIES === '1';
+ 
+   if ((documentId === null) === !captureAllReasonAuthorities) {
+-    throw new Error(
+-      'set exactly one of SOURCE_DOCUMENT_ID or CAPTURE_REASON_AUTHORITIES=1',
+-    );
++    throw new Error('set exactly one of SOURCE_DOCUMENT_ID or CAPTURE_REASON_AUTHORITIES=1');
+   }
+ 
+   const db = PgSqlExecutor.create({
+diff --git a/packages/persistence/src/campaign-import.ts b/packages/persistence/src/campaign-import.ts
+index 0ea90b8..12bb6fd 100644
+--- a/packages/persistence/src/campaign-import.ts
++++ b/packages/persistence/src/campaign-import.ts
+@@ -1,10 +1,6 @@
+ import type { SqlExecutor } from './index.js';
+ 
+-export type CampaignImportKind =
+-  | 'signatory-list'
+-  | 'participant-list'
+-  | 'target-list'
+-  | 'other';
++export type CampaignImportKind = 'signatory-list' | 'participant-list' | 'target-list' | 'other';
+ 
+ export interface CampaignImportRowInput {
+   readonly rawName: string;
+diff --git a/packages/persistence/src/source-capture.ts b/packages/persistence/src/source-capture.ts
+index 28b3251..3458d1d 100644
+--- a/packages/persistence/src/source-capture.ts
++++ b/packages/persistence/src/source-capture.ts
+@@ -169,7 +169,8 @@ async function fetchTrustedSource(
+       redirect: 'manual',
+       signal: AbortSignal.timeout(options.timeoutMs),
+       headers: {
+-        accept: 'text/html,application/xhtml+xml,application/json,text/plain,application/pdf,*/*;q=0.1',
++        accept:
++          'text/html,application/xhtml+xml,application/json,text/plain,application/pdf,*/*;q=0.1',
+         'user-agent': options.userAgent,
+       },
+     });
+@@ -230,7 +231,8 @@ async function assertPublicHttpUrl(url: URL): Promise<void> {
+   }
+ 
+   if (isIP(hostname)) {
+-    if (!isPublicIpAddress(hostname)) throw new Error('source capture private/reserved IP is forbidden');
++    if (!isPublicIpAddress(hostname))
++      throw new Error('source capture private/reserved IP is forbidden');
+     return;
+   }
+ 
+@@ -250,7 +252,10 @@ export function isPublicIpAddress(address: string): boolean {
+ 
+ function isPublicIpv4(address: string): boolean {
+   const parts = address.split('.').map(Number);
+-  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
++  if (
++    parts.length !== 4 ||
++    parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)
++  ) {
+     return false;
+   }
+   const [a, b, third] = parts;
+diff --git a/tests/api.test.mjs b/tests/api.test.mjs
+index 9d45b1e..5aed321 100644
+--- a/tests/api.test.mjs
++++ b/tests/api.test.mjs
+@@ -118,10 +118,7 @@ test('entity, reason and list endpoints expose the public contracts', async () =
+   const historicalCatalog = await route(request('GET', '/api/v1/reason-catalogs/1/compact'));
+   assert.equal(historicalCatalog.status, 200);
+   assert.equal(historicalCatalog.body.catalogVersion, 1);
+-  assert.equal(
+-    (await route(request('GET', '/api/v1/reason-catalogs/999/compact'))).status,
+-    404,
+-  );
++  assert.equal((await route(request('GET', '/api/v1/reason-catalogs/999/compact'))).status, 404);
+   assert.equal((await route(request('GET', '/api/v1/reasons', { version: 'wat' }))).status, 400);
+   const manifest = await route(request('GET', '/api/v1/lists/domain/filter/manifest'));
+   assert.equal(manifest.status, 200);
+-- 
+2.55.0
+
+### diagnostics/prettier-integration tip=1da6be0
+From 4329d6db5162493f59405d9ec1cd331df2107bc7 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Tue, 15 Sep 2026 19:39:56 -0600
+Subject: [PATCH 1/2] chore: format integration diagnostic
+
+---
+ .github/workflows/prettier-integration.yml | 23 ++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+ create mode 100644 .github/workflows/prettier-integration.yml
+
+diff --git a/.github/workflows/prettier-integration.yml b/.github/workflows/prettier-integration.yml
+new file mode 100644
+index 0000000..4121ca1
+--- /dev/null
++++ b/.github/workflows/prettier-integration.yml
+@@ -0,0 +1,23 @@
++name: Prettier integration patch
++on:
++  push:
++    branches: [diagnostics/prettier-integration]
++permissions:
++  contents: write
++jobs:
++  patch:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++      - uses: actions/setup-node@v6
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - run: npm ci
++      - run: npx prettier --write tests/postgres.integration.test.mjs
++      - run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add tests/postgres.integration.test.mjs
++          git commit -m "style: format postgres integration test"
++          git push
+-- 
+2.55.0
+
+
+From 1da6be010f982ab8f821cada8ca3b82c2a134ded Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Wed, 16 Sep 2026 01:40:11 +0000
+Subject: [PATCH 2/2] style: format postgres integration test
+
+---
+ tests/postgres.integration.test.mjs | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/tests/postgres.integration.test.mjs b/tests/postgres.integration.test.mjs
+index e5e057a..cd61aed 100644
+--- a/tests/postgres.integration.test.mjs
++++ b/tests/postgres.integration.test.mjs
+@@ -144,11 +144,7 @@ test(
+       assert.equal(secondPublication.fullArtifactCount, 12);
+       assert.equal(secondPublication.deltaArtifactCount, 12);
+ 
+-      const delta = await published.delta(
+-        'domain-subdomains',
+-        'filter',
+-        firstPublication.version,
+-      );
++      const delta = await published.delta('domain-subdomains', 'filter', firstPublication.version);
+       assert.equal('code' in delta, false);
+       assert.deepEqual(delta.added, [['example.com', publicId, ['C98', 'C99']]]);
+       assert.deepEqual(delta.removed, []);
+-- 
+2.55.0
+
+### diagnostics/prettier-moderation-stack tip=a9edd0e
+From 7aff200d201537259a217b5dd44bc77c151024c9 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Sat, 19 Sep 2026 13:07:40 -0600
+Subject: [PATCH 1/2] chore: temporary moderation formatter
+
+---
+ .../workflows/prettier-moderation-stack.yml   | 26 +++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+ create mode 100644 .github/workflows/prettier-moderation-stack.yml
+
+diff --git a/.github/workflows/prettier-moderation-stack.yml b/.github/workflows/prettier-moderation-stack.yml
+new file mode 100644
+index 0000000..70cb176
+--- /dev/null
++++ b/.github/workflows/prettier-moderation-stack.yml
+@@ -0,0 +1,26 @@
++name: Prettier moderation stack
++on:
++  push:
++    branches: [diagnostics/prettier-moderation-stack]
++permissions:
++  contents: write
++jobs:
++  format:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++        with:
++          persist-credentials: true
++      - uses: actions/setup-node@v6
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - run: npm ci
++      - run: npx prettier --write apps/api/src/admin.ts packages/persistence/src/campaign-import.ts packages/persistence/src/membership-review.ts packages/persistence/src/moderation.ts tests/postgres.integration.test.mjs
++      - name: Commit formatting
++        run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add apps packages tests
++          git diff --cached --quiet || git commit -m "style: format moderation stack"
++          git push
+-- 
+2.55.0
+
+
+From a9edd0ea3544399e97689fe2dd570e75672113a4 Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Sat, 19 Sep 2026 19:07:52 +0000
+Subject: [PATCH 2/2] style: format moderation stack
+
+---
+ apps/api/src/admin.ts                         | 48 +++++++------------
+ packages/persistence/src/campaign-import.ts   |  7 +--
+ packages/persistence/src/membership-review.ts |  7 +--
+ packages/persistence/src/moderation.ts        |  6 +--
+ 4 files changed, 21 insertions(+), 47 deletions(-)
+
+diff --git a/apps/api/src/admin.ts b/apps/api/src/admin.ts
+index a28f5f6..5834ab2 100644
+--- a/apps/api/src/admin.ts
++++ b/apps/api/src/admin.ts
+@@ -33,8 +33,7 @@ export interface AdminDependencies {
+   readonly moderation: PostgresModerationQueue;
+ }
+ 
+-const uuidPattern =
+-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
++const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+ const submissionStates = new Set<CommunitySubmissionState>([
+   'pending',
+   'triaged',
+@@ -55,8 +54,9 @@ export function createAdminRouter(deps: AdminDependencies) {
+       });
+     }
+ 
+-    const submissionReview =
+-      /^\/admin\/api\/v1\/submissions\/([0-9a-f-]+)\/review$/i.exec(request.pathname);
++    const submissionReview = /^\/admin\/api\/v1\/submissions\/([0-9a-f-]+)\/review$/i.exec(
++      request.pathname,
++    );
+     if (request.method === 'POST' && submissionReview) {
+       const id = validUuid(submissionReview[1]);
+       const body = parseReviewBody(request.body);
+@@ -82,9 +82,7 @@ export function createAdminRouter(deps: AdminDependencies) {
+       });
+     }
+ 
+-    const importRows = /^\/admin\/api\/v1\/imports\/([0-9a-f-]+)\/rows$/i.exec(
+-      request.pathname,
+-    );
++    const importRows = /^\/admin\/api\/v1\/imports\/([0-9a-f-]+)\/rows$/i.exec(request.pathname);
+     if (request.method === 'GET' && importRows) {
+       const batchId = validUuid(importRows[1]);
+       const limit = parseLimit(request.query.limit, 500, 1000);
+@@ -94,8 +92,9 @@ export function createAdminRouter(deps: AdminDependencies) {
+       });
+     }
+ 
+-    const importRowApprove =
+-      /^\/admin\/api\/v1\/import-rows\/([0-9a-f-]+)\/approve$/i.exec(request.pathname);
++    const importRowApprove = /^\/admin\/api\/v1\/import-rows\/([0-9a-f-]+)\/approve$/i.exec(
++      request.pathname,
++    );
+     if (request.method === 'POST' && importRowApprove) {
+       const rowId = validUuid(importRowApprove[1]);
+       const body = parseEntityReviewBody(request.body);
+@@ -105,9 +104,7 @@ export function createAdminRouter(deps: AdminDependencies) {
+     }
+ 
+     const importRowDisposition =
+-      /^\/admin\/api\/v1\/import-rows\/([0-9a-f-]+)\/(skip|reject)$/i.exec(
+-        request.pathname,
+-      );
++      /^\/admin\/api\/v1\/import-rows\/([0-9a-f-]+)\/(skip|reject)$/i.exec(request.pathname);
+     if (request.method === 'POST' && importRowDisposition) {
+       const rowId = validUuid(importRowDisposition[1]);
+       const action = importRowDisposition[2];
+@@ -123,9 +120,7 @@ export function createAdminRouter(deps: AdminDependencies) {
+       return response(200, { ok: true });
+     }
+ 
+-    const importReady = /^\/admin\/api\/v1\/imports\/([0-9a-f-]+)\/ready$/i.exec(
+-      request.pathname,
+-    );
++    const importReady = /^\/admin\/api\/v1\/imports\/([0-9a-f-]+)\/ready$/i.exec(request.pathname);
+     if (request.method === 'POST' && importReady) {
+       const batchId = validUuid(importReady[1]);
+       if (!batchId) return response(400, { error: 'invalid_request' });
+@@ -160,10 +155,9 @@ export function createAdminRouter(deps: AdminDependencies) {
+       });
+     }
+ 
+-    const proposalApprove =
+-      /^\/admin\/api\/v1\/membership-proposals\/([0-9a-f-]+)\/approve$/i.exec(
+-        request.pathname,
+-      );
++    const proposalApprove = /^\/admin\/api\/v1\/membership-proposals\/([0-9a-f-]+)\/approve$/i.exec(
++      request.pathname,
++    );
+     if (request.method === 'POST' && proposalApprove) {
+       const proposalId = validUuid(proposalApprove[1]);
+       const body = parseNoteBody(request.body, false);
+@@ -177,10 +171,9 @@ export function createAdminRouter(deps: AdminDependencies) {
+       return response(200, { ok: true, decisionId });
+     }
+ 
+-    const proposalReject =
+-      /^\/admin\/api\/v1\/membership-proposals\/([0-9a-f-]+)\/reject$/i.exec(
+-        request.pathname,
+-      );
++    const proposalReject = /^\/admin\/api\/v1\/membership-proposals\/([0-9a-f-]+)\/reject$/i.exec(
++      request.pathname,
++    );
+     if (request.method === 'POST' && proposalReject) {
+       const proposalId = validUuid(proposalReject[1]);
+       const body = parseNoteBody(request.body, true);
+@@ -229,9 +222,7 @@ function nullableString(value: unknown): string | null {
+   return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
+ }
+ 
+-function parseReviewBody(
+-  body: unknown,
+-): { readonly state: string; readonly note: string } | null {
++function parseReviewBody(body: unknown): { readonly state: string; readonly note: string } | null {
+   if (!isRecord(body) || typeof body.state !== 'string') return null;
+   const note = typeof body.note === 'string' ? body.note.trim() : '';
+   if (note.length > 10_000) return null;
+@@ -248,10 +239,7 @@ function parseEntityReviewBody(
+   return { entityId, note };
+ }
+ 
+-function parseNoteBody(
+-  body: unknown,
+-  required: boolean,
+-): { readonly note: string } | null {
++function parseNoteBody(body: unknown, required: boolean): { readonly note: string } | null {
+   if (body === null || body === undefined) return required ? null : { note: '' };
+   if (!isRecord(body)) return null;
+   const note = typeof body.note === 'string' ? body.note.trim() : '';
+diff --git a/packages/persistence/src/campaign-import.ts b/packages/persistence/src/campaign-import.ts
+index 09d4c39..72fe95d 100644
+--- a/packages/persistence/src/campaign-import.ts
++++ b/packages/persistence/src/campaign-import.ts
+@@ -452,12 +452,7 @@ export async function commitOfficialImport(
+            AND catalog.publication_enabled = true
+            AND catalog.default_list IN ('filter', 'highlight')
+          ON CONFLICT (entity_id, assertion_id, reason_code, proposed_list) DO NOTHING`,
+-        [
+-          row.resolved_entity_id,
+-          assertionId,
+-          `official-import:${batchId}`,
+-          context.reason_code,
+-        ],
++        [row.resolved_entity_id, assertionId, `official-import:${batchId}`, context.reason_code],
+       );
+       await tx.query(
+         `UPDATE official_import_rows
+diff --git a/packages/persistence/src/membership-review.ts b/packages/persistence/src/membership-review.ts
+index 045c21e..fe564d4 100644
+--- a/packages/persistence/src/membership-review.ts
++++ b/packages/persistence/src/membership-review.ts
+@@ -291,12 +291,7 @@ export async function approveMembershipProposal(
+            NULL
+          ) AS issues
+        FROM evidence`,
+-      [
+-        proposal.entity_id,
+-        proposal.assertion_id,
+-        proposal.reason_code,
+-        proposal.proposed_list,
+-      ],
++      [proposal.entity_id, proposal.assertion_id, proposal.reason_code, proposal.proposed_list],
+     );
+     const check = validation.rows[0];
+     if (!check?.valid_for_publication) {
+diff --git a/packages/persistence/src/moderation.ts b/packages/persistence/src/moderation.ts
+index 99bb185..0241680 100644
+--- a/packages/persistence/src/moderation.ts
++++ b/packages/persistence/src/moderation.ts
+@@ -1,11 +1,7 @@
+ import type { SqlExecutor } from './index.js';
+ 
+ export type CommunitySubmissionState =
+-  | 'pending'
+-  | 'triaged'
+-  | 'accepted'
+-  | 'rejected'
+-  | 'duplicate';
++  'pending' | 'triaged' | 'accepted' | 'rejected' | 'duplicate';
+ 
+ export interface CommunitySubmissionQueueItem {
+   readonly id: string;
+-- 
+2.55.0
+
+### diagnostics/prettier-output tip=82ea65d
+From 347df4d70953d484e5a3509111458e79b521ddf5 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Tue, 15 Sep 2026 18:54:18 -0600
+Subject: [PATCH 1/4] chore: emit prettier diagnostic diff
+
+---
+ package.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/package.json b/package.json
+index ef60215..37d2918 100644
+--- a/package.json
++++ b/package.json
+@@ -16,7 +16,7 @@
+     "typecheck": "tsc -b --emitDeclarationOnly",
+     "lint": "eslint . --max-warnings=0",
+     "format": "prettier --write .",
+-    "format:check": "prettier --check .",
++    "format:check": "prettier --write packages/domain/src/index.ts packages/persistence/src/index.ts tests/api.test.mjs && git diff -- packages/domain/src/index.ts packages/persistence/src/index.ts tests/api.test.mjs",
+     "test": "npm run build && node --test tests/*.test.mjs",
+     "check": "npm run format:check && npm run lint && npm run typecheck && npm test"
+   },
+-- 
+2.55.0
+
+
+From 827420a6bc80714ecc45cfc2a7413d6bcedf8b95 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Tue, 15 Sep 2026 18:54:25 -0600
+Subject: [PATCH 2/4] chore: run prettier diagnostic
+
+---
+ .github/workflows/prettier-diagnostic.yml | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+ create mode 100644 .github/workflows/prettier-diagnostic.yml
+
+diff --git a/.github/workflows/prettier-diagnostic.yml b/.github/workflows/prettier-diagnostic.yml
+new file mode 100644
+index 0000000..45458fd
+--- /dev/null
++++ b/.github/workflows/prettier-diagnostic.yml
+@@ -0,0 +1,18 @@
++name: Prettier diagnostic
++on:
++  push:
++    branches: [diagnostics/prettier-output]
++permissions:
++  contents: read
++jobs:
++  diff:
++    runs-on: ubuntu-latest
++    timeout-minutes: 5
++    steps:
++      - uses: actions/checkout@v6
++      - uses: actions/setup-node@v6
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - run: npm ci
++      - run: npm run format:check
+-- 
+2.55.0
+
+
+From e4747ec84ae26af8b4b978d42c4c6fefa250cbfb Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Tue, 15 Sep 2026 19:01:40 -0600
+Subject: [PATCH 3/4] chore: target api prettier diagnostic
+
+---
+ package.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/package.json b/package.json
+index 37d2918..cb5a229 100644
+--- a/package.json
++++ b/package.json
+@@ -16,7 +16,7 @@
+     "typecheck": "tsc -b --emitDeclarationOnly",
+     "lint": "eslint . --max-warnings=0",
+     "format": "prettier --write .",
+-    "format:check": "prettier --write packages/domain/src/index.ts packages/persistence/src/index.ts tests/api.test.mjs && git diff -- packages/domain/src/index.ts packages/persistence/src/index.ts tests/api.test.mjs",
++    "format:check": "prettier --write apps/api/src/index.ts && git diff -- apps/api/src/index.ts",
+     "test": "npm run build && node --test tests/*.test.mjs",
+     "check": "npm run format:check && npm run lint && npm run typecheck && npm test"
+   },
+-- 
+2.55.0
+
+
+From 82ea65d4b8b5f717aa2b6df804c4b02931b430c9 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Tue, 15 Sep 2026 19:02:01 -0600
+Subject: [PATCH 4/4] chore: mirror current api for prettier diagnostic
+
+---
+ apps/api/src/index.ts | 64 +++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 53 insertions(+), 11 deletions(-)
+
+diff --git a/apps/api/src/index.ts b/apps/api/src/index.ts
+index aa37ac1..0a09db2 100644
+--- a/apps/api/src/index.ts
++++ b/apps/api/src/index.ts
+@@ -2,10 +2,11 @@ import type {
+   AlternativeDirectory,
+   PublicationReader,
+   PublicEntityDirectory,
++  ReasonCatalogReader,
+   SubmissionInput,
+   SubmissionWriter,
+ } from '@isnotreal/application';
+-import type { ListKind, PublicationChannel } from '@isnotreal/protocol';
++import { PROTOCOL_SCHEMA_VERSION, type ListKind, type PublicationChannel } from '@isnotreal/protocol';
+ 
+ export interface ApiRequest {
+   readonly method: string;
+@@ -22,6 +23,7 @@ export interface ApiResponse {
+ 
+ export interface ApiDependencies {
+   readonly entities: PublicEntityDirectory;
++  readonly reasons: ReasonCatalogReader;
+   readonly alternatives: AlternativeDirectory;
+   readonly submissions: SubmissionWriter;
+   readonly publications: PublicationReader;
+@@ -53,6 +55,13 @@ export function createApiRouter(deps: ApiDependencies) {
+       return response(200, { results: await deps.entities.search(q, limit) });
+     }
+ 
++    if (request.method === 'GET' && request.pathname === '/api/v1/reasons') {
++      return response(200, {
++        schemaVersion: PROTOCOL_SCHEMA_VERSION,
++        reasons: await deps.reasons.list(),
++      });
++    }
++
+     const entityMatch = /^\/api\/v1\/entities\/(\d+)$/.exec(request.pathname);
+     if (request.method === 'GET' && entityMatch) {
+       const publicId = entityMatch[1];
+@@ -61,6 +70,16 @@ export function createApiRouter(deps: ApiDependencies) {
+       return entity ? response(200, entity) : response(404, { error: 'not_found' });
+     }
+ 
++    const slugMatch = /^\/api\/v1\/entities\/slug\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(
++      request.pathname,
++    );
++    if (request.method === 'GET' && slugMatch) {
++      const slug = slugMatch[1];
++      if (!slug) return response(404, { error: 'not_found' });
++      const entity = await deps.entities.bySlug(slug);
++      return entity ? response(200, entity) : response(404, { error: 'not_found' });
++    }
++
+     const alternativesMatch = /^\/api\/v1\/entities\/(\d+)\/alternatives$/.exec(request.pathname);
+     if (request.method === 'GET' && alternativesMatch) {
+       const publicId = alternativesMatch[1];
+@@ -132,23 +151,36 @@ function parseSubmission(body: unknown): SubmissionInput | null {
+   }
+ 
+   const proposedList = body.proposedList;
+-  if (proposedList !== null && proposedList !== undefined && !isListValue(proposedList)) {
+-    return null;
+-  }
++  if (proposedList !== null && proposedList !== undefined && !isListValue(proposedList)) return null;
++
+   const sourceUrls = body.sourceUrls;
+-  if (!Array.isArray(sourceUrls) || sourceUrls.some((url) => typeof url !== 'string')) return null;
+-  if (sourceUrls.length > 20) return null;
++  if (!Array.isArray(sourceUrls) || sourceUrls.length > 20) return null;
++  if (sourceUrls.some((url) => typeof url !== 'string' || !isHttpUrl(url))) return null;
++
++  const entityPublicId = nullableString(body.entityPublicId);
++  if (entityPublicId !== null && !/^\d+$/.test(entityPublicId)) return null;
++
++  const identifierKind = nullableString(body.identifierKind);
++  const identifierValue = nullableString(body.identifierValue);
++  if (identifierKind && identifierKind.length > 64) return null;
++  if (identifierValue && identifierValue.length > 512) return null;
++
++  const proposedReasonCode = nullableString(body.proposedReasonCode);
++  if (proposedReasonCode && !/^[A-Z][A-Z0-9_-]{1,15}$/.test(proposedReasonCode)) return null;
++
++  const submitterContactRef = nullableString(body.submitterContactRef);
++  if (submitterContactRef && submitterContactRef.length > 512) return null;
+ 
+   return {
+-    entityPublicId: nullableString(body.entityPublicId),
+-    identifierKind: nullableString(body.identifierKind),
+-    identifierValue: nullableString(body.identifierValue),
++    entityPublicId,
++    identifierKind,
++    identifierValue,
+     submissionType: type as SubmissionInput['submissionType'],
+     proposedList: proposedList === undefined ? null : proposedList,
+-    proposedReasonCode: nullableString(body.proposedReasonCode),
++    proposedReasonCode,
+     narrative: narrative.trim(),
+     sourceUrls: sourceUrls as string[],
+-    submitterContactRef: nullableString(body.submitterContactRef),
++    submitterContactRef,
+   };
+ }
+ 
+@@ -163,3 +195,13 @@ function nullableString(value: unknown): string | null {
+ function isListValue(value: unknown): value is ListKind | null {
+   return value === null || value === 'filter' || value === 'highlight';
+ }
++
++function isHttpUrl(value: string): boolean {
++  if (value.length > 2_048) return false;
++  try {
++    const url = new URL(value);
++    return url.protocol === 'http:' || url.protocol === 'https:';
++  } catch {
++    return false;
++  }
++}
+-- 
+2.55.0
+
+### diagnostics/prettier-reason-stack tip=729a046
+From 4723e7af8df2015889c1400dcc715c1a0a97a9a5 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Fri, 18 Sep 2026 08:23:13 -0600
+Subject: [PATCH 1/2] chore: add temporary reason formatting workflow
+
+---
+ .github/workflows/prettier-reason-stack.yml | 27 +++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+ create mode 100644 .github/workflows/prettier-reason-stack.yml
+
+diff --git a/.github/workflows/prettier-reason-stack.yml b/.github/workflows/prettier-reason-stack.yml
+new file mode 100644
+index 0000000..2dc9c87
+--- /dev/null
++++ b/.github/workflows/prettier-reason-stack.yml
+@@ -0,0 +1,27 @@
++name: Prettier reason stack
++on:
++  push:
++    branches: [diagnostics/prettier-reason-stack]
++permissions:
++  contents: write
++jobs:
++  format:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++        with:
++          persist-credentials: true
++      - uses: actions/setup-node@v6
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - run: npm ci
++      - name: Format changed reason stack
++        run: npx prettier --write docs/reason-catalog.md docs/protocol.md packages/application/src/index.ts packages/persistence/src/index.ts packages/persistence/src/runtime.ts packages/protocol/src/index.ts apps/api/src/index.ts apps/api/src/runtime.ts tests/api.test.mjs tests/compiler.test.mjs tests/protocol.test.mjs tests/postgres.integration.test.mjs
++      - name: Commit canonical formatting
++        run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add docs packages apps tests
++          git diff --cached --quiet || git commit -m "style: format reason catalog stack"
++          git push
+-- 
+2.55.0
+
+
+From 729a0461616e552cde83420de07172682f38a766 Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Fri, 18 Sep 2026 14:23:28 +0000
+Subject: [PATCH 2/2] style: format reason catalog stack
+
+---
+ docs/reason-catalog.md            | 134 +++++++++++++++---------------
+ packages/application/src/index.ts |  10 +--
+ packages/persistence/src/index.ts |   3 +-
+ tests/api.test.mjs                |   5 +-
+ 4 files changed, 74 insertions(+), 78 deletions(-)
+
+diff --git a/docs/reason-catalog.md b/docs/reason-catalog.md
+index c92e425..20a8fc5 100644
+--- a/docs/reason-catalog.md
++++ b/docs/reason-catalog.md
+@@ -48,83 +48,83 @@ The compiler excludes stale current-status reasons from extension publications w
+ 
+ ## Person highlight reasons
+ 
+-| Code | Display label |
+-| --- | --- |
+-| P01 | Publicly advocated for Palestinian rights |
+-| P02 | Publicly called for a Gaza ceasefire |
+-| P03 | Signed Artists4Ceasefire |
+-| P04 | Signed Film Workers for Palestine pledge |
+-| P05 | Joined No Music for Genocide |
+-| P06 | Boycotted Israeli institutions |
+-| P07 | Withdrew in Palestine solidarity |
+-| P08 | Participated in a Palestine solidarity event |
+-| P09 | Raised funds for Palestinian relief |
+-| P10 | Donated to Palestinian relief |
+-| P11 | Released Palestine-focused creative work |
+-| P12 | Publicly criticized Israeli military actions |
+-| P13 | Publicly opposed occupation or settlements |
+-| P14 | Took another documented Palestine solidarity action |
++| Code | Display label                                       |
++| ---- | --------------------------------------------------- |
++| P01  | Publicly advocated for Palestinian rights           |
++| P02  | Publicly called for a Gaza ceasefire                |
++| P03  | Signed Artists4Ceasefire                            |
++| P04  | Signed Film Workers for Palestine pledge            |
++| P05  | Joined No Music for Genocide                        |
++| P06  | Boycotted Israeli institutions                      |
++| P07  | Withdrew in Palestine solidarity                    |
++| P08  | Participated in a Palestine solidarity event        |
++| P09  | Raised funds for Palestinian relief                 |
++| P10  | Donated to Palestinian relief                       |
++| P11  | Released Palestine-focused creative work            |
++| P12  | Publicly criticized Israeli military actions        |
++| P13  | Publicly opposed occupation or settlements          |
++| P14  | Took another documented Palestine solidarity action |
+ 
+ ## Person filter reasons
+ 
+-| Code | Display label |
+-| --- | --- |
+-| I01 | Publicly expressed support for Israel in the conflict |
+-| I02 | Signed the October 2023 CCFP Israel letter |
+-| I03 | Publicly supported Israeli military action |
+-| I04 | Raised funds for an IDF-related organization |
+-| I05 | Donated to an IDF-related organization |
+-| I06 | Participated in an IDF support fundraiser or event |
+-| I07 | Publicly encouraged support for the IDF |
+-| I08 | Performed at an IDF support event |
+-| I09 | Publicly opposed a Gaza ceasefire |
+-| I10 | Publicly opposed a Palestine boycott or solidarity campaign |
+-| I11 | Publicly defended Israeli government Gaza policy |
+-| I12 | Publicly opposed Palestinian statehood or self-determination |
++| Code | Display label                                                |
++| ---- | ------------------------------------------------------------ |
++| I01  | Publicly expressed support for Israel in the conflict        |
++| I02  | Signed the October 2023 CCFP Israel letter                   |
++| I03  | Publicly supported Israeli military action                   |
++| I04  | Raised funds for an IDF-related organization                 |
++| I05  | Donated to an IDF-related organization                       |
++| I06  | Participated in an IDF support fundraiser or event           |
++| I07  | Publicly encouraged support for the IDF                      |
++| I08  | Performed at an IDF support event                            |
++| I09  | Publicly opposed a Gaza ceasefire                            |
++| I10  | Publicly opposed a Palestine boycott or solidarity campaign  |
++| I11  | Publicly defended Israeli government Gaza policy             |
++| I12  | Publicly opposed Palestinian statehood or self-determination |
+ 
+ ## Company/organization highlight reasons
+ 
+-| Code | Display label |
+-| --- | --- |
+-| CP01 | Publicly called for a Gaza ceasefire |
+-| CP02 | Donated to Palestinian humanitarian relief |
+-| CP03 | Raised funds for Palestinian humanitarian relief |
+-| CP04 | Ended a relevant Israeli military contract |
++| Code | Display label                                           |
++| ---- | ------------------------------------------------------- |
++| CP01 | Publicly called for a Gaza ceasefire                    |
++| CP02 | Donated to Palestinian humanitarian relief              |
++| CP03 | Raised funds for Palestinian humanitarian relief        |
++| CP04 | Ended a relevant Israeli military contract              |
+ | CP05 | Divested from a documented boycott or divestment target |
+-| CP06 | Ended settlement-related business activity |
+-| CP07 | Joined a documented Palestine solidarity campaign |
+-| CP08 | Refuses business with Israeli settlements |
+-| CP09 | Participates in a documented Palestine-related boycott |
++| CP06 | Ended settlement-related business activity              |
++| CP07 | Joined a documented Palestine solidarity campaign       |
++| CP08 | Refuses business with Israeli settlements               |
++| CP09 | Participates in a documented Palestine-related boycott  |
+ 
+ ## Company/brand filter reasons
+ 
+-| Code | Display label |
+-| --- | --- |
+-| C01 | Supplies weapons or military equipment to Israel |
+-| C02 | Supplies components used in Israeli military systems |
+-| C03 | Provides cloud, AI, or technology services to Israeli military |
+-| C04 | Provides surveillance or security technology used in occupied Palestinian territory |
+-| C05 | Provides infrastructure or services to Israeli military |
+-| C06 | Donated goods or services to Israeli military personnel |
+-| C07 | Donated money to an IDF-related organization |
+-| C08 | Fundraised for an IDF-related organization |
+-| C09 | Operates in Israeli settlements in occupied territory |
+-| C10 | Provides services or infrastructure to Israeli settlements |
+-| C11 | Supplies settlement construction or expansion |
+-| C12 | Extracts or uses resources from occupied Palestinian territory |
+-| C13 | Listed in UN settlement-business database |
+-| C14 | BDS consumer boycott priority target |
+-| C15 | BDS pressure target |
+-| C16 | BDS divestment or exclusion target |
+-| C17 | Israeli military or security contractor |
+-| C18 | Israeli government contractor for relevant military or security activity |
+-| C19 | Invests in companies supplying Israeli military |
+-| C20 | Finances companies supplying Israeli military |
+-| C21 | Company officially supported Israeli military action |
+-| C22 | Senior company leadership publicly supported Israeli military action |
+-| C23 | Provided wartime material support to Israeli state or military |
+-| C24 | Other documented settlement involvement |
+-| C25 | BDS organic boycott target |
++| Code | Display label                                                                       |
++| ---- | ----------------------------------------------------------------------------------- |
++| C01  | Supplies weapons or military equipment to Israel                                    |
++| C02  | Supplies components used in Israeli military systems                                |
++| C03  | Provides cloud, AI, or technology services to Israeli military                      |
++| C04  | Provides surveillance or security technology used in occupied Palestinian territory |
++| C05  | Provides infrastructure or services to Israeli military                             |
++| C06  | Donated goods or services to Israeli military personnel                             |
++| C07  | Donated money to an IDF-related organization                                        |
++| C08  | Fundraised for an IDF-related organization                                          |
++| C09  | Operates in Israeli settlements in occupied territory                               |
++| C10  | Provides services or infrastructure to Israeli settlements                          |
++| C11  | Supplies settlement construction or expansion                                       |
++| C12  | Extracts or uses resources from occupied Palestinian territory                      |
++| C13  | Listed in UN settlement-business database                                           |
++| C14  | BDS consumer boycott priority target                                                |
++| C15  | BDS pressure target                                                                 |
++| C16  | BDS divestment or exclusion target                                                  |
++| C17  | Israeli military or security contractor                                             |
++| C18  | Israeli government contractor for relevant military or security activity            |
++| C19  | Invests in companies supplying Israeli military                                     |
++| C20  | Finances companies supplying Israeli military                                       |
++| C21  | Company officially supported Israeli military action                                |
++| C22  | Senior company leadership publicly supported Israeli military action                |
++| C23  | Provided wartime material support to Israeli state or military                      |
++| C24  | Other documented settlement involvement                                             |
++| C25  | BDS organic boycott target                                                          |
+ 
+ ## Named campaign and authority bindings
+ 
+diff --git a/packages/application/src/index.ts b/packages/application/src/index.ts
+index c97a044..a0f0495 100644
+--- a/packages/application/src/index.ts
++++ b/packages/application/src/index.ts
+@@ -50,10 +50,7 @@ export type ReasonEvidenceMode =
+   | 'other';
+ 
+ export type ReasonValidityMode =
+-  | 'historical-event'
+-  | 'current-status'
+-  | 'current-list-membership'
+-  | 'current-relationship';
++  'historical-event' | 'current-status' | 'current-list-membership' | 'current-relationship';
+ 
+ export interface ReasonEvidenceRequirement {
+   readonly subjectScope: ReasonSubjectScope;
+@@ -78,10 +75,7 @@ export interface ReasonAuthoritySource {
+   readonly title: string;
+   readonly publisher: string | null;
+   readonly role:
+-    | 'canonical-campaign-record'
+-    | 'authoritative-list'
+-    | 'official-guidance'
+-    | 'methodology';
++    'canonical-campaign-record' | 'authoritative-list' | 'official-guidance' | 'methodology';
+ }
+ 
+ export interface ReasonCatalogEntry {
+diff --git a/packages/persistence/src/index.ts b/packages/persistence/src/index.ts
+index 5cb52e1..d1bf0a8 100644
+--- a/packages/persistence/src/index.ts
++++ b/packages/persistence/src/index.ts
+@@ -87,8 +87,7 @@ type ReasonCatalogRow = {
+   minimum_evidence_items: number | null;
+   reverify_after_days: number | null;
+   inheritance_policy:
+-    | NonNullable<ReasonCatalogEntry['evidenceRequirement']>['inheritancePolicy']
+-    | null;
++    NonNullable<ReasonCatalogEntry['evidenceRequirement']>['inheritancePolicy'] | null;
+   campaigns: ReasonCatalogEntry['campaigns'];
+   authority_sources: ReasonCatalogEntry['authoritySources'];
+ };
+diff --git a/tests/api.test.mjs b/tests/api.test.mjs
+index d4404d6..51bf60d 100644
+--- a/tests/api.test.mjs
++++ b/tests/api.test.mjs
+@@ -109,7 +109,10 @@ test('entity, reason and list endpoints expose the public contracts', async () =
+   assert.deepEqual(compactReasons.body.labels, [['P03', 'Signed example campaign']]);
+   const reasonDetail = await route(request('GET', '/api/v1/reasons/P03'));
+   assert.equal(reasonDetail.status, 200);
+-  assert.equal(reasonDetail.body.reason.evidenceRequirement.evidenceMode, 'named-campaign-membership');
++  assert.equal(
++    reasonDetail.body.reason.evidenceRequirement.evidenceMode,
++    'named-campaign-membership',
++  );
+   assert.equal((await route(request('GET', '/api/v1/reasons/P99'))).status, 404);
+   const manifest = await route(request('GET', '/api/v1/lists/domain/filter/manifest'));
+   assert.equal(manifest.status, 200);
+-- 
+2.55.0
+
+### diagnostics/prettier-runtime tip=7033fd8
+From 920dc407011eae4d632c7716887a197854355e7d Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Tue, 15 Sep 2026 19:34:49 -0600
+Subject: [PATCH 1/3] chore: diagnostic prettier runtime diff
+
+---
+ .github/workflows/prettier-runtime.yml | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+ create mode 100644 .github/workflows/prettier-runtime.yml
+
+diff --git a/.github/workflows/prettier-runtime.yml b/.github/workflows/prettier-runtime.yml
+new file mode 100644
+index 0000000..4b1ec64
+--- /dev/null
++++ b/.github/workflows/prettier-runtime.yml
+@@ -0,0 +1,18 @@
++name: Prettier runtime diagnostic
++on:
++  push:
++    branches: [diagnostics/prettier-runtime]
++permissions:
++  contents: read
++jobs:
++  diff:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++      - uses: actions/setup-node@v6
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - run: npm ci
++      - run: npx prettier --write apps/api/src/migrate.ts apps/api/src/publish.ts apps/api/src/runtime.ts packages/persistence/src/runtime.ts
++      - run: git diff -- apps/api/src/migrate.ts apps/api/src/publish.ts apps/api/src/runtime.ts packages/persistence/src/runtime.ts
+-- 
+2.55.0
+
+
+From 0665e03ca8829faea4de79cca2527f9051efecee Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Tue, 15 Sep 2026 19:35:38 -0600
+Subject: [PATCH 2/3] chore: let prettier diagnostic commit canonical output
+
+---
+ .github/workflows/prettier-runtime.yml | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/.github/workflows/prettier-runtime.yml b/.github/workflows/prettier-runtime.yml
+index 4b1ec64..6de9ab4 100644
+--- a/.github/workflows/prettier-runtime.yml
++++ b/.github/workflows/prettier-runtime.yml
+@@ -3,7 +3,7 @@ on:
+   push:
+     branches: [diagnostics/prettier-runtime]
+ permissions:
+-  contents: read
++  contents: write
+ jobs:
+   diff:
+     runs-on: ubuntu-latest
+@@ -15,4 +15,12 @@ jobs:
+           cache: npm
+       - run: npm ci
+       - run: npx prettier --write apps/api/src/migrate.ts apps/api/src/publish.ts apps/api/src/runtime.ts packages/persistence/src/runtime.ts
+-      - run: git diff -- apps/api/src/migrate.ts apps/api/src/publish.ts apps/api/src/runtime.ts packages/persistence/src/runtime.ts
++      - name: Commit canonical formatting
++        run: |
++          if ! git diff --quiet; then
++            git config user.name "github-actions[bot]"
++            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++            git add apps/api/src/migrate.ts apps/api/src/publish.ts apps/api/src/runtime.ts packages/persistence/src/runtime.ts
++            git commit -m "style: apply canonical prettier formatting"
++            git push
++          fi
+-- 
+2.55.0
+
+
+From 7033fd882dd625b2c583a23983b0c8bbd6560f69 Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Wed, 16 Sep 2026 01:35:50 +0000
+Subject: [PATCH 3/3] style: apply canonical prettier formatting
+
+---
+ apps/api/src/migrate.ts             |  5 ++++-
+ apps/api/src/publish.ts             |  3 ++-
+ apps/api/src/runtime.ts             | 12 +++++++---
+ packages/persistence/src/runtime.ts | 35 ++++++++++++++++++++---------
+ 4 files changed, 40 insertions(+), 15 deletions(-)
+
+diff --git a/apps/api/src/migrate.ts b/apps/api/src/migrate.ts
+index 14b503e..fb76ee2 100644
+--- a/apps/api/src/migrate.ts
++++ b/apps/api/src/migrate.ts
+@@ -12,7 +12,10 @@ async function main(): Promise<void> {
+     applicationName: 'isnotreal-migrate',
+   });
+   try {
+-    const result = await applySqlMigrations(db, resolve(process.env.MIGRATIONS_DIR ?? 'db/migrations'));
++    const result = await applySqlMigrations(
++      db,
++      resolve(process.env.MIGRATIONS_DIR ?? 'db/migrations'),
++    );
+     console.log(
+       JSON.stringify({ applied: result.applied, alreadyApplied: result.alreadyApplied }, null, 2),
+     );
+diff --git a/apps/api/src/publish.ts b/apps/api/src/publish.ts
+index 9dd6a66..197b4fd 100644
+--- a/apps/api/src/publish.ts
++++ b/apps/api/src/publish.ts
+@@ -9,7 +9,8 @@ import {
+ async function main(): Promise<void> {
+   const databaseUrl = requiredEnv('DATABASE_URL');
+   const compilerVersion = process.env.COMPILER_VERSION?.trim() || 'dev';
+-  const sourceRevision = process.env.SOURCE_REVISION?.trim() || process.env.GITHUB_SHA?.trim() || 'manual';
++  const sourceRevision =
++    process.env.SOURCE_REVISION?.trim() || process.env.GITHUB_SHA?.trim() || 'manual';
+   const artifactRoot = resolve(process.env.PUBLICATION_ROOT ?? '.local/publications');
+   const ttlHours = parseTtlHours(process.env.PUBLICATION_TTL_HOURS);
+ 
+diff --git a/apps/api/src/runtime.ts b/apps/api/src/runtime.ts
+index eab7490..0f62a9a 100644
+--- a/apps/api/src/runtime.ts
++++ b/apps/api/src/runtime.ts
+@@ -79,7 +79,9 @@ export async function startNodeApiRuntime(
+         });
+       }
+       if (!response.writableEnded) {
+-        response.end(JSON.stringify({ error: status === 500 ? 'internal_error' : 'invalid_request' }));
++        response.end(
++          JSON.stringify({ error: status === 500 ? 'internal_error' : 'invalid_request' }),
++        );
+       }
+     });
+   });
+@@ -188,7 +190,10 @@ async function readBody(request: IncomingMessage, maxBodyBytes: number): Promise
+ 
+ function sendApiResponse(response: ServerResponse, request: ApiRequest, result: ApiResponse): void {
+   const cacheControl = cachePolicy(request, result.status);
+-  sendJson(response, result.status, result.body, { ...result.headers, 'cache-control': cacheControl });
++  sendJson(response, result.status, result.body, {
++    ...result.headers,
++    'cache-control': cacheControl,
++  });
+ }
+ 
+ function sendJson(
+@@ -206,7 +211,8 @@ function sendJson(
+ 
+ function cachePolicy(request: ApiRequest, status: number): string {
+   if (request.method !== 'GET' || status !== 200) return 'no-store';
+-  if (request.pathname === '/api/v1/reasons') return 'public, max-age=300, stale-while-revalidate=3600';
++  if (request.pathname === '/api/v1/reasons')
++    return 'public, max-age=300, stale-while-revalidate=3600';
+   if (request.pathname.includes('/lists/')) return 'public, max-age=60, stale-while-revalidate=300';
+   return 'public, max-age=60, stale-while-revalidate=300';
+ }
+diff --git a/packages/persistence/src/runtime.ts b/packages/persistence/src/runtime.ts
+index e4e1328..691818e 100644
+--- a/packages/persistence/src/runtime.ts
++++ b/packages/persistence/src/runtime.ts
+@@ -11,7 +11,11 @@ import {
+   type PublicationChannel,
+   type PublicationReader,
+ } from '@isnotreal/application';
+-import { PostgresPublicationCandidateReader, type SqlExecutor, type SqlQueryResult } from './index.js';
++import {
++  PostgresPublicationCandidateReader,
++  type SqlExecutor,
++  type SqlQueryResult,
++} from './index.js';
+ 
+ export interface PgRuntimeOptions {
+   readonly connectionString: string;
+@@ -323,12 +327,17 @@ export class PostgresPublishedArtifactReader implements PublicationReader {
+ 
+   private async readVerifiedBytes(metadata: ArtifactMetadataRow): Promise<Uint8Array> {
+     const expectedSize = Number(metadata.byte_size);
+-    if (!Number.isSafeInteger(expectedSize) || expectedSize < 0 || expectedSize > MAX_ARTIFACT_BYTES) {
++    if (
++      !Number.isSafeInteger(expectedSize) ||
++      expectedSize < 0 ||
++      expectedSize > MAX_ARTIFACT_BYTES
++    ) {
+       throw new Error('publication artifact size is invalid');
+     }
+     const bytes = await this.store.get(metadata.storage_key);
+     if (bytes.byteLength !== expectedSize) throw new Error('publication artifact size mismatch');
+-    if (sha256(bytes) !== metadata.sha256) throw new Error('publication artifact checksum mismatch');
++    if (sha256(bytes) !== metadata.sha256)
++      throw new Error('publication artifact checksum mismatch');
+     return bytes;
+   }
+ }
+@@ -499,9 +508,10 @@ export async function publishCurrentState(
+           ],
+         );
+       }
+-      await tx.query("UPDATE publications SET state = 'ready' WHERE id = $1 AND state = 'building'", [
+-        publication.id,
+-      ]);
++      await tx.query(
++        "UPDATE publications SET state = 'ready' WHERE id = $1 AND state = 'building'",
++        [publication.id],
++      );
+     });
+ 
+     const activated = await activatePublication(db, publication.id, publication.sequence);
+@@ -588,9 +598,10 @@ async function activatePublication(
+        WHERE state IN ('building', 'ready', 'active')`,
+     );
+     if (latest.rows[0]?.max_sequence !== sequence) {
+-      await tx.query("UPDATE publications SET state = 'retired' WHERE id = $1 AND state = 'ready'", [
+-        publicationId,
+-      ]);
++      await tx.query(
++        "UPDATE publications SET state = 'retired' WHERE id = $1 AND state = 'ready'",
++        [publicationId],
++      );
+       return false;
+     }
+ 
+@@ -637,7 +648,11 @@ async function readVerifiedBytesFromStore(
+   metadata: ArtifactMetadataRow,
+ ): Promise<Uint8Array> {
+   const expectedSize = Number(metadata.byte_size);
+-  if (!Number.isSafeInteger(expectedSize) || expectedSize < 0 || expectedSize > MAX_ARTIFACT_BYTES) {
++  if (
++    !Number.isSafeInteger(expectedSize) ||
++    expectedSize < 0 ||
++    expectedSize > MAX_ARTIFACT_BYTES
++  ) {
+     throw new Error('publication artifact size is invalid');
+   }
+   const bytes = await store.get(metadata.storage_key);
+-- 
+2.55.0
+
+### diagnostics/prettier-runtime-test tip=59c7ede
+From 908d5d88e289997a974e7fbd4df24dfe0895a326 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Sat, 19 Sep 2026 13:09:55 -0600
+Subject: [PATCH 1/2] chore: temporary runtime formatter
+
+---
+ .github/workflows/prettier-runtime-test.yml | 24 +++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+ create mode 100644 .github/workflows/prettier-runtime-test.yml
+
+diff --git a/.github/workflows/prettier-runtime-test.yml b/.github/workflows/prettier-runtime-test.yml
+new file mode 100644
+index 0000000..582297b
+--- /dev/null
++++ b/.github/workflows/prettier-runtime-test.yml
+@@ -0,0 +1,24 @@
++name: Prettier runtime test
++on:
++  push:
++    branches: [diagnostics/prettier-runtime-test]
++permissions:
++  contents: write
++jobs:
++  format:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++        with: { persist-credentials: true }
++      - uses: actions/setup-node@v6
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - run: npm ci
++      - run: npx prettier --write apps/api/src/runtime.ts apps/api/src/serve.ts tests/postgres.integration.test.mjs README.md
++      - run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add apps tests README.md
++          git diff --cached --quiet || git commit -m "style: format runtime and integration"
++          git push
+-- 
+2.55.0
+
+
+From 59c7ede1873755e02cf1652d4d0cf426058eaf55 Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Sat, 19 Sep 2026 19:10:10 +0000
+Subject: [PATCH 2/2] style: format runtime and integration
+
+---
+ README.md                           | 1 -
+ apps/api/src/runtime.ts             | 4 +++-
+ tests/postgres.integration.test.mjs | 7 ++++++-
+ 3 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/README.md b/README.md
+index 91af9f9..140fdf0 100644
+--- a/README.md
++++ b/README.md
+@@ -56,7 +56,6 @@ tests/
+ 
+ PostgreSQL is the source of truth. The extension never receives names, biographies, evidence or source URLs in normal list synchronization. Compiled publications contain only the stable platform/domain identifier, stable public entity ID and short display reason codes. The website/API can resolve the public entity ID into the complete public record.
+ 
+-
+ ## Reason and evidence workflow
+ 
+ The public list pipeline intentionally separates factual ingestion from editorial membership:
+diff --git a/apps/api/src/runtime.ts b/apps/api/src/runtime.ts
+index eab0355..73e0f2b 100644
+--- a/apps/api/src/runtime.ts
++++ b/apps/api/src/runtime.ts
+@@ -283,7 +283,9 @@ function bearerToken(authorization: string | undefined): string | null {
+ function timingSafeTokenEqual(left: string, right: string): boolean {
+   const leftBuffer = Buffer.from(left);
+   const rightBuffer = Buffer.from(right);
+-  return leftBuffer.byteLength === rightBuffer.byteLength && timingSafeEqual(leftBuffer, rightBuffer);
++  return (
++    leftBuffer.byteLength === rightBuffer.byteLength && timingSafeEqual(leftBuffer, rightBuffer)
++  );
+ }
+ 
+ function writeSecurityHeaders(response: ServerResponse): void {
+diff --git a/tests/postgres.integration.test.mjs b/tests/postgres.integration.test.mjs
+index 82b2e93..9527041 100644
+--- a/tests/postgres.integration.test.mjs
++++ b/tests/postgres.integration.test.mjs
+@@ -476,7 +476,12 @@ test(
+       });
+       assert.equal(fourthPublication.activated, true);
+       assert.deepEqual((await published.full('instagram', 'highlight')).entries, [
+-        ['exampleartist', (await db.query(`SELECT public_id::text FROM entities WHERE id = $1`, [artistEntityId])).rows[0].public_id, ['P03']],
++        [
++          'exampleartist',
++          (await db.query(`SELECT public_id::text FROM entities WHERE id = $1`, [artistEntityId]))
++            .rows[0].public_id,
++          ['P03'],
++        ],
+       ]);
+ 
+       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
+-- 
+2.55.0
+
+### diagnostics/runtime-deps tip=f56eb19
+From bdc899d50538e478124402b485007b7eed8a7bf8 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Tue, 15 Sep 2026 19:07:19 -0600
+Subject: [PATCH 1/5] chore: prepare runtime dependency lock generation
+
+---
+ package.json | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/package.json b/package.json
+index ef60215..b703a5e 100644
+--- a/package.json
++++ b/package.json
+@@ -22,6 +22,8 @@
+   },
+   "devDependencies": {
+     "@eslint/js": "10.0.1",
++    "@types/node": "24.13.4",
++    "@types/pg": "8.23.1",
+     "eslint": "10.10.0",
+     "prettier": "3.9.6",
+     "typescript": "5.9.3",
+-- 
+2.55.0
+
+
+From 140548c6e961b3cfd0737f34dbf9f4f5560c4064 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Tue, 15 Sep 2026 19:07:25 -0600
+Subject: [PATCH 2/5] chore: add postgres runtime dependency
+
+---
+ packages/persistence/package.json | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/packages/persistence/package.json b/packages/persistence/package.json
+index 22d6905..fb16ca9 100644
+--- a/packages/persistence/package.json
++++ b/packages/persistence/package.json
+@@ -13,6 +13,7 @@
+     "dist"
+   ],
+   "dependencies": {
+-    "@isnotreal/application": "0.0.0"
++    "@isnotreal/application": "0.0.0",
++    "pg": "8.23.0"
+   }
+ }
+-- 
+2.55.0
+
+
+From 68035b5b3822353191b612dd5747595e169ae3ad Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Tue, 15 Sep 2026 19:07:33 -0600
+Subject: [PATCH 3/5] chore: wire api to persistence package
+
+---
+ apps/api/package.json | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/apps/api/package.json b/apps/api/package.json
+index 3df05c6..0398300 100644
+--- a/apps/api/package.json
++++ b/apps/api/package.json
+@@ -13,8 +13,9 @@
+     "dist"
+   ],
+   "dependencies": {
++    "@isnotreal/application": "0.0.0",
+     "@isnotreal/config": "0.0.0",
+-    "@isnotreal/protocol": "0.0.0",
+-    "@isnotreal/application": "0.0.0"
++    "@isnotreal/persistence": "0.0.0",
++    "@isnotreal/protocol": "0.0.0"
+   }
+ }
+-- 
+2.55.0
+
+
+From 43f982504ee3c2e3c1d3c563b7ca1131fe685f10 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Tue, 15 Sep 2026 19:07:42 -0600
+Subject: [PATCH 4/5] chore: generate runtime dependency lockfile
+
+---
+ .github/workflows/runtime-deps-lock.yml | 29 +++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+ create mode 100644 .github/workflows/runtime-deps-lock.yml
+
+diff --git a/.github/workflows/runtime-deps-lock.yml b/.github/workflows/runtime-deps-lock.yml
+new file mode 100644
+index 0000000..228ba31
+--- /dev/null
++++ b/.github/workflows/runtime-deps-lock.yml
+@@ -0,0 +1,29 @@
++name: Runtime dependency lock diagnostic
++on:
++  push:
++    branches: [diagnostics/runtime-deps]
++permissions:
++  contents: write
++jobs:
++  lock:
++    runs-on: ubuntu-latest
++    timeout-minutes: 5
++    steps:
++      - uses: actions/checkout@v6
++        with:
++          persist-credentials: true
++      - uses: actions/setup-node@v6
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - run: npm install --package-lock-only --ignore-scripts
++      - run: |
++          if git diff --quiet -- package-lock.json; then
++            echo "package-lock.json already current"
++            exit 0
++          fi
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add package-lock.json
++          git commit -m "chore: generate runtime dependency lockfile"
++          git push origin HEAD:diagnostics/runtime-deps
+-- 
+2.55.0
+
+
+From f56eb19b710088cf56bf27079bf5aabc9448d97b Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Wed, 16 Sep 2026 01:07:56 +0000
+Subject: [PATCH 5/5] chore: generate runtime dependency lockfile
+
+---
+ package-lock.json | 181 +++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 180 insertions(+), 1 deletion(-)
+
+diff --git a/package-lock.json b/package-lock.json
+index b25aedd..52e6866 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -13,6 +13,8 @@
+       ],
+       "devDependencies": {
+         "@eslint/js": "10.0.1",
++        "@types/node": "24.13.4",
++        "@types/pg": "8.23.1",
+         "eslint": "10.10.0",
+         "prettier": "3.9.6",
+         "typescript": "5.9.3",
+@@ -28,6 +30,7 @@
+       "dependencies": {
+         "@isnotreal/application": "0.0.0",
+         "@isnotreal/config": "0.0.0",
++        "@isnotreal/persistence": "0.0.0",
+         "@isnotreal/protocol": "0.0.0"
+       }
+     },
+@@ -330,6 +333,28 @@
+       "dev": true,
+       "license": "MIT"
+     },
++    "node_modules/@types/node": {
++      "version": "24.13.4",
++      "resolved": "https://registry.npmjs.org/@types/node/-/node-24.13.4.tgz",
++      "integrity": "sha512-YJ7EqCstVTzIr0fMr7qul/977en+pQHrfmuKIo6Zr9i75Be21dr3MovcfvGtyvi2HAUrRerWps5sMO9I7WaxDw==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "undici-types": "~7.18.0"
++      }
++    },
++    "node_modules/@types/pg": {
++      "version": "8.23.1",
++      "resolved": "https://registry.npmjs.org/@types/pg/-/pg-8.23.1.tgz",
++      "integrity": "sha512-fKVHpikPdg4GKks3JuLEhvwSyvwzF23hnabPy6DD8ljVbC7+6J5dQzdv4arV6jqq57djnMgs1HKBxX4P8aBI3A==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@types/node": "*",
++        "pg-protocol": "*",
++        "pg-types": "^2.2.0"
++      }
++    },
+     "node_modules/@typescript-eslint/eslint-plugin": {
+       "version": "8.70.0",
+       "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-8.70.0.tgz",
+@@ -1167,6 +1192,95 @@
+         "node": ">=8"
+       }
+     },
++    "node_modules/pg": {
++      "version": "8.23.0",
++      "resolved": "https://registry.npmjs.org/pg/-/pg-8.23.0.tgz",
++      "integrity": "sha512-Ip2EQCngowJLGOfCwkFhPXU7/ljlhn6Rxlmy4XYfL2Y+vyRM59+8uR2xqRWKdYmbXmxCFOAmKxBuSUCdF34qLg==",
++      "license": "MIT",
++      "dependencies": {
++        "pg-connection-string": "^2.14.0",
++        "pg-pool": "^3.14.0",
++        "pg-protocol": "^1.16.0",
++        "pg-types": "2.2.0",
++        "pgpass": "1.0.5"
++      },
++      "engines": {
++        "node": ">= 16.0.0"
++      },
++      "optionalDependencies": {
++        "pg-cloudflare": "^1.4.0"
++      },
++      "peerDependencies": {
++        "pg-native": ">=3.0.1"
++      },
++      "peerDependenciesMeta": {
++        "pg-native": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/pg-cloudflare": {
++      "version": "1.4.0",
++      "resolved": "https://registry.npmjs.org/pg-cloudflare/-/pg-cloudflare-1.4.0.tgz",
++      "integrity": "sha512-Vo7z/6rrQYxpNRylp4Tlob2elzbh+N/MOQbxFVWCxS7oEx6jF53GTJFxK2WWpKuBRkmiin4Mt+xofFDjx09R0A==",
++      "license": "MIT",
++      "optional": true
++    },
++    "node_modules/pg-connection-string": {
++      "version": "2.14.0",
++      "resolved": "https://registry.npmjs.org/pg-connection-string/-/pg-connection-string-2.14.0.tgz",
++      "integrity": "sha512-XwWDGcLRGCXAR8F/AM5bG7Q+A3Wm2s6QeEjlOKZLlH3UYcguiqCWKyWXVag5TLTIjR7oOJUY8kcADaZgWPyLeg==",
++      "license": "MIT"
++    },
++    "node_modules/pg-int8": {
++      "version": "1.0.1",
++      "resolved": "https://registry.npmjs.org/pg-int8/-/pg-int8-1.0.1.tgz",
++      "integrity": "sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==",
++      "license": "ISC",
++      "engines": {
++        "node": ">=4.0.0"
++      }
++    },
++    "node_modules/pg-pool": {
++      "version": "3.14.0",
++      "resolved": "https://registry.npmjs.org/pg-pool/-/pg-pool-3.14.0.tgz",
++      "integrity": "sha512-gKtPkFdQPU3DksooVLi9LsjZxrsBUZIpa+7aVx+LV5pNh0KzP4Zleud2po+ConrxbuXGBJ6Hfer6hdgpIBpBaw==",
++      "license": "MIT",
++      "peerDependencies": {
++        "pg": ">=8.0"
++      }
++    },
++    "node_modules/pg-protocol": {
++      "version": "1.16.0",
++      "resolved": "https://registry.npmjs.org/pg-protocol/-/pg-protocol-1.16.0.tgz",
++      "integrity": "sha512-sILXutLVjCLjcDuOmvhX5e2Z4cS5qG/6Bu3VkpFwdf/633ElGLpEh9bgmuI5I4sqKqkifQiGyiCcx1HdtrK7tg==",
++      "license": "MIT"
++    },
++    "node_modules/pg-types": {
++      "version": "2.2.0",
++      "resolved": "https://registry.npmjs.org/pg-types/-/pg-types-2.2.0.tgz",
++      "integrity": "sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==",
++      "license": "MIT",
++      "dependencies": {
++        "pg-int8": "1.0.1",
++        "postgres-array": "~2.0.0",
++        "postgres-bytea": "~1.0.0",
++        "postgres-date": "~1.0.4",
++        "postgres-interval": "^1.1.0"
++      },
++      "engines": {
++        "node": ">=4"
++      }
++    },
++    "node_modules/pgpass": {
++      "version": "1.0.5",
++      "resolved": "https://registry.npmjs.org/pgpass/-/pgpass-1.0.5.tgz",
++      "integrity": "sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug==",
++      "license": "MIT",
++      "dependencies": {
++        "split2": "^4.1.0"
++      }
++    },
+     "node_modules/picomatch": {
+       "version": "4.0.7",
+       "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.7.tgz",
+@@ -1180,6 +1294,45 @@
+         "url": "https://github.com/sponsors/jonschlinkert"
+       }
+     },
++    "node_modules/postgres-array": {
++      "version": "2.0.0",
++      "resolved": "https://registry.npmjs.org/postgres-array/-/postgres-array-2.0.0.tgz",
++      "integrity": "sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=4"
++      }
++    },
++    "node_modules/postgres-bytea": {
++      "version": "1.0.1",
++      "resolved": "https://registry.npmjs.org/postgres-bytea/-/postgres-bytea-1.0.1.tgz",
++      "integrity": "sha512-5+5HqXnsZPE65IJZSMkZtURARZelel2oXUEO8rH83VS/hxH5vv1uHquPg5wZs8yMAfdv971IU+kcPUczi7NVBQ==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=0.10.0"
++      }
++    },
++    "node_modules/postgres-date": {
++      "version": "1.0.7",
++      "resolved": "https://registry.npmjs.org/postgres-date/-/postgres-date-1.0.7.tgz",
++      "integrity": "sha512-suDmjLVQg78nMK2UZ454hAG+OAW+HQPZ6n++TNDUX+L0+uUlLywnoxJKDou51Zm+zTCjrCl0Nq6J9C5hP9vK/Q==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=0.10.0"
++      }
++    },
++    "node_modules/postgres-interval": {
++      "version": "1.2.0",
++      "resolved": "https://registry.npmjs.org/postgres-interval/-/postgres-interval-1.2.0.tgz",
++      "integrity": "sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==",
++      "license": "MIT",
++      "dependencies": {
++        "xtend": "^4.0.0"
++      },
++      "engines": {
++        "node": ">=0.10.0"
++      }
++    },
+     "node_modules/prelude-ls": {
+       "version": "1.2.1",
+       "resolved": "https://registry.npmjs.org/prelude-ls/-/prelude-ls-1.2.1.tgz",
+@@ -1272,6 +1425,15 @@
+         "node": ">=8"
+       }
+     },
++    "node_modules/split2": {
++      "version": "4.2.0",
++      "resolved": "https://registry.npmjs.org/split2/-/split2-4.2.0.tgz",
++      "integrity": "sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==",
++      "license": "ISC",
++      "engines": {
++        "node": ">= 10.x"
++      }
++    },
+     "node_modules/tinyglobby": {
+       "version": "0.2.17",
+       "resolved": "https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.17.tgz",
+@@ -1353,6 +1515,13 @@
+         "typescript": ">=4.8.4 <6.1.0"
+       }
+     },
++    "node_modules/undici-types": {
++      "version": "7.18.2",
++      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-7.18.2.tgz",
++      "integrity": "sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==",
++      "dev": true,
++      "license": "MIT"
++    },
+     "node_modules/uri-js": {
+       "version": "4.4.1",
+       "resolved": "https://registry.npmjs.org/uri-js/-/uri-js-4.4.1.tgz",
+@@ -1389,6 +1558,15 @@
+         "node": ">=0.10.0"
+       }
+     },
++    "node_modules/xtend": {
++      "version": "4.0.2",
++      "resolved": "https://registry.npmjs.org/xtend/-/xtend-4.0.2.tgz",
++      "integrity": "sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=0.4"
++      }
++    },
+     "node_modules/yocto-queue": {
+       "version": "0.1.0",
+       "resolved": "https://registry.npmjs.org/yocto-queue/-/yocto-queue-0.1.0.tgz",
+@@ -1425,7 +1603,8 @@
+       "name": "@isnotreal/persistence",
+       "version": "0.0.0",
+       "dependencies": {
+-        "@isnotreal/application": "0.0.0"
++        "@isnotreal/application": "0.0.0",
++        "pg": "8.23.0"
+       }
+     },
+     "packages/protocol": {
+-- 
+2.55.0
+
+### format/api-test tip=18b2317
+From 18b2317861a82feff05e3c46c5d2f5d1fabd393d Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Sun, 20 Sep 2026 17:32:32 -0600
+Subject: [PATCH] chore: format cause publication fixes
+
+---
+ .github/workflows/format-api-test.yml | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 .github/workflows/format-api-test.yml
+
+diff --git a/.github/workflows/format-api-test.yml b/.github/workflows/format-api-test.yml
+new file mode 100644
+index 0000000..95b8396
+--- /dev/null
++++ b/.github/workflows/format-api-test.yml
+@@ -0,0 +1,22 @@
++name: Format api test
++on:
++  push:
++    branches: [format/api-test]
++permissions:
++  contents: write
++jobs:
++  format:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++        with: { persist-credentials: true }
++      - uses: actions/setup-node@v6
++        with: { node-version-file: .nvmrc, cache: npm }
++      - run: npm ci
++      - run: npx prettier --write tests/api.test.mjs packages/persistence/src/runtime.ts db/migrations/0024_cause_scoped_artifacts.sql
++      - run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add tests packages db
++          git diff --cached --quiet || git commit -m "style: format cause publication fixes"
++          git push
+-- 
+2.55.0
+
+### format/api-test2 tip=90a2198
+From ff637576dabdb7e65860c10e150b4526a1d9fbfd Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Sun, 20 Sep 2026 17:33:11 -0600
+Subject: [PATCH 1/2] chore: format cause publication fixes
+
+---
+ .github/workflows/format-api-test2.yml | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 .github/workflows/format-api-test2.yml
+
+diff --git a/.github/workflows/format-api-test2.yml b/.github/workflows/format-api-test2.yml
+new file mode 100644
+index 0000000..ef8666d
+--- /dev/null
++++ b/.github/workflows/format-api-test2.yml
+@@ -0,0 +1,22 @@
++name: Format api test2
++on:
++  push:
++    branches: [format/api-test2]
++permissions:
++  contents: write
++jobs:
++  format:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++        with: { persist-credentials: true }
++      - uses: actions/setup-node@v6
++        with: { node-version-file: .nvmrc, cache: npm }
++      - run: npm ci
++      - run: npx prettier --write tests/api.test.mjs packages/persistence/src/runtime.ts
++      - run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add tests packages
++          git diff --cached --quiet || git commit -m "style: format cause publication fixes"
++          git push
+-- 
+2.55.0
+
+
+From 90a2198e07705a864b05de0e96788e02db4ba60c Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Sun, 20 Sep 2026 23:33:22 +0000
+Subject: [PATCH 2/2] style: format cause publication fixes
+
+---
+ tests/api.test.mjs | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/tests/api.test.mjs b/tests/api.test.mjs
+index 1976096..96612a6 100644
+--- a/tests/api.test.mjs
++++ b/tests/api.test.mjs
+@@ -120,7 +120,9 @@ test('entity, reason and list endpoints expose the public contracts', async () =
+   assert.equal(historicalCatalog.body.catalogVersion, 1);
+   assert.equal((await route(request('GET', '/api/v1/reason-catalogs/999/compact'))).status, 404);
+   assert.equal((await route(request('GET', '/api/v1/reasons', { version: 'wat' }))).status, 400);
+-  const manifest = await route(request('GET', '/api/v1/causes/israel-palestine/lists/domain/filter/manifest'));
++  const manifest = await route(
++    request('GET', '/api/v1/causes/israel-palestine/lists/domain/filter/manifest'),
++  );
+   assert.equal(manifest.status, 200);
+   assert.equal(manifest.body.channel, 'domain');
+   const subtreeManifest = await route(
+-- 
+2.55.0
+
+### format/current tip=259ff27
+From ac56523274b9fc9e951d286fa6c7f62244608ac5 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Sun, 20 Sep 2026 17:23:08 -0600
+Subject: [PATCH 1/2] chore: one-shot formatter for current lap
+
+---
+ .github/workflows/format-current.yml | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 .github/workflows/format-current.yml
+
+diff --git a/.github/workflows/format-current.yml b/.github/workflows/format-current.yml
+new file mode 100644
+index 0000000..161c94e
+--- /dev/null
++++ b/.github/workflows/format-current.yml
+@@ -0,0 +1,22 @@
++name: Format current
++on:
++  push:
++    branches: [format/current]
++permissions:
++  contents: write
++jobs:
++  format:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++        with: { persist-credentials: true }
++      - uses: actions/setup-node@v6
++        with: { node-version-file: .nvmrc, cache: npm }
++      - run: npm ci
++      - run: npx prettier --write apps/api/src/index.ts apps/api/src/runtime.ts apps/web/src/index.ts docs/PRODUCT_DELIVERY_PLAN.md
++      - run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add apps docs
++          git diff --cached --quiet || git commit -m "style: format current product lap"
++          git push
+-- 
+2.55.0
+
+
+From 259ff2798576f8f3649856bd1cc449c1e9fa7711 Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Sun, 20 Sep 2026 23:23:19 +0000
+Subject: [PATCH 2/2] style: format current product lap
+
+---
+ apps/api/src/index.ts         |  5 ++++-
+ apps/api/src/runtime.ts       | 12 ++++++++++--
+ apps/web/src/index.ts         | 14 +++++++-------
+ docs/PRODUCT_DELIVERY_PLAN.md |  1 -
+ 4 files changed, 21 insertions(+), 11 deletions(-)
+
+diff --git a/apps/api/src/index.ts b/apps/api/src/index.ts
+index e6cda4a..b118e4e 100644
+--- a/apps/api/src/index.ts
++++ b/apps/api/src/index.ts
+@@ -247,7 +247,10 @@ export function createApiRouter(deps: ApiDependencies) {
+       }
+       const from = request.query.from;
+       if (!from) return response(400, { error: 'missing_from_version' });
+-      return response(200, await deps.publications.delta(causeValue, channelValue, listValue, from));
++      return response(
++        200,
++        await deps.publications.delta(causeValue, channelValue, listValue, from),
++      );
+     }
+ 
+     return response(404, { error: 'not_found' });
+diff --git a/apps/api/src/runtime.ts b/apps/api/src/runtime.ts
+index d2ef7aa..b81a751 100644
+--- a/apps/api/src/runtime.ts
++++ b/apps/api/src/runtime.ts
+@@ -230,12 +230,20 @@ async function handleRequest(
+         return;
+       }
+       if (webResult.kind === 'bad-gateway') {
+-        sendJson(response, webResult.status, { error: 'bad_gateway' }, { 'cache-control': 'no-store' });
++        sendJson(
++          response,
++          webResult.status,
++          { error: 'bad_gateway' },
++          { 'cache-control': 'no-store' },
++        );
+         return;
+       }
+       response.statusCode = webResult.status;
+       response.setHeader('content-type', 'text/html; charset=utf-8');
+-      response.setHeader('cache-control', webResult.status === 200 ? 'public, max-age=60' : 'no-store');
++      response.setHeader(
++        'cache-control',
++        webResult.status === 200 ? 'public, max-age=60' : 'no-store',
++      );
+       response.end(webResult.html);
+       return;
+     }
+diff --git a/apps/web/src/index.ts b/apps/web/src/index.ts
+index 3640be1..57a2c35 100644
+--- a/apps/web/src/index.ts
++++ b/apps/web/src/index.ts
+@@ -43,9 +43,7 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
+       const publicId = idMatch[1];
+       if (!publicId) return notFound();
+       const entity = await deps.entities.byPublicId(publicId);
+-      return entity
+-        ? { kind: 'redirect', status: 308, location: `/${entity.slug}` }
+-        : notFound();
++      return entity ? { kind: 'redirect', status: 308, location: `/${entity.slug}` } : notFound();
+     }
+ 
+     const slugMatch = /^\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/.exec(pathname);
+@@ -53,9 +51,7 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
+       const slug = slugMatch[1];
+       if (!slug) return notFound();
+       const entity = await deps.entities.bySlug(slug);
+-      return entity
+-        ? { kind: 'html', status: 200, html: renderEntityPage(entity) }
+-        : notFound();
++      return entity ? { kind: 'html', status: 200, html: renderEntityPage(entity) } : notFound();
+     }
+ 
+     return null;
+@@ -165,7 +161,11 @@ const styles = `
+ :root{color-scheme:dark;--bg:#0b0b0d;--panel:#151519;--text:#f5f2ea;--muted:#aaa7a0;--line:#2c2c32;--hot:#ff4d67;--gold:#f5c451;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% -10%,#2a1820 0,transparent 34rem),var(--bg);color:var(--text)}a{color:inherit}header,footer,main{width:min(1120px,calc(100% - 40px));margin:auto}header{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}header nav{display:flex;gap:24px}header nav a,.back{color:var(--muted);text-decoration:none}.brand{font-weight:900;letter-spacing:-.04em;text-decoration:none;font-size:1.2rem}.brand span{color:var(--hot)}.hero{padding:10vw 0 7vw;max-width:900px}.eyebrow{text-transform:uppercase;letter-spacing:.16em;color:var(--gold);font-size:.75rem;font-weight:800}.hero h1,.entity h1{font-size:clamp(3.3rem,9vw,7.5rem);line-height:.88;letter-spacing:-.07em;margin:.2em 0}.hero h1 span{color:var(--hot)}.lede{font-size:clamp(1.1rem,2vw,1.45rem);line-height:1.55;color:var(--muted);max-width:720px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:32px}.button{padding:14px 20px;border:1px solid var(--line);border-radius:999px;text-decoration:none;font-weight:750}.primary{background:var(--text);color:var(--bg)}.cause-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.cause,.reason,.install,.principles,.entity section{background:linear-gradient(145deg,#18181d,#111114);border:1px solid var(--line);border-radius:22px;padding:28px}.cause span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}.cause h2{font-size:1.7rem;margin:.5em 0}.cause p,.install p,.principles p,.entity p{color:var(--muted);line-height:1.6}.install,.principles{margin-top:14px;padding:48px}.install h2,.principles h2,.entity h2{font-size:clamp(1.8rem,4vw,3.2rem);letter-spacing:-.04em}.platforms{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}.platforms span{border:1px solid var(--line);border-radius:999px;padding:9px 14px;color:var(--muted)}.entity{max-width:900px;padding:70px 0}.entity h1{font-size:clamp(3rem,8vw,6rem);margin-bottom:60px}.entity section{margin:14px 0}.reason{margin-top:12px}.reason h3{margin-top:0}.reason a{display:block;color:var(--gold);margin-top:12px;overflow-wrap:anywhere}footer{border-top:1px solid var(--line);margin-top:80px;padding:34px 0 60px;display:flex;justify-content:space-between;color:var(--muted)}@media(max-width:700px){header nav{display:none}.cause-grid{grid-template-columns:1fr}.install,.principles{padding:28px}.hero{padding:80px 0 55px}footer{flex-direction:column;gap:8px}}`;
+ 
+ function escapeHtml(value: string): string {
+-  return value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char);
++  return value.replace(
++    /[&<>"']/g,
++    (char) =>
++      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char,
++  );
+ }
+ 
+ function escapeAttribute(value: string): string {
+diff --git a/docs/PRODUCT_DELIVERY_PLAN.md b/docs/PRODUCT_DELIVERY_PLAN.md
+index c01ecfc..e53c8ae 100644
+--- a/docs/PRODUCT_DELIVERY_PLAN.md
++++ b/docs/PRODUCT_DELIVERY_PLAN.md
+@@ -182,7 +182,6 @@ First align contracts and add selectable causes. Then demonstrate one complete v
+ 
+ Do not call the entire product done because a schema migrated, an import ran, a UI screenshot exists or CI passed unit tests. For each completed package record the commit, runtime tested, test evidence, known limitations and whether it is merely implemented, deployed or publicly available.
+ 
+-
+ ## Current implementation pulse
+ 
+ Updated during active build work on 2026-09-20. `[~]` means code exists but the acceptance gate is not yet fully demonstrated.
+-- 
+2.55.0
+
+### format/current-final tip=850bff9
+From 850bff9156b006f07fed62afa87ad1c34d02efb1 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Mon, 21 Sep 2026 23:13:07 -0600
+Subject: [PATCH] chore: format current server delivery state
+
+---
+ .github/workflows/format-current-final.yml | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 .github/workflows/format-current-final.yml
+
+diff --git a/.github/workflows/format-current-final.yml b/.github/workflows/format-current-final.yml
+new file mode 100644
+index 0000000..3a39aba
+--- /dev/null
++++ b/.github/workflows/format-current-final.yml
+@@ -0,0 +1,22 @@
++name: Format current final
++on:
++  push:
++    branches: [format/current-final]
++permissions:
++  contents: write
++jobs:
++  format:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++        with: { persist-credentials: true }
++      - uses: actions/setup-node@v6
++        with: { node-version-file: .nvmrc, cache: npm }
++      - run: npm ci
++      - run: npx prettier --write docs db/migrations/0028_additional_cause_reason_taxonomy.sql
++      - run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add docs db/migrations/0028_additional_cause_reason_taxonomy.sql
++          git diff --cached --quiet || git commit -m "style: format current docs and cause taxonomy"
++          git push
+-- 
+2.55.0
+
+### format/import-direct tip=201f142
+From 43b798fef4aec716012b55d059cbece4dfe9691b Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Sun, 20 Sep 2026 18:57:59 -0600
+Subject: [PATCH 1/3] chore: one-shot trusted import formatter
+
+---
+ .github/workflows/format-import-direct.yml | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 .github/workflows/format-import-direct.yml
+
+diff --git a/.github/workflows/format-import-direct.yml b/.github/workflows/format-import-direct.yml
+new file mode 100644
+index 0000000..37eaf46
+--- /dev/null
++++ b/.github/workflows/format-import-direct.yml
+@@ -0,0 +1,22 @@
++name: Format trusted import
++on:
++  push:
++    branches: [format/import-direct]
++permissions:
++  contents: write
++jobs:
++  format:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++        with: { persist-credentials: true }
++      - uses: actions/setup-node@v6
++        with: { node-version-file: .nvmrc, cache: npm }
++      - run: npm ci
++      - run: npx prettier --write packages/persistence/src/campaign-import.ts apps/api/src/admin.ts tests/postgres.integration.test.mjs ops/db-grants.sh
++      - run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add packages apps tests ops
++          git diff --cached --quiet || git commit -m "style: format trusted import path"
++          git push
+-- 
+2.55.0
+
+
+From 5337c0f80b4c2b6c347b7042ac204f6b18cae4f9 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Sun, 20 Sep 2026 18:58:07 -0600
+Subject: [PATCH 2/3] chore: format only supported source files
+
+---
+ .github/workflows/format-import-direct.yml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.github/workflows/format-import-direct.yml b/.github/workflows/format-import-direct.yml
+index 37eaf46..7a5b58c 100644
+--- a/.github/workflows/format-import-direct.yml
++++ b/.github/workflows/format-import-direct.yml
+@@ -13,7 +13,7 @@ jobs:
+       - uses: actions/setup-node@v6
+         with: { node-version-file: .nvmrc, cache: npm }
+       - run: npm ci
+-      - run: npx prettier --write packages/persistence/src/campaign-import.ts apps/api/src/admin.ts tests/postgres.integration.test.mjs ops/db-grants.sh
++      - run: npx prettier --write packages/persistence/src/campaign-import.ts apps/api/src/admin.ts tests/postgres.integration.test.mjs
+       - run: |
+           git config user.name "github-actions[bot]"
+           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+-- 
+2.55.0
+
+
+From 201f1426c3843b218c37731f13efe01defb6a738 Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Mon, 21 Sep 2026 00:58:21 +0000
+Subject: [PATCH 3/3] style: format trusted import path
+
+---
+ apps/api/src/admin.ts                       | 17 +++++++----------
+ packages/persistence/src/campaign-import.ts |  5 ++++-
+ 2 files changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/apps/api/src/admin.ts b/apps/api/src/admin.ts
+index 48add26..e4b6c56 100644
+--- a/apps/api/src/admin.ts
++++ b/apps/api/src/admin.ts
+@@ -104,8 +104,9 @@ export function createAdminRouter(deps: AdminDependencies) {
+       return response(200, { ok: true });
+     }
+ 
+-    const importRowCreate =
+-      /^\/admin\/api\/v1\/import-rows\/([0-9a-f-]+)\/create-entity$/i.exec(request.pathname);
++    const importRowCreate = /^\/admin\/api\/v1\/import-rows\/([0-9a-f-]+)\/create-entity$/i.exec(
++      request.pathname,
++    );
+     if (request.method === 'POST' && importRowCreate) {
+       const rowId = validUuid(importRowCreate[1]);
+       const body = parseCreateEntityBody(request.body);
+@@ -246,14 +247,10 @@ function parseReviewBody(body: unknown): { readonly state: string; readonly note
+   return { state: body.state, note };
+ }
+ 
+-function parseCreateEntityBody(
+-  body: unknown,
+-):
+-  | {
+-      readonly kind: 'person' | 'music-group' | 'company' | 'brand' | 'organization';
+-      readonly note: string;
+-    }
+-  | null {
++function parseCreateEntityBody(body: unknown): {
++  readonly kind: 'person' | 'music-group' | 'company' | 'brand' | 'organization';
++  readonly note: string;
++} | null {
+   if (!isRecord(body) || typeof body.kind !== 'string') return null;
+   const kinds = new Set(['person', 'music-group', 'company', 'brand', 'organization']);
+   if (!kinds.has(body.kind)) return null;
+diff --git a/packages/persistence/src/campaign-import.ts b/packages/persistence/src/campaign-import.ts
+index 22c3e12..10161ef 100644
+--- a/packages/persistence/src/campaign-import.ts
++++ b/packages/persistence/src/campaign-import.ts
+@@ -575,7 +575,10 @@ export async function commitOfficialImport(
+       [
+         batchId,
+         reviewer,
+-        JSON.stringify({ assertionsCreated: rows.rows.length, membershipsApplied: rows.rows.length }),
++        JSON.stringify({
++          assertionsCreated: rows.rows.length,
++          membershipsApplied: rows.rows.length,
++        }),
+       ],
+     );
+ 
+-- 
+2.55.0
+
+### format/postgres-current tip=1383fc4
+From 1383fc48d13adadcf9fab6105ac9baa0a39f3561 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Sun, 20 Sep 2026 18:48:37 -0600
+Subject: [PATCH] chore: one-shot postgres formatter
+
+---
+ .github/workflows/format-postgres-current.yml | 22 +++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 .github/workflows/format-postgres-current.yml
+
+diff --git a/.github/workflows/format-postgres-current.yml b/.github/workflows/format-postgres-current.yml
+new file mode 100644
+index 0000000..58e5a87
+--- /dev/null
++++ b/.github/workflows/format-postgres-current.yml
+@@ -0,0 +1,22 @@
++name: Format postgres current
++on:
++  push:
++    branches: [format/postgres-current]
++permissions:
++  contents: write
++jobs:
++  format:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++        with: { persist-credentials: true }
++      - uses: actions/setup-node@v6
++        with: { node-version-file: .nvmrc, cache: npm }
++      - run: npm ci
++      - run: npx prettier --write tests/postgres.integration.test.mjs
++      - run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add tests/postgres.integration.test.mjs
++          git diff --cached --quiet || git commit -m "style: format postgres integration"
++          git push
+-- 
+2.55.0
+
+### format/postgres-test tip=5a21c55
+From b06414dfb36584f7a24260968f05a629eec1576a Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Sun, 20 Sep 2026 17:36:39 -0600
+Subject: [PATCH 1/2] chore: format cause integration tests
+
+---
+ .github/workflows/format-postgres-test.yml | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 .github/workflows/format-postgres-test.yml
+
+diff --git a/.github/workflows/format-postgres-test.yml b/.github/workflows/format-postgres-test.yml
+new file mode 100644
+index 0000000..354a181
+--- /dev/null
++++ b/.github/workflows/format-postgres-test.yml
+@@ -0,0 +1,22 @@
++name: Format postgres test
++on:
++  push:
++    branches: [format/postgres-test]
++permissions:
++  contents: write
++jobs:
++  format:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++        with: { persist-credentials: true }
++      - uses: actions/setup-node@v6
++        with: { node-version-file: .nvmrc, cache: npm }
++      - run: npm ci
++      - run: npx prettier --write tests/postgres.integration.test.mjs tests/api.test.mjs
++      - run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add tests
++          git diff --cached --quiet || git commit -m "style: format cause integration tests"
++          git push
+-- 
+2.55.0
+
+
+From 5a21c55796b03c92cde7e194223f223cd4ddfebe Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Sun, 20 Sep 2026 23:36:59 +0000
+Subject: [PATCH 2/2] style: format cause integration tests
+
+---
+ tests/postgres.integration.test.mjs | 28 ++++++++++++++++++++--------
+ 1 file changed, 20 insertions(+), 8 deletions(-)
+
+diff --git a/tests/postgres.integration.test.mjs b/tests/postgres.integration.test.mjs
+index d69d7e9..29031e5 100644
+--- a/tests/postgres.integration.test.mjs
++++ b/tests/postgres.integration.test.mjs
+@@ -265,7 +265,12 @@ test(
+       assert.equal(secondPublication.fullArtifactCount, 48);
+       assert.equal(secondPublication.deltaArtifactCount, 48);
+ 
+-      const delta = await published.delta('israel-palestine', 'domain-subdomains', 'filter', firstPublication.version);
++      const delta = await published.delta(
++        'israel-palestine',
++        'domain-subdomains',
++        'filter',
++        firstPublication.version,
++      );
+       assert.equal('code' in delta, false);
+       assert.deepEqual(delta.added, [['example.com', publicId, ['C03', 'C05']]]);
+       assert.deepEqual(delta.removed, []);
+@@ -297,7 +302,11 @@ test(
+         expiresInMs: 60 * 60 * 1_000,
+       });
+       assert.equal(thirdPublication.activated, true);
+-      assert.equal((await published.full('israel-palestine', 'domain-subdomains', 'filter')).reasonCatalogVersion, 2);
++      assert.equal(
++        (await published.full('israel-palestine', 'domain-subdomains', 'filter'))
++          .reasonCatalogVersion,
++        2,
++      );
+ 
+       const artist = await db.query(
+         `INSERT INTO entities (kind, canonical_name, slug)
+@@ -484,14 +493,17 @@ test(
+         expiresInMs: 60 * 60 * 1_000,
+       });
+       assert.equal(fourthPublication.activated, true);
+-      assert.deepEqual((await published.full('israel-palestine', 'instagram', 'highlight')).entries, [
++      assert.deepEqual(
++        (await published.full('israel-palestine', 'instagram', 'highlight')).entries,
+         [
+-          'exampleartist',
+-          (await db.query(`SELECT public_id::text FROM entities WHERE id = $1`, [artistEntityId]))
+-            .rows[0].public_id,
+-          ['P03'],
++          [
++            'exampleartist',
++            (await db.query(`SELECT public_id::text FROM entities WHERE id = $1`, [artistEntityId]))
++              .rows[0].public_id,
++            ['P03'],
++          ],
+         ],
+-      ]);
++      );
+ 
+       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
+       assert.deepEqual(secondMigration.applied, []);
+-- 
+2.55.0
+
+### format/security-docs tip=7f1e2a6
+From b9b26cba86126e8f3a907c36915e8f915f90c0c0 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Mon, 21 Sep 2026 23:04:09 -0600
+Subject: [PATCH 1/2] chore: one-shot security docs formatter
+
+---
+ .github/workflows/format-security-docs.yml | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 .github/workflows/format-security-docs.yml
+
+diff --git a/.github/workflows/format-security-docs.yml b/.github/workflows/format-security-docs.yml
+new file mode 100644
+index 0000000..0dce059
+--- /dev/null
++++ b/.github/workflows/format-security-docs.yml
+@@ -0,0 +1,22 @@
++name: Format security docs
++on:
++  push:
++    branches: [format/security-docs]
++permissions:
++  contents: write
++jobs:
++  format:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++        with: { persist-credentials: true }
++      - uses: actions/setup-node@v6
++        with: { node-version-file: .nvmrc, cache: npm }
++      - run: npm ci
++      - run: npx prettier --write docs/THREAT_MODEL.md docs/OBSERVABILITY.md docs/PRODUCT_DELIVERY_PLAN.md
++      - run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add docs
++          git diff --cached --quiet || git commit -m "style: format security and delivery docs"
++          git push
+-- 
+2.55.0
+
+
+From 7f1e2a6adfaa6119504e2e4771d97ac291400f21 Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Tue, 22 Sep 2026 05:04:24 +0000
+Subject: [PATCH 2/2] style: format security and delivery docs
+
+---
+ docs/THREAT_MODEL.md | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/docs/THREAT_MODEL.md b/docs/THREAT_MODEL.md
+index c3c8d9b..b82a378 100644
+--- a/docs/THREAT_MODEL.md
++++ b/docs/THREAT_MODEL.md
+@@ -25,26 +25,33 @@ This document is an operational release gate, not a claim that an Internet servi
+ ## Abuse cases
+ 
+ ### Submission spam / coordinated reports
++
+ Edge write throttling, bounded bodies, application backpressure and a moderation queue prevent direct publication. Moderators can reject/cluster abusive reports. Add provider-level bot/WAF challenges only if measured abuse requires them.
+ 
+ ### DDoS / resource exhaustion
++
+ The application is not the DDoS perimeter. CDN/WAF, origin isolation, Nginx limits, bounded request bodies/timeouts and the in-process concurrency ceiling are layered controls. Load-test before changing limits.
+ 
+ ### Cache poisoning
++
+ Immutable publication paths are content/version scoped. Do not cache authenticated admin responses or public write responses. Preserve canonical Host/TLS handling at the edge.
+ 
+ ### Source-fetch SSRF / DNS rebinding
++
+ Only curated source documents may be fetched. Production egress must restrict destination networks at the network/proxy layer as well as application validation so DNS cannot change between validation and connection.
+ 
+ ### Malicious evidence / defamation
++
+ A mention, allegation and adjudicated finding are distinct facts. Public submissions never publish directly. Protected/private people and victims require additional review/exclusion rules.
+ 
+ ### Extension dataset compromise
++
+ Clients verify signed manifests and artifact hashes, enforce replay watermarks, stage before activation and retain the previous verified dataset on failure. Executable extension code updates only through reviewed browser packages/store mechanisms.
+ 
+ ## Release drill
+ 
+ Before production launch:
++
+ 1. Restore the newest DB backup into a disposable database and run readiness plus integrity checks.
+ 2. Simulate a failed/corrupt publication and verify clients retain the previous dataset.
+ 3. Verify origin cannot be reached outside the intended edge/operator network.
+-- 
+2.55.0
+
+### format/trusted2 tip=f0a98b7
+From f0a98b7f696bf70f9b8983d0bfec30786b4d0b89 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Sun, 20 Sep 2026 19:00:01 -0600
+Subject: [PATCH] chore: format trusted batch preparation
+
+---
+ .github/workflows/format-trusted2.yml | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 .github/workflows/format-trusted2.yml
+
+diff --git a/.github/workflows/format-trusted2.yml b/.github/workflows/format-trusted2.yml
+new file mode 100644
+index 0000000..8362a5f
+--- /dev/null
++++ b/.github/workflows/format-trusted2.yml
+@@ -0,0 +1,22 @@
++name: Format trusted import 2
++on:
++  push:
++    branches: [format/trusted2]
++permissions:
++  contents: write
++jobs:
++  format:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v6
++        with: { persist-credentials: true }
++      - uses: actions/setup-node@v6
++        with: { node-version-file: .nvmrc, cache: npm }
++      - run: npm ci
++      - run: npx prettier --write packages/persistence/src/campaign-import.ts apps/api/src/admin.ts tests/postgres.integration.test.mjs
++      - run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add packages apps tests
++          git diff --cached --quiet || git commit -m "style: format trusted batch preparation"
++          git push
+-- 
+2.55.0
+
+### integration/final-gate tip=33706a2
+From 576638b610138ac9b487c6dc5bc0a06b1e5b3dc8 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Tue, 22 Sep 2026 01:38:06 -0600
+Subject: [PATCH 1/2] chore: launch full server integration gate
+
+---
+ .github/workflows/final-gate.yml | 42 ++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+ create mode 100644 .github/workflows/final-gate.yml
+
+diff --git a/.github/workflows/final-gate.yml b/.github/workflows/final-gate.yml
+new file mode 100644
+index 0000000..778cc62
+--- /dev/null
++++ b/.github/workflows/final-gate.yml
+@@ -0,0 +1,42 @@
++name: Final integration gate
++on:
++  push:
++    branches: [integration/final-gate]
++permissions:
++  contents: write
++jobs:
++  gate:
++    runs-on: ubuntu-latest
++    timeout-minutes: 25
++    env:
++      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/isnotreal_test
++      RUN_DB_INTEGRATION: '1'
++    services:
++      postgres:
++        image: postgres:17-alpine
++        env:
++          POSTGRES_USER: postgres
++          POSTGRES_PASSWORD: postgres
++          POSTGRES_DB: isnotreal_test
++        ports: ['5432:5432']
++        options: >-
++          --health-cmd "pg_isready -U postgres -d isnotreal_test"
++          --health-interval 5s
++          --health-timeout 5s
++          --health-retries 10
++    steps:
++      - uses: actions/checkout@v6
++        with: { persist-credentials: true }
++      - uses: actions/setup-node@v6
++        with: { node-version-file: .nvmrc, cache: npm }
++      - run: bash ops/ci-postgres-client.sh
++      - run: npm ci
++      - run: npx prettier --write .
++      - run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add .
++          git diff --cached --quiet || git commit -m "style: canonical final formatting"
++          git push
++      - run: npm run check
++      - run: bash ops/ci-ops-smoke.sh
+-- 
+2.55.0
+
+
+From 33706a2815f342d567a2aabb80bd5896130f823c Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Tue, 22 Sep 2026 07:38:42 +0000
+Subject: [PATCH 2/2] style: canonical final formatting
+
+---
+ apps/api/src/import-ccfp.ts             | 16 +++++------
+ ops/load-smoke.mjs                      | 38 ++++++++++++++++---------
+ packages/persistence/src/identifiers.ts | 10 +++++--
+ tests/delivery-checks.mjs               |  5 +++-
+ tests/official-source-parsers.test.mjs  |  5 +---
+ 5 files changed, 44 insertions(+), 30 deletions(-)
+
+diff --git a/apps/api/src/import-ccfp.ts b/apps/api/src/import-ccfp.ts
+index 2655103..667e067 100644
+--- a/apps/api/src/import-ccfp.ts
++++ b/apps/api/src/import-ccfp.ts
+@@ -55,15 +55,13 @@ try {
+   );
+ 
+   let batchId = existing.rows[0]?.id;
+-  let staged:
+-    | {
+-        readonly batchId: string;
+-        readonly rowCount: number;
+-        readonly candidateRows: number;
+-        readonly ambiguousRows: number;
+-        readonly unresolvedRows: number;
+-      }
+-    | null = null;
++  let staged: {
++    readonly batchId: string;
++    readonly rowCount: number;
++    readonly candidateRows: number;
++    readonly ambiguousRows: number;
++    readonly unresolvedRows: number;
++  } | null = null;
+   if (!batchId) {
+     staged = await stageCampaignImport(db, {
+       campaignVersionId: row.campaign_version_id,
+diff --git a/ops/load-smoke.mjs b/ops/load-smoke.mjs
+index 7bee341..eddb4f8 100644
+--- a/ops/load-smoke.mjs
++++ b/ops/load-smoke.mjs
+@@ -4,7 +4,8 @@ import { performance } from 'node:perf_hooks';
+ const origin = new URL(process.env.LOAD_ORIGIN ?? 'http://127.0.0.1:3000');
+ const total = Number(process.env.LOAD_REQUESTS ?? 500);
+ const concurrency = Number(process.env.LOAD_CONCURRENCY ?? 25);
+-if (!Number.isSafeInteger(total) || total < 1 || total > 100000) throw Error('Invalid LOAD_REQUESTS');
++if (!Number.isSafeInteger(total) || total < 1 || total > 100000)
++  throw Error('Invalid LOAD_REQUESTS');
+ if (!Number.isSafeInteger(concurrency) || concurrency < 1 || concurrency > 500)
+   throw Error('Invalid LOAD_CONCURRENCY');
+ if (!['127.0.0.1', 'localhost'].includes(origin.hostname) && process.env.ALLOW_REMOTE_LOAD !== '1')
+@@ -34,17 +35,26 @@ const started = performance.now();
+ await Promise.all(Array.from({ length: concurrency }, worker));
+ const elapsed = performance.now() - started;
+ durations.sort((a, b) => a - b);
+-const percentile = (p) => durations[Math.min(durations.length - 1, Math.floor(durations.length * p))] ?? 0;
+-const failures = [...statuses].filter(([status]) => status < 200 || status >= 300).reduce((n, [, count]) => n + count, 0);
+-console.log(JSON.stringify({
+-  origin: origin.origin,
+-  requests: total,
+-  concurrency,
+-  requestsPerSecond: Number((total / (elapsed / 1000)).toFixed(1)),
+-  p50Ms: Number(percentile(0.5).toFixed(1)),
+-  p95Ms: Number(percentile(0.95).toFixed(1)),
+-  p99Ms: Number(percentile(0.99).toFixed(1)),
+-  failures,
+-  statuses: Object.fromEntries(statuses),
+-}, null, 2));
++const percentile = (p) =>
++  durations[Math.min(durations.length - 1, Math.floor(durations.length * p))] ?? 0;
++const failures = [...statuses]
++  .filter(([status]) => status < 200 || status >= 300)
++  .reduce((n, [, count]) => n + count, 0);
++console.log(
++  JSON.stringify(
++    {
++      origin: origin.origin,
++      requests: total,
++      concurrency,
++      requestsPerSecond: Number((total / (elapsed / 1000)).toFixed(1)),
++      p50Ms: Number(percentile(0.5).toFixed(1)),
++      p95Ms: Number(percentile(0.95).toFixed(1)),
++      p99Ms: Number(percentile(0.99).toFixed(1)),
++      failures,
++      statuses: Object.fromEntries(statuses),
++    },
++    null,
++    2,
++  ),
++);
+ if (failures) process.exitCode = 1;
+diff --git a/packages/persistence/src/identifiers.ts b/packages/persistence/src/identifiers.ts
+index 5ef729b..010d9d6 100644
+--- a/packages/persistence/src/identifiers.ts
++++ b/packages/persistence/src/identifiers.ts
+@@ -49,7 +49,9 @@ export async function assignVerifiedIdentifier(
+       [input.verificationAssertionId, entityId],
+     );
+     if (!evidence.rows[0]) {
+-      throw new Error('identifier verification assertion must be published, sourced, and belong to the entity');
++      throw new Error(
++        'identifier verification assertion must be published, sourced, and belong to the entity',
++      );
+     }
+ 
+     const identifier = await tx.query<{ id: string }>(
+@@ -95,7 +97,11 @@ export async function assignVerifiedIdentifier(
+       `INSERT INTO review_events (
+          subject_type, subject_id, action, reviewer_id, rationale
+        ) VALUES ('identifier-assignment', $1, 'approved', $2, $3)`,
+-      [identifierId, reviewer, `Verified ${input.kind} identifier for entity ${input.entityPublicId}`],
++      [
++        identifierId,
++        reviewer,
++        `Verified ${input.kind} identifier for entity ${input.entityPublicId}`,
++      ],
+     );
+     return { identifierId, entityId };
+   });
+diff --git a/tests/delivery-checks.mjs b/tests/delivery-checks.mjs
+index 723f1f7..4658309 100644
+--- a/tests/delivery-checks.mjs
++++ b/tests/delivery-checks.mjs
+@@ -39,7 +39,10 @@ export async function runDeliveryChecks({
+      WHERE cause.slug IN ('epstein-records', 'trump-maga', 'russia-ukraine')`,
+   );
+   for (const code of ['EP01', 'MAGA01', 'RU01'])
+-    assert.ok(additionalReasons.rows.some((row) => row.reason_code === code), code);
++    assert.ok(
++      additionalReasons.rows.some((row) => row.reason_code === code),
++      code,
++    );
+   assert.match(
+     additionalReasons.rows.find((row) => row.reason_code === 'EP01').exclusion_criteria,
+     /victims|minors/i,
+diff --git a/tests/official-source-parsers.test.mjs b/tests/official-source-parsers.test.mjs
+index e9b69a5..f49a602 100644
+--- a/tests/official-source-parsers.test.mjs
++++ b/tests/official-source-parsers.test.mjs
+@@ -17,10 +17,7 @@ test('CCFP parser extracts signer names only inside the signed list', () => {
+ 
+ test('CCFP parser refuses a partial or structurally changed source', () => {
+   assert.throws(
+-    () =>
+-      parseCcfpOctober2023Html(
+-        '<html><body>' + '<p>noise</p>'.repeat(600) + '</body></html>',
+-      ),
++    () => parseCcfpOctober2023Html('<html><body>' + '<p>noise</p>'.repeat(600) + '</body></html>'),
+     /signer boundaries/,
+   );
+ });
+-- 
+2.55.0
+
+### integration/final-gate-3 tip=b0b513d
+From 095be9da458daea584d3a21d613145f9becba592 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Tue, 22 Sep 2026 01:53:29 -0600
+Subject: [PATCH 1/2] chore: run current server production gate
+
+---
+ .github/workflows/final-gate-3.yml | 42 ++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+ create mode 100644 .github/workflows/final-gate-3.yml
+
+diff --git a/.github/workflows/final-gate-3.yml b/.github/workflows/final-gate-3.yml
+new file mode 100644
+index 0000000..667de81
+--- /dev/null
++++ b/.github/workflows/final-gate-3.yml
+@@ -0,0 +1,42 @@
++name: Final gate 3
++on:
++  push:
++    branches: [integration/final-gate-3]
++permissions:
++  contents: write
++jobs:
++  gate:
++    runs-on: ubuntu-latest
++    timeout-minutes: 30
++    env:
++      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/isnotreal_test
++      RUN_DB_INTEGRATION: '1'
++    services:
++      postgres:
++        image: postgres:17-alpine
++        env:
++          POSTGRES_USER: postgres
++          POSTGRES_PASSWORD: postgres
++          POSTGRES_DB: isnotreal_test
++        ports: ['5432:5432']
++        options: >-
++          --health-cmd "pg_isready -U postgres -d isnotreal_test"
++          --health-interval 5s
++          --health-timeout 5s
++          --health-retries 10
++    steps:
++      - uses: actions/checkout@v6
++        with: { persist-credentials: true }
++      - uses: actions/setup-node@v6
++        with: { node-version-file: .nvmrc, cache: npm }
++      - run: bash ops/ci-postgres-client.sh
++      - run: npm ci
++      - run: npx prettier --write .
++      - run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add .
++          git diff --cached --quiet || git commit -m "style: canonical production formatting"
++          git push
++      - run: npm run check
++      - run: bash ops/ci-ops-smoke.sh
+-- 
+2.55.0
+
+
+From b0b513d366b9677ed22c1392c44e634308fe2411 Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Tue, 22 Sep 2026 07:54:03 +0000
+Subject: [PATCH 2/2] style: canonical production formatting
+
+---
+ apps/api/src/admin.ts                    |  5 ++--
+ apps/api/src/import-ccfp.ts              | 16 +++++-----
+ ops/load-smoke.mjs                       | 38 +++++++++++++++---------
+ packages/persistence/src/identifiers.ts  | 10 +++++--
+ packages/persistence/src/source-watch.ts |  9 ++++--
+ tests/delivery-checks.mjs                | 10 +++++--
+ tests/official-source-parsers.test.mjs   |  5 +---
+ 7 files changed, 58 insertions(+), 35 deletions(-)
+
+diff --git a/apps/api/src/admin.ts b/apps/api/src/admin.ts
+index 423a898..7739d01 100644
+--- a/apps/api/src/admin.ts
++++ b/apps/api/src/admin.ts
+@@ -253,8 +253,9 @@ export function createAdminRouter(deps: AdminDependencies) {
+       });
+     }
+ 
+-    const sourceChangeReview =
+-      /^\/admin\/api\/v1\/source-changes\/([0-9a-f-]+)\/review$/i.exec(request.pathname);
++    const sourceChangeReview = /^\/admin\/api\/v1\/source-changes\/([0-9a-f-]+)\/review$/i.exec(
++      request.pathname,
++    );
+     if (request.method === 'POST' && sourceChangeReview) {
+       const id = validUuid(sourceChangeReview[1]);
+       const body = parseSourceChangeReviewBody(request.body);
+diff --git a/apps/api/src/import-ccfp.ts b/apps/api/src/import-ccfp.ts
+index 2655103..667e067 100644
+--- a/apps/api/src/import-ccfp.ts
++++ b/apps/api/src/import-ccfp.ts
+@@ -55,15 +55,13 @@ try {
+   );
+ 
+   let batchId = existing.rows[0]?.id;
+-  let staged:
+-    | {
+-        readonly batchId: string;
+-        readonly rowCount: number;
+-        readonly candidateRows: number;
+-        readonly ambiguousRows: number;
+-        readonly unresolvedRows: number;
+-      }
+-    | null = null;
++  let staged: {
++    readonly batchId: string;
++    readonly rowCount: number;
++    readonly candidateRows: number;
++    readonly ambiguousRows: number;
++    readonly unresolvedRows: number;
++  } | null = null;
+   if (!batchId) {
+     staged = await stageCampaignImport(db, {
+       campaignVersionId: row.campaign_version_id,
+diff --git a/ops/load-smoke.mjs b/ops/load-smoke.mjs
+index 81c6d6b..ea65301 100644
+--- a/ops/load-smoke.mjs
++++ b/ops/load-smoke.mjs
+@@ -6,7 +6,8 @@ const { fetch, AbortSignal, console } = globalThis;
+ const origin = new URL(process.env.LOAD_ORIGIN ?? 'http://127.0.0.1:3000');
+ const total = Number(process.env.LOAD_REQUESTS ?? 500);
+ const concurrency = Number(process.env.LOAD_CONCURRENCY ?? 25);
+-if (!Number.isSafeInteger(total) || total < 1 || total > 100000) throw Error('Invalid LOAD_REQUESTS');
++if (!Number.isSafeInteger(total) || total < 1 || total > 100000)
++  throw Error('Invalid LOAD_REQUESTS');
+ if (!Number.isSafeInteger(concurrency) || concurrency < 1 || concurrency > 500)
+   throw Error('Invalid LOAD_CONCURRENCY');
+ if (!['127.0.0.1', 'localhost'].includes(origin.hostname) && process.env.ALLOW_REMOTE_LOAD !== '1')
+@@ -36,17 +37,26 @@ const started = performance.now();
+ await Promise.all(Array.from({ length: concurrency }, worker));
+ const elapsed = performance.now() - started;
+ durations.sort((a, b) => a - b);
+-const percentile = (p) => durations[Math.min(durations.length - 1, Math.floor(durations.length * p))] ?? 0;
+-const failures = [...statuses].filter(([status]) => status < 200 || status >= 300).reduce((n, [, count]) => n + count, 0);
+-console.log(JSON.stringify({
+-  origin: origin.origin,
+-  requests: total,
+-  concurrency,
+-  requestsPerSecond: Number((total / (elapsed / 1000)).toFixed(1)),
+-  p50Ms: Number(percentile(0.5).toFixed(1)),
+-  p95Ms: Number(percentile(0.95).toFixed(1)),
+-  p99Ms: Number(percentile(0.99).toFixed(1)),
+-  failures,
+-  statuses: Object.fromEntries(statuses),
+-}, null, 2));
++const percentile = (p) =>
++  durations[Math.min(durations.length - 1, Math.floor(durations.length * p))] ?? 0;
++const failures = [...statuses]
++  .filter(([status]) => status < 200 || status >= 300)
++  .reduce((n, [, count]) => n + count, 0);
++console.log(
++  JSON.stringify(
++    {
++      origin: origin.origin,
++      requests: total,
++      concurrency,
++      requestsPerSecond: Number((total / (elapsed / 1000)).toFixed(1)),
++      p50Ms: Number(percentile(0.5).toFixed(1)),
++      p95Ms: Number(percentile(0.95).toFixed(1)),
++      p99Ms: Number(percentile(0.99).toFixed(1)),
++      failures,
++      statuses: Object.fromEntries(statuses),
++    },
++    null,
++    2,
++  ),
++);
+ if (failures) process.exitCode = 1;
+diff --git a/packages/persistence/src/identifiers.ts b/packages/persistence/src/identifiers.ts
+index 5ef729b..010d9d6 100644
+--- a/packages/persistence/src/identifiers.ts
++++ b/packages/persistence/src/identifiers.ts
+@@ -49,7 +49,9 @@ export async function assignVerifiedIdentifier(
+       [input.verificationAssertionId, entityId],
+     );
+     if (!evidence.rows[0]) {
+-      throw new Error('identifier verification assertion must be published, sourced, and belong to the entity');
++      throw new Error(
++        'identifier verification assertion must be published, sourced, and belong to the entity',
++      );
+     }
+ 
+     const identifier = await tx.query<{ id: string }>(
+@@ -95,7 +97,11 @@ export async function assignVerifiedIdentifier(
+       `INSERT INTO review_events (
+          subject_type, subject_id, action, reviewer_id, rationale
+        ) VALUES ('identifier-assignment', $1, 'approved', $2, $3)`,
+-      [identifierId, reviewer, `Verified ${input.kind} identifier for entity ${input.entityPublicId}`],
++      [
++        identifierId,
++        reviewer,
++        `Verified ${input.kind} identifier for entity ${input.entityPublicId}`,
++      ],
+     );
+     return { identifierId, entityId };
+   });
+diff --git a/packages/persistence/src/source-watch.ts b/packages/persistence/src/source-watch.ts
+index 33235e7..126e7c5 100644
+--- a/packages/persistence/src/source-watch.ts
++++ b/packages/persistence/src/source-watch.ts
+@@ -15,7 +15,11 @@ export interface SourceChangeEvent {
+ export async function watchOfficialSources(
+   db: SqlExecutor,
+   store: ArtifactStore,
+-): Promise<{ readonly checked: number; readonly changed: number; readonly changes: readonly SourceChangeEvent[] }> {
++): Promise<{
++  readonly checked: number;
++  readonly changed: number;
++  readonly changes: readonly SourceChangeEvent[];
++}> {
+   const documents = await db.query<{ id: string }>(
+     `SELECT DISTINCT document.id::text
+      FROM source_documents document
+@@ -36,7 +40,8 @@ export async function watchOfficialSources(
+     );
+     const captured = await captureSourceDocument(db, store, document.id);
+     const prior = previous.rows[0];
+-    if (!prior || prior.id === captured.captureId || prior.content_hash === captured.sha256) continue;
++    if (!prior || prior.id === captured.captureId || prior.content_hash === captured.sha256)
++      continue;
+     await db.query(
+       `INSERT INTO source_change_events (
+          document_id, previous_capture_id, new_capture_id
+diff --git a/tests/delivery-checks.mjs b/tests/delivery-checks.mjs
+index 73506de..598a943 100644
+--- a/tests/delivery-checks.mjs
++++ b/tests/delivery-checks.mjs
+@@ -39,7 +39,10 @@ export async function runDeliveryChecks({
+      WHERE cause.slug IN ('epstein-records', 'trump-maga', 'russia-ukraine')`,
+   );
+   for (const code of ['EP01', 'MAGA01', 'RU01'])
+-    assert.ok(additionalReasons.rows.some((row) => row.reason_code === code), code);
++    assert.ok(
++      additionalReasons.rows.some((row) => row.reason_code === code),
++      code,
++    );
+   assert.equal(
+     additionalReasons.rows.every((row) => row.suggested_action === 'informational'),
+     true,
+@@ -47,7 +50,10 @@ export async function runDeliveryChecks({
+   const catalogReasons = await db.query(
+     `SELECT code FROM current_reason_catalog WHERE code IN ('EP01','MAGA01','RU01') ORDER BY code`,
+   );
+-  assert.deepEqual(catalogReasons.rows.map((row) => row.code), ['EP01', 'MAGA01', 'RU01']);
++  assert.deepEqual(
++    catalogReasons.rows.map((row) => row.code),
++    ['EP01', 'MAGA01', 'RU01'],
++  );
+   assert.match(
+     additionalReasons.rows.find((row) => row.reason_code === 'EP01').exclusion_criteria,
+     /victims|minors/i,
+diff --git a/tests/official-source-parsers.test.mjs b/tests/official-source-parsers.test.mjs
+index e9b69a5..f49a602 100644
+--- a/tests/official-source-parsers.test.mjs
++++ b/tests/official-source-parsers.test.mjs
+@@ -17,10 +17,7 @@ test('CCFP parser extracts signer names only inside the signed list', () => {
+ 
+ test('CCFP parser refuses a partial or structurally changed source', () => {
+   assert.throws(
+-    () =>
+-      parseCcfpOctober2023Html(
+-        '<html><body>' + '<p>noise</p>'.repeat(600) + '</body></html>',
+-      ),
++    () => parseCcfpOctober2023Html('<html><body>' + '<p>noise</p>'.repeat(600) + '</body></html>'),
+     /signer boundaries/,
+   );
+ });
+-- 
+2.55.0
+

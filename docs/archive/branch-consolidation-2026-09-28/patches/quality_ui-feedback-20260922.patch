@@ -1,0 +1,3602 @@
+From 8becdbeded7c4386da8c3ede2990d4b1616e3c52 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Mon, 21 Sep 2026 22:12:55 -0600
+Subject: [PATCH 1/8] test: verify complete feedback UI changeset in PostgreSQL
+ and browser
+
+---
+ .github/quality-part-1                 | Bin 0 -> 7200 bytes
+ .github/quality-part-2                 | Bin 0 -> 7200 bytes
+ .github/quality-part-3                 | Bin 0 -> 7140 bytes
+ .github/workflows/quality-feedback.yml |  63 +++++++++++++++++++++++++
+ 4 files changed, 63 insertions(+)
+ create mode 100644 .github/quality-part-1
+ create mode 100644 .github/quality-part-2
+ create mode 100644 .github/quality-part-3
+ create mode 100644 .github/workflows/quality-feedback.yml
+
+diff --git a/.github/quality-part-1 b/.github/quality-part-1
+new file mode 100644
+index 0000000000000000000000000000000000000000..a6ad2c5dd1d5b47c3a507ddc8a81c13812d8a1f2
+GIT binary patch
+literal 7200
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/.github/quality-part-2 b/.github/quality-part-2
+new file mode 100644
+index 0000000000000000000000000000000000000000..65a3616de1aadf803297f8431897227dd5e8be76
+GIT binary patch
+literal 7200
+zcmV+*9N*(&aTa2B{@eF1WCwpqt{UStr`|IYaj(OVk(bL@eE&ZPv=Nbk;_Zthzx@&y
+z+UR#JI1LbrfoF6gE6&do`SZ0FR06oR0Rz>AuHCq77;6*?x0{ABXgCD1qZU7erIr%3
+zjG=f{(S9|+u-HHgm38zZYW+XQ?wuf#UeMz~JJ~Ne=gGk5!HkU>lT36O@)m13>ua3s
+zJ^`mD1heOEm#}(&w%IF{@0~NA{8^JQs@3u!q^Qqr8SEO!Blw{P-I*4YOa4BhZB>ID
+zC%Gg;2ucIDw?r(ma0YJP1eMhW1PrPhUOsF29$&JgkHadc{nVD}%>m;+&vISf%(UJ{
+zu|-|d>~YMENi!Ef7AMNS#yHJV@`hLPYz==<LrOC<H>~!V2i!Hsq&`-RZ^PdGGTk6L
+zxXZP_Tq6!H342}PPRfpkN*}i-b|=pI7oZRf<Ov}*#1cwCWdA7=>#ulD-IF!{xVAL+
+zcx1?_mEqi>=8@2(#;opTQZy^X$YsOF%XzJ(0v-V1{Km(+S6{Z_MyY_F^6G{<)YXEX
+zU@3Z-kv5Azrzu!%pzyMV>&gYS6#770=%Z*emtpcC-otg40I9FG+>DzxW|WFU;sig`
+zI$V31rxVWuM6f$ry?8<;@)9g3`nOq~DLWfIz?rIFC@=vhqAYw;KxYg>lM<+rLWPHV
+z6h#k5ll@$XOKidwqZ^cDp^=M(#8%wtylvE){}}>2k}_0X{x0fYz$>sDmwrJ;om_ib
+zzP+P@Oo6C}X8t7oVw-b{$|s4atM<Crcbu}mR#%AVzUk9rLG+DR7a*!HG{J~fv7?b;
+z9F&P5%IyB%U!?oszNgqUT3OspR*3=9edC!a7m^FW1?sMqM|V({6K*?w+g23^-Ai9F
+zJdve_m#{tDCvlGdo83hVKt7b4Xk3tN{UH7*^<WkjG5tR6C4lKMilZ_AbySiOBtBP^
+zY)1Jf?2V%P;tpg@vLGlZ1F#4jW~))V_1kU2<l}u~^?@$g{)G!@5_B3NXth3?qP{?@
+zU45S&dZ?Et7@7ez5*-oA6Xr^hJSES3Kuhjm!E6=$gGy-A2+VU6F|SUefbGw^K^OjW
+zIU{$Z(f+=zWybafA(?i}@_r6z?Bmi`S?uVu{u%f25cUJBV%}amdJO0lvqb(F?dU`<
+zUTyQMA*y@&^5=#ZP})onn`dX!voUd|dlNm-%_1Ffts=Moy{H}Aak0hN^@1C?rW-%!
+zMi4fHQ8)CpfSXdlEyl*uE%=Ro0$l;bDD4GyHg<ovT~U|9332+%wpZZSKCh?nRCmtn
+zuC?IDvWr?4U*x_}cua<!zx2*}z&Gxys9fbgp{0o>!m-KrH`SOvQ&}*oUM8{qy=BD>
+z7;j4J0yN8}$?2r+%3QOU(7*%)=|{OULg+7qGfERoLfrVh29;-xZ)4<DIHLe}Pz9x~
+zeWqT?W^O-CjBHJlo(1DiJM8CiUrB)CHdzVS=4&5SwuUh=Jx~vcIY`{&bWAtk0k+fF
+zku&gN^n$2kU=x4x_R?`kN9EgPKhWL3Rp9!E3x>wg-*WB4efaZk*KgxhFimUkmgK!@
+zEa3M^S}ufSukf!NfdV;!C?$2x3`8tpgsqN=+I(&BQ4H=c5k;hio*N2IyIZPw0YpOE
+z<Ejj?w|BrA={HrxN(Dn@4?O8G-TgCXI-hXFcQ;YvUQi<wx`6n;&N$?o4FMf?PC5&a
+zG(-krON3^__r$?lVD0j84d1oJq3<PUeo@pC;FWba4s;(*h1C--Fl%PBotcQ2=i}rP
+zXO6}J`S1dl#*9gUiIaaTdS5CR!QPN9f3tk!CaI;fv=aFE@Wt^TLoDU%=86e%Bl8)}
+z%(D8Q_RLMfaWrP=@V9&qD>-i~j;E<))G6C6;W0mIgCt0~y6V1+@Yotglu4@_91I@j
+z5CZ<yNGf0J%xD!5L}B=zahB(rOPBFVtg9En(?rW=hml^3bJ|&c0Z~ijTYnXU)32jo
+zCTsc^oP+M`w>k}L!G4$4HskNut-=Zk!B=CwbT>PQ9W5jth=cEXBNv&D&|g=n;gU$6
+zP`+!mIa=~wmQn$#E;jm3=@C&XMiWdO6m+#hKQZy?@jwCt53EaC-9b-smbtVWV6Tq+
+zoo(i5ohw`@trYJSZ#`|`=D$(I0<a>;-SOj^W^n^gcCwoQ&qGxR`N~_&FAf;VDvpW<
+z!rWtN*$H@^kWuA_KvV$X%Og-?NIDQ8(=#V6V^+0jWs8muN~d^6QJue4{PbV?tph!;
+z(G|d!p6&C9tFocnACg8stCqLU>|Y_bcwDNR%A(|CN%J}){`{YJo0eF>v(D<FpTlz*
+zVv2OHv5PcuQ3Ql!d~mq#eofRNKgIcmj8R~!+><s#HZCmdCP7#S9pE=VAhC+`J@=B?
+zT}0pdNe(fH3$%XCgz4>BLA~mC=JdUNXAY1^TpFHiT~6podR_{I9+`^>Lw<NHT3<Hg
+zM=tCHLUP{u92Vne5w17xi%^{ekoHd$4@J$RYo3rhaw7fXPBJqEEv=Ef0SOf_LDD%8
+zb~i$S{e&aKAJ}{&s5s<b7|AUj0xuJW)G~0JE3@k*Pg>ViI<do*g{z8N`dOv`a9-={
+z!m-ME`c##YFbxmXiM$t?>s<>Z{h$KiObNa39LrILAgs|NvLFVB|D;M$M&O~}s^s{^
+zh~-hb8BXP`z?WjJwlfrOmhJ8h#L>f;Td5u=$_H#*&=7P?bTMk*e#`yPBGNRI-v2+$
+zMG~fR0JpAZWq%|*Q;Aw-RJS1uHn}{7R|{OOKot=91>#im-*s*e9r(M?ZpWf$8CbX|
+z$aOBVQ(ex@Y^!Ro|IYJF^hg2oe6-Uj6tTt$#VxtvURsLHUk1SN^EY+>&(#bS^h^c4
+z+U;#S45rbg`we1rS>J^$Yf%f~VHUX$(u;POYm**?5TX*i1CLhDkT{*}E58F_yy>N|
+zbea|%(mnn}D`bqf{bU?h{hockcH*<T;)mLBm1(*Pj|OUyHplPd!!I%-#=Eh-K-V<F
+z;vuFI_o_;aMUi?&tA!<KN;2$kKAnwH5Mpg)^mKfdx1H0o7Fvw;(*r+U4abB7Y|eJ5
+zurNA9G3l!`?`fHe3YNw^(ix^wOo6b<x*SCJs-_R3FD*Bl$W1+<c%gm0O3q=2mXY;*
+zJ!$Z&Y+O`A!&nBail%EHp4|uC3Rw1zd08kT9d9BP9Jxv|&MK=-g-y_@9#j4qoC$3Y
+zDJtgEMEDSR?5ITxq#eG?Dzk1VN9+q$xm23uiX_=}XIxt_%0Y;-rt5G1_<?>~0gh#7
+z3Ql9hepHBKrIclRi}SkcnQ!<WYl0U<qOUxLIO{m+n1kcu*;7T*fG!{Yl5vX@a)j``
+zOsvA<A6I5t4z^aciiDSOy8=2F`dBnA^X2lDCqAuQwcFwKE76=6;uYE;D|1OknJnNM
+z5X<1?kd%=OOIDj_NSpXG=p}{5o7zMxE#we&+Nsh_h(MMjVX!R5AxE!_VeiTdx8x#>
+z<+BdAV6)s}ZjFCIEyrGQd}~!28g3kLF*UE5lsa}G;Q!M#(B~@?{7&KFIzWU;PT1A+
+z|A=DauROqd)>NQf_Qto<U4eh#c(qz|Sqpb)zc^P-Mfg1K9j{Dy=WSYf*$!J9bJkF4
+z4m6%y<}4H5-ioL3{3Js)dx49zKt|Ad46S2kloKv#r;%q?JX!K~e-57OorY=vbRsE(
+z>=-FYk6SR>#BvLPs6IGr3&!Mhdb}T4q|cvklKixrKMY}7Wq_%g`YEs`FCa>Tx;8U_
+zYb0NfA3hgc|Kn=7(<UFb<tcG($9O8}DcxSf;LaB#6v$1}lBGo~w@A$M-Crhv>7NU?
+z3?1u=A}4FFqCDj3#=bvrt0|5z6LGht9z$Ovh%G`Z)iV+Hz>j<XS$*qJus8T5q$ysG
+zR+}H!CVN9bwq3(H<cslTbLACBJJ8PAV2-Rsqhy{Z-;l9?C3LG5;_4ly6!M8M!wkf^
+z^gUk`_4LHqgpHdk4!s3XVA8`0V+&NZRN9|R)~6Gtk>7;lc_o!5SXPvze4wXZ%g-kJ
+zdp3aidHdSY#Yv<~P1rG}yhwy~n2As?9?^$&5#$<wS*{KU^b@BNdQ+awUi9%Pg77lr
+zZnKLE&Xzegzehgr-Uo_A*3qJ7U~uld4EvaE;5Thp8%WBG4y$(zBgr#4+_X1?L8EC}
+z)~WDWf<&0%j(&=16897Z@~1><8kJ{w9xM2gp4pi+5p$lEy7lvi{(#R$bVdV^03u%G
+zeIK)oox^7PS{=4Y5e*;77LjiYgKF-SYAoG~8vOg}^z8re)vMV9cw2YqN;vo+o|&!(
+zbgWIL)-{py?F3P!wl&CWEks$dJA%}o+pVhN#A0NMguNjtgv_SQ=|_qVuujB~9o|iu
+z=_yI=#<#$q3#T9`ds6|JsV`<y!R@qsw$;sD+mMOd=JcI6CWi&@)yAq`aOl3<NbV0E
+z_Q46q0dj;Bz!rkJ&eo<8k;iOT)KVt3%E_)qeL-6K*OT#y{n_Xh=z?9!UJOD;7gzjy
+z*<db>W0XYw6s_*&WF*B-ce(ri8qyPWIhb-TlM2ZEoj5YktSoO`@u1FFxkLpMNh>l{
+zRYN+1J4ecU9zk^zP~ll-rvW^cLsw9ESRDNaLfLW5#amH}vL0((FsMMqV<Idkm5PLL
+zM1mdOiEKUNPm8n99FfYuCArP1mX!(yTq_>uKAe+n!?jE0Pfz*<BQlomk@m&|;8Qw?
+zr8?41Kk`#@8+vjNd%Ci?4T0l3e-KMQ>v2|$M{3%AONKm3-bjY1m9~<NRiLhS2LW64
+z;JTb{i4t+kEWdKn*Om%;X$sol^iy2dn)@S%h0&auJF`-%0F)(k(QV`STky{?mZ5ld
+zvQe1m7n2ljM)5*`*KwI_E<Ef}8(EXqe<q)+Y?})6$4iuOgV&e%;LGKmtk8@e;OdSE
+z*g>oZDx!rJ;U|f(A2zEp4?b3Rnrl?HjMX{BMYswZcmNB-c3tJA4EKK=p(*@MQrcIe
+zknUDH%<ZR(5c+#$5yGpMEH@gTm})m;yH{E8e$AG_)rlyR>5|F(ZhrblXdurtt%^yq
+zSum6d1Y&?~RB<Vt(IFF888_D!QQH?s?kT&Gc1Tb(U%CLYyR+{XYrjxrsLl8j@Z80Q
+z^MW7aCrtxWvG(v=`R@ipt(r_4;;qOEg@ZpUuTZ;+afL2(9OSR{C)S9;3bIJEIaFBN
+z#YVWRrD4_IK0Zg16l1@UT|#8BGWA1FW?t9@zXbfu<}q2KXxdQOjSe#u9>Tv2FHQr^
+z*8hHn9ZP7u_fSk#$B;l4`bHXOCq(_yT>Ga~9cIV3>M$n5M8DiYmsUDN1tEIl{&C-?
+zu*Z=dmduCv^%2)Njk$`Gy<aCz=ifbrkL++0a3zbDR{+vH9bwnhu?Wm{yqVkMnjt50
+zD;zF`de4G%IVA%PCm@?oq|P<B5!&kWsDc4i3j_7)tvYMF;(4@T%8{(>!-<N)khr=V
+zS6{{OnsCJ`+fIv9ZjquujqSa0ZG16jR=T0ul}^HFTq4$@RMm2pm`PThCd3>-FIXc6
+zs)z%<{9vJ=n6Z%cPh*omEC3FmE0qJHHexlC7&dv5`B*$@jklCSZz2FCGdCf1>8qX%
+zNGY{dHi3FSh8q!QNm%ujmB;nX4N?@^)X$TNn!f*GE0}<uUTEok&}*&HVe)K=Ivza;
+zz2K246r=QzZtvNJ75Yf^=<*LT9t8ptd}tttw8t1l5{C5ZIwGV);SP5l1mS3PRcK}B
+z#Uf9tUqE}P?MgYF5wvOcMVo5B2OGJobUZf@0QY`8u)zZ@@S?CU2|OB<gk9nU=IOm}
+zXPq~?c=;lVmmq&kY<W#dsh%Oe0Pn232xiEezrIAM&S!7qTsJe!P_tE(4Zyf_ljKYu
+z{f~|IRO$okqURiyQ6tBJxMXI`c?k?5@N{lS)F=I}79zH8St)Mh4zB}r+J-hDvq#+a
+zb=?(ZPpE~^){jW*Y|J_u!U)&OMb2HtA2eTHK4gaC5=b6V;{)ju)fe9OS(U$^FEVe5
+z<fkypwKPr<M%JS1$^qtOhEaW+igptt2jaL>T#{p|2c)r!K#@SWa34<Km(@DMN6f-N
+z0`)iF%&QMQl-?)%FvrG1|2el1EFF1ebG6NTYdHGKkaP*JY1jD0vu2#(U``Kfvp5c^
+z3b~v=&*(Q2$nXNj$qZTxD0(0bK6h<;FmXmIuwn5-lAQO{#RMWdB|+Ja!f?CP!27>#
+zn1@HSBf<yeTq|*>3D4vubChD96AAe)glEyKse_sidt;dfu<<lRR|MK9=I{pxKSlzv
+zrNy7KgAL9E5GOY@Pu`O#2y0LxtkcNSuKH$H+uC=<`2IiQNlprKl+JN4HNWGl0&)gu
+zO?5zU&o_iKDB1NX$k}OeU`UPlG5b^}`d8eE(uJ`5YmktaJKTfaWyZY<e{J)Cpe2lh
+z4ziI|ALpFfT;nOwUP}d;`0*Chb{3n*h~_mfOBSM+Z*{)DBbV5mO-IQqy&{Cw8O+Vx
+z-vw6c+ZWFyLTA>=bO7`(A})CKg{L4_8h76i$IHSx|7_qbyKAZv*ep>>*jdM7)Q*yU
+z*(dkkUchDuHo{w&YbI4H_X<4TT||p<IqgbU(Ip?S3+-%y$cXHIEbS!Bi8shLrMri7
+z94<&amKQ+xqld3HQ-NefF6h-<%#L*2J_E$LpsX@U3>gjdWZ@HYw2RLxiQr5E`XNW`
+zVLU&hg!upa27yflOoX`Vf|1}j=bo;0YMmk5-E1KykJUUr?d1^v0-&6IO98k`XTP4;
+zH+v8Gt8%43Xq8G=p6eAUCjc+ZmXwS&6|aHx#}n2T{F&-;kRRYOl&?|G)cJKb+mutS
+z$<s@+c81r=qc8Fi!{3I3Kc{HbX9jJf-+NTJ^l?*Z@anlH2J;U#WanHA?_${aodbX1
+z+*9i9xcU>6&;Kd}7(!mO&!U<OvRb7y-}os1VmGn5AHpnhJ%-*c7j`A618GAQ5rf4%
+z;G<yvv~Wq5*SzCN7#71X_G7R6vdIah0YVC45JvZ!68|csgmb656qIA@h_cR?Q&`AE
+zf>|+JA4emLC^oG^!63Z~1w*+9jMTV81v^A4S4}dNknK>$QXHokdUA!3RbCck8cQ&S
+zQ)eJOTA0#e9+U^O=<nuU9(&yOT+FmigEwQT*wyX%RF0UAZZxsW7{M$-e5o_OEA64l
+zU>yx2|5LB89EGmmKP{mRQ4=vU>I{8HtLw?jvyf&9v$#Av7KFk?U4gvD65}=c5}~#L
+zWB+&9_(WHCn91y8jwRr7ax8q-jt}g~@QBWYv7!CYs&!85dq^q-`-g~oj&L$tjpkP7
+zBbPgb-ZK!~k#9ueuY!QDm`T}WXqjxuwNGmu8n4PU5KXc$|E<y29W8hM3)o&Z<_A#L
+zUl34tvtVVVNWbXeGwO^_OQ=-%VaR~^<#=;0&lH_eW&pGW3*%O_efxC#Of{?2o094_
+z(a+mQ%&TD2F0<iwbG1F8D`hdBfdc`AU+mO4e+KzO6?XLSuxM$k!FKJ+@220T<j{fx
+z=vt>7@`3ksSjVsA1G85Gi<`|GuFR`PyK5{&e|&}`oKl)sfJOd~Uq8)+Aej6Cyh+)B
+zPwU@LN_{xTDcu9jqv{qeR-__RH$~EV4Dx&Y;>K*%`h1Y<G>DKf3RA#zz?tYv>u4E%
+zk!Q5qa-oPcGF~AhhAK!7xB$%5@@OjuoB~A6ud=oel73oxUzsmaFIaa8yGe~wV$lr^
+zitS?ApI~8h)zMP)Eb_Bethn?vuxvuT_1p;-7TC=>g9vs<0zVI5)z_b6I_8g3H4SrL
+zJS&xAMWrNL_^}Rc<frgDfzA*HQnjvL9^EpYn%jIRu;0CWxWJ6Ku9GulKiA8rM&pS+
+z6&mlfCMWm^^i|2j7QzRNx0xj;x0{COyosmPMO<iwzDvrN$}M1gB;0beT!U62O2O9;
+zaV68;AtBqMdrBUU3KCOX*uGN&BeW4o$${hXp?pD-`{8loj~`WBjJ8{G{h}cr%|vA6
+z0UjNVahsK6%v9&`zAv+@JC$ZQ!itzeJ57AV-7r?+uoWA&xOTJ^B#Pu!Pqb#PEQ?nV
+z)}Gr5G){s=yHA>=@F89g1$F6H1>MM1!6aaoX6qHGnlPV-{nw%A@6({VZ`0v3#wQW7
+zvw;;`_XJXsAg2mV3$AztO3OsDHi+rX(5&KTL6E_s8^3x^sq3q24v-*IS|adRD|zr1
+zrF%wygj=&QN$)mL>)kUBW^3%CuG1>xg2qV48jU2;iQvm85WpV1bPpu(R>e}@b4zG8
+zCF~0Pszi#8K^}9Dhw?DzV9vnGgbZe!XQzkK*sX){O-n>Z7hRLb4MkL5mTM6MZ%+hF
+zXzCA9^^L$S-`5frmI&I9ivNNmQ*>?JODJ^ZfWsyd%cQ?IyZ*^+qD~ZPN7an(W`d)(
+zui9uPhWcasLIbfi?GqQ32m)Y9IMtu^u+VIc6s>z^<7Orl4J2XhgukLKhc0&<3ZP6y
+zd{44QQ3E*YGF)1#ZH`^ofDLFa>c-GL%Nvr+qt0PeIRNKKbaa5ny(czq#2=cb%N2R!
+zyOM-gp1H+Y-}nDQK7?zh>wl2ra8Q94D4scYRRhx7{S&MKL&LUyMG3!1rxBM~(zX;K
+z^VNy{$zh<R;2s61PVhqMw9UP%*qzudQel^7T>B_Wp<1-o)A}0yrhkCh)2-H(UXTSK
+zv<%JVemXcL_k1bY8jjbLO|2c9nNZo&S!?)e6mulwg(=_;ezhVos1~Q_GB)E({3vfC
+z2YJI;5?W*e1VaJ79QDf;-1l=0#wux-v%baFypiH-%-0yt8nOriL!G_PYrYYa*~=dA
+zcYi~tG(`q_)R^f^m^gWTuhT_ZScbX<#Y<XIBfWfT)!|zTFfjg$4|dhGM81gu#X@kP
+z3?pjZZ11&>JPh}`SYB$vsqn;yJ`ADmVXdQ0gR%gFLTndOkS9o<-gb!o(vxIbHD{E(
+z=)$xU+@II1(^oZ?b%3otp&HHg=sAJvBvQvaoHMJY;;JIzHXiiNDan&bs-WQJkzwG{
+zj~<6pmJvmlvU{E9+wv@$ni?&aH?`~OK7m?X;7)joFeb!WcqG)gKXL9L{BFTvDE-R?
+zpf1Th$I&+tf-Y=s{KFV?wx$ut?xE%;WD6QFH|s~7jD$HI`ugouR%`;57hcv<{h>;I
+zdKqoQj?374pf^m~+EhOzj?yCK8FDRaCQ(@waDshuGn?{=fQk8h@Ew~RVT;Ne2U6IN
+z+C?WoC{lYjRsuj(Isu0qrj17<%JQycMX5mZYLsSuv9Qoxfg$YWVYnZGeRH3=|9QXC
+zM?H8-&sf~`4_0^`8=#rj+&~U6CH`5qj;$2JoLiRL6q_2I#Jh#XmbtJ3p6L4~TE>Y^
+zgUb<UR-M5l60SH4G~6Znsjxz0xJ&?klFiB^HF%b}+(ABWm_d>H7ZqR4l$z;O-f$a)
+ieq0?xM6RM?eIhHvaX5_qG^4}J%uUxpJLT=2qT~~HeB{*t
+
+literal 0
+HcmV?d00001
+
+diff --git a/.github/quality-part-3 b/.github/quality-part-3
+new file mode 100644
+index 0000000000000000000000000000000000000000..1000d4a29af14e8c6f84f624246c37dfb29d812e
+GIT binary patch
+literal 7140
+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
+a0f49hfS?9zabJV6#Ao{g000001X)^yNwfR_
+
+literal 0
+HcmV?d00001
+
+diff --git a/.github/workflows/quality-feedback.yml b/.github/workflows/quality-feedback.yml
+new file mode 100644
+index 0000000..c722965
+--- /dev/null
++++ b/.github/workflows/quality-feedback.yml
+@@ -0,0 +1,63 @@
++name: Verify complete feedback and UI workflow
++on:
++  push:
++    branches: [quality/ui-feedback-20260922]
++permissions:
++  contents: write
++jobs:
++  verify:
++    runs-on: ubuntu-latest
++    timeout-minutes: 20
++    env:
++      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/isnotreal_test
++      RUN_DB_INTEGRATION: '1'
++    services:
++      postgres:
++        image: postgres:17-alpine
++        env:
++          POSTGRES_USER: postgres
++          POSTGRES_PASSWORD: postgres
++          POSTGRES_DB: isnotreal_test
++        ports: ['5432:5432']
++        options: >-
++          --health-cmd "pg_isready -U postgres -d isnotreal_test"
++          --health-interval 5s
++          --health-timeout 5s
++          --health-retries 10
++    steps:
++      - uses: actions/checkout@v6
++      - uses: actions/setup-node@v6
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - name: Apply checksum-verified local changeset
++        shell: bash
++        run: |
++          set -euo pipefail
++          cat .github/quality-part-1 .github/quality-part-2 .github/quality-part-3 > "$RUNNER_TEMP/quality.tar.xz"
++          echo "635d1ab4b0ad2d860a13eb9dc6d25402e5563f0a46439bac439bb3bafa50d935  $RUNNER_TEMP/quality.tar.xz" | sha256sum --check
++          mkdir "$RUNNER_TEMP/quality-patch"
++          tar -xJf "$RUNNER_TEMP/quality.tar.xz" -C "$RUNNER_TEMP/quality-patch"
++          python3 "$RUNNER_TEMP/quality-patch/apply.py"
++          rm .github/quality-part-* .github/workflows/quality-feedback.yml
++      - run: bash ops/ci-postgres-client.sh
++      - run: npm install --package-lock-only
++      - run: npm ci
++      - run: npx prettier --write .
++      - name: Preserve complete formatted changeset on verification branch
++        run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add apps packages db tests ops package.json package-lock.json playwright.config.mjs .gitignore .prettierignore .github
++          git diff --cached --quiet || git commit -m "feat: complete feedback intake editor inbox and request safeguards"
++          git push origin HEAD:quality/ui-feedback-20260922
++      - run: npm run check
++      - run: npx playwright install --with-deps chromium
++      - run: npm run test:browser
++      - uses: actions/upload-artifact@v4
++        if: always()
++        with:
++          name: feedback-ui-browser-evidence
++          path: test-results/
++          if-no-files-found: ignore
++          retention-days: 7
+-- 
+2.55.0
+
+
+From 69a9e9fcbc10b387bbd3e1a507d932f8399f7dd0 Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Tue, 22 Sep 2026 04:14:18 +0000
+Subject: [PATCH 2/8] feat: complete feedback intake editor inbox and request
+ safeguards
+
+---
+ .github/quality-part-1                     | Bin 7200 -> 0 bytes
+ .github/quality-part-2                     | Bin 7200 -> 0 bytes
+ .github/quality-part-3                     | Bin 7140 -> 0 bytes
+ .github/workflows/quality-feedback.yml     |  63 -------
+ .gitignore                                 |   3 +
+ .prettierignore                            |   3 +
+ apps/api/src/admin.ts                      |   4 +
+ apps/api/src/feedback-admin.ts             |  94 ++++++++++
+ apps/api/src/index.ts                      |  69 ++++---
+ apps/api/src/request-guard.ts              | 158 ++++++++++++++++
+ apps/api/src/runtime.ts                    |  99 +++++++---
+ apps/api/src/serve.ts                      |   5 +
+ apps/web/src/index.ts                      |  51 +++---
+ apps/web/src/support-assets.ts             | 201 +++++++++++++++++++++
+ apps/web/src/support.ts                    |  34 ++++
+ db/migrations/0100_feedback_inbox.sql      |  29 +++
+ ops/nginx-isnotreal.conf.example           |   4 +
+ package-lock.json                          |  46 +++++
+ package.json                               |   6 +-
+ packages/application/src/feedback.ts       | 100 ++++++++++
+ packages/application/src/index.ts          |  19 +-
+ packages/persistence/package.json          |   4 +
+ packages/persistence/src/feedback-inbox.ts | 172 ++++++++++++++++++
+ packages/persistence/src/index.ts          |  82 ++++++---
+ playwright.config.mjs                      |   8 +
+ tests/browser/support.spec.mjs             | 172 ++++++++++++++++++
+ tests/feedback-checks.mjs                  | 136 ++++++++++++++
+ tests/postgres.integration.test.mjs        |   2 +
+ tests/request-guard.test.mjs               |  65 +++++++
+ 29 files changed, 1453 insertions(+), 176 deletions(-)
+ delete mode 100644 .github/quality-part-1
+ delete mode 100644 .github/quality-part-2
+ delete mode 100644 .github/quality-part-3
+ delete mode 100644 .github/workflows/quality-feedback.yml
+ create mode 100644 apps/api/src/feedback-admin.ts
+ create mode 100644 apps/api/src/request-guard.ts
+ create mode 100644 apps/web/src/support-assets.ts
+ create mode 100644 apps/web/src/support.ts
+ create mode 100644 db/migrations/0100_feedback_inbox.sql
+ create mode 100644 packages/application/src/feedback.ts
+ create mode 100644 packages/persistence/src/feedback-inbox.ts
+ create mode 100644 playwright.config.mjs
+ create mode 100644 tests/browser/support.spec.mjs
+ create mode 100644 tests/feedback-checks.mjs
+ create mode 100644 tests/request-guard.test.mjs
+
+diff --git a/.github/quality-part-1 b/.github/quality-part-1
+deleted file mode 100644
+index a6ad2c5dd1d5b47c3a507ddc8a81c13812d8a1f2..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+HcmV?d00001
+
+literal 7200
+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
+
+diff --git a/.github/quality-part-2 b/.github/quality-part-2
+deleted file mode 100644
+index 65a3616de1aadf803297f8431897227dd5e8be76..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+HcmV?d00001
+
+literal 7200
+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
+
+diff --git a/.github/quality-part-3 b/.github/quality-part-3
+deleted file mode 100644
+index 1000d4a29af14e8c6f84f624246c37dfb29d812e..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+HcmV?d00001
+
+literal 7140
+zcmV<A8yn;VvivDYH!AK?p)YP5cn@$q@vkiGoVu41d5S8K3>t>s5)ivj2g4`{X=W_#
+z38V(>e9awXG*F&+65<a--FK}-ysgEShkS=JhyyB>Uz5#V4|I(=QKPSwC2frPPcd4i
+z0?5KrSlQAf3+#qFboxugqsBkaU@709nckp1a>_K;ck~CaK3!=}2pW?~h(Q=LQ*VC?
+z2CUC{zPQ$4Kxj2e<E7fs26z$Y_v2A!&<pl1d{5(a{CeHv#YCX_Cou~!Fl`#kKA@Fq
+z)m0WCfVdqlNbxT#(+Um*Nhc1EkK=yJNYC!WBqFc;>I7k}g4jrG)~fd{@?=6cM2SMA
+zbG}2Wy0-UwUMHf(J6)ad-=XNLT@jxxLaxSmhK=?_h!2zVD954ohqU-6?C15+!h{!j
+zOeLNv^6NlSP1KCKwM-7H1KC2ywFk7ak@vyyBgP8CJP7z#yUIm`Xs?_by5!t7#&O@F
+zcKFp<x#9Z6=z{gR8}+5Rc0sIq5d3l1TNi(FcD#wj#-<Wcr!gHy?!2-R!_yC1cr@um
+zSzpASkQr$=JgYOCi;9;cAhqf?ZFc`J@%I!%ApR))(XxcV)yw`2TF5U$BL;kfHi8xK
+z+xy$o((ZHte<G=_-?6CY%-fv|s@P=Ta#xKk8g}r)WC4If4c_wG?i*I#cYt^&N2^=2
+zT5t0t)-sN|S2gN6VGh&$rRzi>XYaLj1p7FjH9Ek8vX2yRre>|S=7jkNx0J(o1c}I2
+zAsoq2RoM15bQZQVXmHtryfE+0*~O&RgW1@<Wi(DHL4x%m-n%S0)=-a~xDXR%_(e8s
+zn1CO5zV1h?_gh_b<MS1mDWDd>AHANJ-5lpXy+oGvPsFd@9_V~nFyjyE6QXOtJlN}Q
+zdC)wr4S&O8&HIr7Y-m99+!ASR&>0^RhP6`XOGVf-Hs+y)mu-N~*r2x}`xablm$|HZ
+zW#veI=gFe|1BtX21Q?W_RAxTm8vvy2=gYiA9>6t#j<XYdv+mL0#MRhzHs*;*1Hs$m
+zUQDx6i<uRwGn-AU{ERtWl1aqre+?&t>kgMfEQ2U6igm-^P&}2jhuro3C%&i$$V?v3
+z{jnNP(bfTAwev(9ZNBzLceeBV>YtLPF4&p&Oc%646{XgP{?hOxYTIDP9iYU>&nNOD
+z4_l`MXwh#1Mv9P__r<awbuDK-&w<V)?qS5N&*7g}BG8Zw18QH-2832JVgYW8Ru234
+z04Bqa)FaxlVV{2*+Y+USF>xcSrYF};ae6pXKv7%<<R3SnmXKnumR?H^in<XB(gc#b
+z`INSRjIyPJ+z6in%_9_d3;rxk5yNhOL;R~{R)G!H6vs@a6^z&i33ncMh1)B{ki9_O
+zR<=Q&2`|`?DTxicv4iH*4U}wRS<R84n(@sR1oP`B@$}&hODFjakGWn0HlY|u#qr>7
+zw!|sgKG?9F8?!krJgn3aqb1oE@(3i#B$78f2an&b1;-AYrhVHE04czVQ7Cj}O{m9t
+zh#L>*H{c;1Xa5vEiz*PbYQ}n%T+FcR)Q1&{2VjB)n{~UkGv6&$q8gK=*Cd=SFEh+3
+z5tRr-i~nH^F|99vL0@8p`mnh$e4-t&fk|A0H~TBGouttj9Vz}e(+QBf#TeS&5N=f0
+z*D2NNk~v1kbdDbO4s>5(Q>Z~zv<rL=xdU%I=gN8-I$djZkFmBBdt&%ZcgQkr<Vl3d
+zSnTE`Sa@KCR+%!ft$*&F0n$*zTJNgrA-SHT-p(C}6R_^x_RU%+mLy`%MZ+CT3|$9p
+zYLfE(jh{W7_LxEBQ+28j*_ZZk&3#SDS>|iDk-xK;u4fZCh=uvm5%UQ#=6tFBm#fI4
+zac&By_J9~o$=>#{#fHTH49XESxsyOn(@~pI();GiX&;j=)<ND=W*$!e;W|`9<9^iU
+zR3Vq%45Lix#$O>bhll7s4-J*yTyC?oDfo!v3ayflq%gs7Iaq9v$1*;oN#jZL+6z}<
+zkH=--DtjZx;L#Tvm8a;xY28qLlOHSMGHHNf+raZV^_u-6LBH~fhZWuUR)D3O#t;4^
+z{UWr@ua9-M;cMQ0U`&&30@ph=4WFg=%!pr6*eA?u;Wkq3$9ub>_`^QA$icFl!D9bz
+zPZ;r>IQ*%4&1GZ&b-04e+g4!(G*HUMdX)7M8aBZ|iOwLIb2M=x?Ycl@?@-B!wU)-N
+zB@bV+3k+F|JOw%ndy1SgN4-p3_r;@exFeC*iH>m>y$(0<;!OG%YXi1P8C>$N`t(VY
+zg3>q(0Uzo_s+<*DRUP*|^qos4`tY<fFev2iEEj5hl?qTa2;2w2d2>6MFZjaNd(}Vw
+zO{)x!lylfJtedYqo&t|k27{+<$iZCGbkzIjAi^HG>Or)q*dw{vN&&wMA^Q%(%@<)_
+zOdu~eC2B?d{ZEVE75{*3h5qe<7*~hkPCY_JP1bcq#j@=G)$2n7gL83oq8LXF_+&(q
+zO|HwaGJh-;o`U>AeE1xxic(c=wkfHY;SgB2*5ClklkfQBp5DiASgpd5OKl?(1N7o|
+zX6a(`Ytz`=6PaTQ-`W(J_pNTgQkOyHavj4p9vRMVJZDayS7*y|>)Md0i!U}9jnBv`
+zx~G=@^X{wL!{c$!ABVvu9a6GA53{1tcY^Q&*&!?U;3SN;Nj~kDdCOR_5VKQo!6N~A
+zF5=d(1ufv~*LlCmjog-CpnW%4NShW%$@Uz}f8SVIuSR`Z7cEG_S3VJgVJ$^b31KZa
+z4^Ch$l<kjZ>zXpjm7^~%vPJtC54VAXSDnL;UY^{xzZXlzJ!AXwuP26u3sd(61uF>l
+z|Mv3!{pc|g5LO&b1F7R3;3N?mkBD>lYhc<7d3m!Q3@}J1@Xoe`@#?Oj@T+G`AiyYi
+z$+4Ho-7b!ousu+8{gF40p&(TaSFmTZF#wC}$=fF$7-sC|PQplhpoAa+t6ih7?EO3=
+zmeO2lulZHf+@isxYlyd<ZXga17?<)VXy62XS=qR)AmoEN-n79AkV#?UtBfFk8loco
+zki>E~R7lk@xvhrbhJlIw^zge!(8WQB>Sff5ZTrD10v}7`0JQ~6C?Wyluv!B`hV3F3
+znWj=6ab|WC(i(+8fz*fm=(eKcqi}C9TrWSFJ?L0Gs@Ji0G~tX|F$phYy_1(8vcUed
+zzZC5ghFE))+m7GT4dkZ25ag1vj*kqUht7Ef;j!xIQ}F~NBSFkt@#GbtU@>_UR(@=7
+zvtQSfA}^#!xKAr%{HPS@120Ha1^*P|@HLslN>l{seH}6s9QV{W=+h~Zf;+n`s@O(0
+zG5E2H_S+Uag^)!#8`z{ri*d{SQr1ZouH%~Z&Ffam^M@C~Y*$F{GF3?5s>0jo*y&|l
+znAfgv3|}cB*%YR<KY~2~_B6D1x8Ak6mb~#_6;v!cpTst&g78aB@4!y*4q<cJ@?=I|
+zmNaH>Y${O?+vBD!O&a-?W|>O#fFvIz5{Xp@>^+tK5Fast%QQh|t!Q?$E*7w9b&_ZC
+zR@|6_UQvl4sz<VQ@DqPJa=~vRP;a=3QI<4L&+!Qiz6$@H3LrT=EMt3Q*tc<T+_x{R
+zY;E^8AAhm~v~b^=iluQtB&7_4HnuNl5NSXxuW3buoFgM6rh8)$|29%#wLnFUbH@G6
+zevaj=XAumE5e&(saH3W7i}`t=ll7lk^mi)>n&g_7?fCqRnG4e3s;KpaGNp06K`fq1
+z?fdyud}^X$4OCP2u4m=UG<wlv1n*&8VL8wWHPvSW-Uyep&?M6u)P%pLxHvd2c9&%^
+zVJl?W={1wyO^(8JU9RDC#6g~pn@0CfU5}$P30Wv~ezNztF@SBjF0-hD36V0J7mRSK
+z)xp|u*^LVT-zQ&F`E*|5Nq1>2nFGw)k|**>F{PQrhhM)k=eNpgyEV>B2_x~XQBfJq
+z=1BjtN-XQy|8z6@FW>uc$FGEU6sF_JtqT~$etIlL)}g3B^j<P&Gg4}ZhK4<4YWkAN
+z!$({-6%z*dXt5HlZ8bpcV&whS`Gf~~jj`nG3jy8KPypXl$t)XS@s$zknS7i9Q^C|L
+z$B~scu-Em48;-_GzI-^qubzh~p-@6LHV2F!an3~SZ(nx<Ph5v%ft#DUHHXPjfSwRA
+zp7J%135!)QZgS;d%<=3!y&h^sWPk=sLU28MqXUgAKEsdPkh02aT7xsO9Xf9`N?Qsv
+zNhPrc18(w4!=m&>ei<P3K|!gM=!G$Y{0w7>llf*(=@Tpa2X<TC_)$37ows~UP@jxS
+zCBUkkJ9j|ke4ElrfwgMS0^Ro5emIlcY|=ULy^|0^P<3&jG8F`O50j`vpnL&ZO(n*A
+zJ{+6DZsqs*c6mjBX5klU=~4x`ZQh{+>ugfSd2ix9j2p{amu(@{f@Kuwb#<^G>aaYF
+z`o`Y1u6^=v>}nJ-OvOgzmr6<j4I89-^Z{2v9+Ii;`W_%|#O|)2NN%i!a#`zv!xIli
+z#RwWo<AD(-zR%&m{?V(KqIbsco|fp@vuIV(tT|<!!|d5sw8U?_P?_G@FI$thnYX%^
+zA@A4I3a5$uZ;~R^pjHv0NFxw;ftM@;PWhEKXH-~%oP^4E8Hm){S+!zT(CA@26F@7B
+zIBe$GO^PLs%9e0%Hlq?q`ncOf1^B=6cdq;z1&KKThX)xLdRg^YB9EbyHboB+V*hGQ
+zVU5xSo>7GqrZ1G-RwsZ>A0)x!xSr~Qk(%|NJZ#VZ_MP*FaG@+*jA?pPv&utZD^<yf
+z=RXY0#DRzS_-%yKKL-QxBj&~46Q2)=j#*Wo7N%5AQs<K_7*EvoED<6B6J85V3kb;Z
+zaCBrtm9yxu2}Zsx&VdJ))&WwBVisZ>g@9Pn@>{1NCu^R^eNkUuJ7XQS>6@~#?me~g
+z3hGfTnz?sX@JqJF6q1!3FuaojxSNh<(4eIa&fsPBlU`sMBb+e$tJ+%H*Rr{0teu>D
+zIth|qU8^R#2z)FdEJc<?F89aM25ZJ5SUtDnE&auVF@KE5;T`NYm8}@Ddp1&4q<LC7
+zJK5&bn?KOO6JK)&>1zTUoRL2ree_Jy_mw+84tf$pQNjpzC`5d-*Us+4w24+i4=Yg6
+z`&<~zH)l~Tl9uV8z={NI&CaE?52OqwSuswsQ|KO%1aN;8@G>u14~qU$sqEv}ryF;E
+zcT_bVyo95cV2+)4rFx-Sy=9KVZ&+@}Jjq~$E8K0_xepKi7J<0GEql}pV!2_%b7K3R
+zH6yKw4aLj6*RpQSAIrsqceugWq67!1QbU|<1iF(B8}g*g8;_lamZg&i+gzCxj1$^y
+z%Yq9hOf@+9J#`x<>a392BDwXdVi4#vxEA;wxRECTj+~;icyhxEem?3a`}8DJ*#(^+
+z8R#j2{vLV+!c!q{ocs+;sphnq>>Yy;1n6b8vm@lvTO5@b@CMh$gFf%yF0#y=x9K00
+zk}o2H+~5gN3$tf;ERq?T0n@}ZdK-4cis@mOcUt;OyQ^B!4-8~;G2|0Qm%Ri#W<?jC
+zK%+gIc;9M-3@q`Hdy?yy`V#i6Qe=KO%`tP+(t4yDT3L_h=Qnbc5bxp#<XHRyacSM1
+z$UlrV&FZh2#^9`nO?-I05HjaJ=QsYmj1lQ!qb8oynlKOG;CAsEuO`cC%zw(YaI;h}
+zvkulkEznW<`ju@}ILa3;xWj%qQjr2kcx<r(&(Y!jtrB2RBe$atoGum}f~YDtGWEHe
+z4y-5`E!H!C!K$x~$*a8_zFXWlg?=WORI!&l`!Q^o5&10^l{-?AMjOc{s@b9tWIWEP
+zDopSexQNAjhJ5mLTrQ?TrceFjxJgjl$chz`uS3AnoKSGCz0ufgu>sU@8Hlg_bVV`C
+z7};^3e<e<bHr624Jx_l-74&21%YiJk@h&U?Q&SV)WoX;xc~tyo@J8Gv8sw_w&g<jV
+zduIOtdEL}H6kQ|GxyX_Z_b3^iB1q2gRIBv{cP;AjXzh$QP8S@<J2s~oU?>!sUlxzD
+zeTdUe(HKK{JoLk($s}~97D#+fbga|!R8IE28!+G~Mn`8Gu(3p)(k=NnS52vn^l%LE
+zSdSzb{Tt-G@-O0&Aa+bAQYz56>(;3oNZU><1D$ZBJ<IDy2_f4>X#sGignI~nt{dY+
+zC~ZHne`W`HX$72cvltZRK6L#`?^s0zH=MqjL#j}#NEx!?c3byvZS<A~5_u*nBd~cv
+zt_JKaGKJTexeemb%^*DCjGFeVPeXEyiRRIkma|n)Fs&K3g8~M4ywI~sC>#_4CEe$^
+zTwUwOQaStynYXFO*FyG-V&kMphvX<)hjtKLH+83Db``?8=|rZ>+|gk%|IqF5c9-g<
+zJcUfTWy;SRx0&6DnjJFM6XWYZN10Z`hcXbvzVHJ;deO)X^3X2j^H?#2{}D3(Z{D<?
+z<YdppMCMmBI33CcbsO7vx5Wsa(^d<VpLc9M@aW9V-CyEnoYBq);V0!Re-uRu!{4@w
+zR1p@-cv}wLm;q2aYomx6p>9m$*lBNTF&8^Mg(2}Tl+AbThYsK8Cm~{Ne`|vsRgeW&
+z+CU=<(h4&mu_UWn6MswA3P<-U*3YSUOCT$m{s<~i1SjYQ4QE<U2ah4lr&w3B^U_g#
+zA4=bci3cSh+c|a8P=WS8#v!9BXfu4a(0IXW<q}9qP%RcOuzky<MBBlaQ^*bE3I2~2
+zQ?pP+C=iU0dQy~F)*?UBv>LeO*0nNGdJ8p~ARf5ThQC!b-%}rTKbnR4h06FSp^fGo
+zFJoM*1F=AS#V-h*(y%N}OxP$73LYZx&_Ty2v4>^<Loejzr<6?xIW&B1z(UeXkdP+h
+z82oN1DY>SC;u1;cb%SC$MP>hjM6>qH)lI~RL*{LNCVTBN+7D)Td9F=1m}=abs@i>j
+zysSO5QH%G~r3-<xd5G<uKwB$B(mUCdXOlP<GP06;dC8GIR;fPAo>WHwy77l6NCi9F
+zCHPUS2UBvn)Ld$)yrYFOw=t_g2l6%keB!7wtf6{`-M=Xk1U1Dym=c!O&xTO?RmyNw
+zr!y-3g*XO??9r$GW|;;s=Wi^ppR7P50D%I>8IqeYeIk6#CA~`5Y80Z5jsPlia|9#$
+zI|oF#PF~$y&kSiRnr1|T6iJlaw>~*(9a9&qbd1j-Nx{8~&tpXXiR)igMGy{b`VG1K
+z&kLNoBlf4bF()cP@vs8R29e}Ebk}bikA$V1A`&#_MEiyf6Ggoi^uoHaE!-3XH`KqJ
+zcMB`EZe!e6a;GG+W>Zl)oSxa)5VNT;3tG<|%mya9j9(s`H}V+_bba_SB;iW$p(45B
+z`O|$#zF`!r9{cFig+QUOPvO)J*P~K%_%RB6279WmI@Ut@?e#OpS{*w5A7eYcN%jBQ
+zJ{PKmICrF0^1(?-tlH&HRj*D$>w}g7vLtl0BgNjK2)e_C9CQ>EfqtKJOQZ_f(=6}`
+z7afET62BrUf^OGlIXCi*V0cb|T&24VBr0GY>MvD9g+X0q8CDTEsEzVU&@;!=zR+p%
+z=B7bh&UN~mUyzl4T3=%zg#qeBwMw?Dyi$NPgD8O%f|RkZ3c!zDJ+vWh*&B+i*C$cd
+z;ZL_X9%UQaD}*)9C*NIO!*05Er|D2Ps|q|8HH!}Cyl;YH;4zO=LF=?S7A7Z3iX<~K
+z+(h*V0ZmQrjWs)pDdfe4uD;%xGV+;nseltOoO!?$Mpsv0-J`VdJltdiM9UKDz73gu
+z!kU_V3<x|Bi|&UhL<bXsYA9Qx!w;HDPC1sbo0*J%N%|?A<Py5WJ4bjwpLBVo8u)yR
+znEEEuuDA$PFi>xJhr?j;9g(5-3>B=)VZ!)Q(M}9}FQADLb6xHCc`y;34&x{{#Ojtz
+zgCB;j3eT1DpNR^WXj29=@<h29K!YIMs&4^7dWZT|`mo_;h$HLBql+6Zpm^vzSUl8@
+z*C<Yc+%)(CS!<v2>=~1zA?KUKe0jrNey>BfEC}xdiozrF%rmxV7iUKjy?HVEqU^6M
+zv1mz`{8LnrDjI;8L{KwJ@o?V@4GRqesew{1ay6Ot{#JWMkKj!*K1pRwy(+>|((Loo
+z*Qcz~nqmsCDqbsf*a8vl`#t3kJD>q<_=cRWgY4=uEO<lPafnqHd+2*`aMK6^(aVCn
+zxY1vkITKgtX*I>1!m)nMLWLcZgiBmyxQAH0GWdg~i>-_{UJca$W?lnf8e!I^E0XsS
+z!ecOjV>iDhy(CSKO@{LOJG!@il6f|%K9$BC0lDlaTwY$6nk_p5g#Zsp7i(JsZ4~E&
+zx8tsXRWpH3k4#hAsxE$)T>{$~u_6e(WLC?$7W?uKU-UPJab3e)wa7t8QZnZWPBWo4
+z7K{;RejKqJ@F#k<8NsZvT*vy=zWXDo?9B;>01z=N*I<1unB6NRnvZ{S;jk0zzk(M6
+zh~xBQx%Ii41t-5>85?I(vJ$l7Sx%pO#O5!=)<txQm@}?U1{xgNHH{O@qi5q?VXE1-
+zkX>6w-<KSw4wHm@>8K%p(Mn#1g{y$}@9Bj&OvQfFVxt|V5F^#N1Rk>Kl3iX9kz8&~
+zWe^Fxkx<3zy>J^+X}~KpFxas)%p}Cxl(=)*12V#_e{%e9OUq1j1!t@YDGz-RNWwcP
+zxXVa#5ZS}cYJ}>OQ83KXlK<EO<Rq#dZ{s#Byztfw9L!fLcS<YQPBCMnjRm^6hKWcW
+zVY>si=kHc#ARD`eJQWN{eA%B1>ynKKu_X`WXmk2nltSf0ke8sHvjmNavUlL!Z(o<t
+z%o4rQuEgN4{gPB{TeQIFkbWVJB}X+esIrFN(6HJAuLnNi%Mr`(X=psW3lRry%XvDD
+zR|OR?dPvhud*dCg@qh(!OH_f{%5)WxFMEr}0W9vA+gu}(T#>$)(88neDHY{OdsqdN
+z$!0Y$-6(c1E@qA5W1dth+JXkvFY0&^w_pbBR$XDBPw?xQpUxZ8vSJRu-3j)^Fx8@B
+zB9gOo%g}B7E1QMUPmZLP7n(>n_0iZhCd8jEKHyZ5S!jCjxsi2C%LdWB6?t-e?^ud{
+zY(G`49=P_dva8KpN+L8cfcxbEn1$r?bj8>7w>VdpMeM-nox>051s{-1YL_bSWyJ?o
+zK)N>km%17Fo&}H!smm(@%V5rwP87B-Wf)#%UqK)zJLFUyg<s^5GWaY3elqr$eKaE=
+zbjsq$K^U~lOdEHS0SpqtdWNTkh9Cl}BHm#XVSLSoEEepL!)t9%v$5Y7q$*zCkX*UI
+zxn~_FI$(Q-moH~_5W_C0fFP>>u`JeG$V~hf{wh#;qEbFixpv%JFh}*`!NE)!LUxz+
+z54$FaPrrS;m~;O!gI0qm3Wo`UqA637_0PnxChtA9WwvV<{_eM{&d}|<<KdtwPq*fF
+zvAQ#NCfIfL0T%XAdn4rxKYbhe+q|=!21a&sjc7fW4tQYApYHEpxc~rN`KiZ$tFvkV
+a0f49hfS?9zabJV6#Ao{g000001X)^yNwfR_
+
+diff --git a/.github/workflows/quality-feedback.yml b/.github/workflows/quality-feedback.yml
+deleted file mode 100644
+index c722965..0000000
+--- a/.github/workflows/quality-feedback.yml
++++ /dev/null
+@@ -1,63 +0,0 @@
+-name: Verify complete feedback and UI workflow
+-on:
+-  push:
+-    branches: [quality/ui-feedback-20260922]
+-permissions:
+-  contents: write
+-jobs:
+-  verify:
+-    runs-on: ubuntu-latest
+-    timeout-minutes: 20
+-    env:
+-      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/isnotreal_test
+-      RUN_DB_INTEGRATION: '1'
+-    services:
+-      postgres:
+-        image: postgres:17-alpine
+-        env:
+-          POSTGRES_USER: postgres
+-          POSTGRES_PASSWORD: postgres
+-          POSTGRES_DB: isnotreal_test
+-        ports: ['5432:5432']
+-        options: >-
+-          --health-cmd "pg_isready -U postgres -d isnotreal_test"
+-          --health-interval 5s
+-          --health-timeout 5s
+-          --health-retries 10
+-    steps:
+-      - uses: actions/checkout@v6
+-      - uses: actions/setup-node@v6
+-        with:
+-          node-version-file: .nvmrc
+-          cache: npm
+-      - name: Apply checksum-verified local changeset
+-        shell: bash
+-        run: |
+-          set -euo pipefail
+-          cat .github/quality-part-1 .github/quality-part-2 .github/quality-part-3 > "$RUNNER_TEMP/quality.tar.xz"
+-          echo "635d1ab4b0ad2d860a13eb9dc6d25402e5563f0a46439bac439bb3bafa50d935  $RUNNER_TEMP/quality.tar.xz" | sha256sum --check
+-          mkdir "$RUNNER_TEMP/quality-patch"
+-          tar -xJf "$RUNNER_TEMP/quality.tar.xz" -C "$RUNNER_TEMP/quality-patch"
+-          python3 "$RUNNER_TEMP/quality-patch/apply.py"
+-          rm .github/quality-part-* .github/workflows/quality-feedback.yml
+-      - run: bash ops/ci-postgres-client.sh
+-      - run: npm install --package-lock-only
+-      - run: npm ci
+-      - run: npx prettier --write .
+-      - name: Preserve complete formatted changeset on verification branch
+-        run: |
+-          git config user.name "github-actions[bot]"
+-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+-          git add apps packages db tests ops package.json package-lock.json playwright.config.mjs .gitignore .prettierignore .github
+-          git diff --cached --quiet || git commit -m "feat: complete feedback intake editor inbox and request safeguards"
+-          git push origin HEAD:quality/ui-feedback-20260922
+-      - run: npm run check
+-      - run: npx playwright install --with-deps chromium
+-      - run: npm run test:browser
+-      - uses: actions/upload-artifact@v4
+-        if: always()
+-        with:
+-          name: feedback-ui-browser-evidence
+-          path: test-results/
+-          if-no-files-found: ignore
+-          retention-days: 7
+diff --git a/.gitignore b/.gitignore
+index 17c4279..01d9985 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -17,3 +17,6 @@ DerivedData/
+ backups/
+ *.dump
+ *.sql.gz
++
++test-results/
++playwright-report/
+diff --git a/.prettierignore b/.prettierignore
+index 2651070..471f19b 100644
+--- a/.prettierignore
++++ b/.prettierignore
+@@ -3,3 +3,6 @@ dist/
+ coverage/
+ package-lock.json
+ *.tsbuildinfo
++
++test-results/
++playwright-report/
+diff --git a/apps/api/src/admin.ts b/apps/api/src/admin.ts
+index 0381f8a..524a6fa 100644
+--- a/apps/api/src/admin.ts
++++ b/apps/api/src/admin.ts
+@@ -1,3 +1,4 @@
++import { createFeedbackAdminRouter } from './feedback-admin.js';
+ import type {
+   CommunitySubmissionState,
+   PostgresModerationQueue,
+@@ -45,7 +46,10 @@ const submissionStates = new Set<CommunitySubmissionState>([
+ ]);
+ 
+ export function createAdminRouter(deps: AdminDependencies) {
++  const feedback = createFeedbackAdminRouter(deps.db);
+   return async (request: AdminRequest): Promise<AdminResponse> => {
++    const feedbackResult = await feedback(request);
++    if (feedbackResult) return feedbackResult;
+     if (request.method === 'GET' && request.pathname === '/admin/api/v1/submissions') {
+       const state = optionalSubmissionState(request.query.state);
+       if (state === false) return response(400, { error: 'invalid_state' });
+diff --git a/apps/api/src/feedback-admin.ts b/apps/api/src/feedback-admin.ts
+new file mode 100644
+index 0000000..38b67c9
+--- /dev/null
++++ b/apps/api/src/feedback-admin.ts
+@@ -0,0 +1,94 @@
++import { feedbackStates, type FeedbackQueue, type FeedbackState } from '@isnotreal/application';
++import {
++  PostgresFeedbackInbox,
++  FeedbackRevisionError,
++  FeedbackValidationError,
++} from '@isnotreal/persistence/feedback-inbox';
++import type { SqlExecutor } from '@isnotreal/persistence';
++import type { AdminRequest, AdminResponse } from './admin.js';
++const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
++export function createFeedbackAdminRouter(db: SqlExecutor) {
++  const inbox = new PostgresFeedbackInbox(db);
++  return async (request: AdminRequest): Promise<AdminResponse | null> => {
++    const path = request.pathname;
++    if (!path.startsWith('/admin/api/v1/feedback')) return null;
++    try {
++      if (request.method === 'GET' && path === '/admin/api/v1/feedback/counts')
++        return { status: 200, body: { counts: await inbox.counts() } };
++      if (request.method === 'GET' && path === '/admin/api/v1/feedback') {
++        const q = request.query;
++        if (q.queue && !['all', 'evidence', 'product', 'safety'].includes(q.queue))
++          throw new FeedbackValidationError('Invalid queue');
++        if (q.state && !['all', 'open', ...feedbackStates].includes(q.state))
++          throw new FeedbackValidationError('Invalid state');
++        const limit = q.limit === undefined ? 50 : Number(q.limit);
++        let after = null;
++        if (q.afterId || q.afterDate) {
++          if (
++            !q.afterId ||
++            !uuid.test(q.afterId) ||
++            !q.afterDate ||
++            !Number.isFinite(Date.parse(q.afterDate))
++          )
++            throw new FeedbackValidationError('Invalid cursor');
++          after = { id: q.afterId, submittedAt: new Date(q.afterDate).toISOString() };
++        }
++        return {
++          status: 200,
++          body: await inbox.list({
++            queue: q.queue && q.queue !== 'all' ? (q.queue as FeedbackQueue) : null,
++            state: q.state === 'all' ? null : ((q.state ?? 'open') as FeedbackState | 'open'),
++            limit,
++            after,
++          }),
++        };
++      }
++      const match = /^\/admin\/api\/v1\/feedback\/([^/]+)\/(review|duplicates)$/.exec(path);
++      if (!match || !match[1] || !uuid.test(match[1]))
++        return { status: 404, body: { error: 'not_found' } };
++      if (request.method === 'GET' && match[2] === 'duplicates')
++        return { status: 200, body: { duplicates: await inbox.duplicates(match[1]) } };
++      if (request.method === 'POST' && match[2] === 'review') {
++        const body = request.body as Record<string, unknown> | null;
++        if (
++          !body ||
++          typeof body !== 'object' ||
++          Array.isArray(body) ||
++          typeof body.state !== 'string' ||
++          !feedbackStates.includes(body.state as FeedbackState) ||
++          typeof body.expectedRevision !== 'number' ||
++          typeof body.note !== 'string'
++        )
++          throw new FeedbackValidationError('Invalid review');
++        if (
++          body.duplicateOf !== undefined &&
++          body.duplicateOf !== null &&
++          (typeof body.duplicateOf !== 'string' || !uuid.test(body.duplicateOf))
++        )
++          throw new FeedbackValidationError('Invalid original report');
++        return {
++          status: 200,
++          body: await inbox.review(
++            match[1],
++            {
++              state: body.state as FeedbackState,
++              expectedRevision: body.expectedRevision,
++              note: body.note,
++              ...(body.duplicateOf === undefined
++                ? {}
++                : { duplicateOf: body.duplicateOf as string | null }),
++            },
++            request.actorId,
++          ),
++        };
++      }
++      return { status: 405, body: { error: 'method_not_allowed' } };
++    } catch (error) {
++      if (error instanceof FeedbackRevisionError)
++        return { status: 409, body: { error: 'review_conflict', message: error.message } };
++      if (error instanceof FeedbackValidationError)
++        return { status: 400, body: { error: 'invalid_review', message: error.message } };
++      throw error;
++    }
++  };
++}
+diff --git a/apps/api/src/index.ts b/apps/api/src/index.ts
+index 3a956de..6c8c44f 100644
+--- a/apps/api/src/index.ts
++++ b/apps/api/src/index.ts
+@@ -1,3 +1,8 @@
++import {
++  submissionCatalog,
++  SubmissionConflictError,
++  SubmissionTargetNotFoundError,
++} from '@isnotreal/application';
+ import type {
+   AlternativeDirectory,
+   PublicationReader,
+@@ -49,20 +54,9 @@ const channels = new Set<PublicationChannel>([
+   'domain-subdomains',
+ ]);
+ const lists = new Set<ListKind>(['filter', 'highlight']);
+-const submissionTypes = new Set<SubmissionInput['submissionType']>([
+-  'add-evidence',
+-  'incorrect-information',
+-  'changed-position',
+-  'wrong-identifier',
+-  'missing-identifier',
+-  'company-relationship',
+-  'suggest-alternative',
+-  'new-entity',
+-  'product-feedback',
+-  'bug-report',
+-  'accessibility-feedback',
+-  'abuse-report',
+-]);
++const submissionTypes = new Set<SubmissionInput['submissionType']>(
++  submissionCatalog.map((item) => item.code),
++);
+ 
+ export function createApiRouter(deps: ApiDependencies) {
+   return async (request: ApiRequest): Promise<ApiResponse> => {
+@@ -85,7 +79,7 @@ export function createApiRouter(deps: ApiDependencies) {
+ 
+     if (request.method === 'GET' && request.pathname === '/api/v1/search') {
+       const q = request.query.q?.trim() ?? '';
+-      if (q.length < 2) return response(400, { error: 'query_too_short' });
++      if (q.length < 2 || q.length > 200) return response(400, { error: 'invalid_query_length' });
+       const requestedLimit = Number.parseInt(request.query.limit ?? '20', 10);
+       const limit = Number.isFinite(requestedLimit)
+         ? Math.min(50, Math.max(1, requestedLimit))
+@@ -225,7 +219,15 @@ export function createApiRouter(deps: ApiDependencies) {
+       ) {
+         return response(400, { error: 'unknown_reason_code' });
+       }
+-      return response(202, await deps.submissions.create(input));
++      try {
++        return response(202, await deps.submissions.create(input));
++      } catch (error) {
++        if (error instanceof SubmissionConflictError)
++          return response(409, { error: 'submission_conflict' });
++        if (error instanceof SubmissionTargetNotFoundError)
++          return response(400, { error: 'unknown_entity' });
++        throw error;
++      }
+     }
+ 
+     const publicationMatch =
+@@ -288,12 +290,16 @@ function parseSubmission(body: unknown): SubmissionInput | null {
+   if (proposedList !== null && proposedList !== undefined && !isListValue(proposedList))
+     return null;
+ 
+-  const sourceUrls = body.sourceUrls;
++  const sourceUrls = body.sourceUrls ?? [];
+   if (!Array.isArray(sourceUrls) || sourceUrls.length > 20) return null;
+   if (sourceUrls.some((url) => typeof url !== 'string' || !isHttpUrl(url))) return null;
+ 
+   const entityPublicId = nullableString(body.entityPublicId);
+-  if (entityPublicId !== null && !/^\d+$/.test(entityPublicId)) return null;
++  if (
++    entityPublicId !== null &&
++    (!/^[1-9]\d{0,18}$/.test(entityPublicId) || BigInt(entityPublicId) > 9223372036854775807n)
++  )
++    return null;
+ 
+   const identifierKind = nullableString(body.identifierKind);
+   const identifierValue = nullableString(body.identifierValue);
+@@ -306,7 +312,22 @@ function parseSubmission(body: unknown): SubmissionInput | null {
+   const submitterContactRef = nullableString(body.submitterContactRef);
+   if (submitterContactRef && submitterContactRef.length > 512) return null;
+ 
++  const clientRequestId = nullableString(body.clientRequestId);
++  if (
++    body.clientRequestId !== undefined &&
++    body.clientRequestId !== null &&
++    typeof body.clientRequestId !== 'string'
++  )
++    return null;
++  if (
++    clientRequestId &&
++    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
++      clientRequestId,
++    )
++  )
++    return null;
+   return {
++    clientRequestId,
+     entityPublicId,
+     identifierKind,
+     identifierValue,
+@@ -344,7 +365,13 @@ function isListValue(value: unknown): value is ListKind | null {
+ }
+ 
+ function isHttpUrl(value: string): boolean {
+-  if (value.length > 2_048 || /\s/.test(value)) return false;
+-  const schemeLength = value.startsWith('https://') ? 8 : value.startsWith('http://') ? 7 : 0;
+-  return schemeLength > 0 && value.length > schemeLength;
++  if (value.length > 2048 || /\s/.test(value)) return false;
++  try {
++    const url = new URL(value);
++    return (
++      ['http:', 'https:'].includes(url.protocol) && !!url.hostname && !url.username && !url.password
++    );
++  } catch {
++    return false;
++  }
+ }
+diff --git a/apps/api/src/request-guard.ts b/apps/api/src/request-guard.ts
+new file mode 100644
+index 0000000..e6c7582
+--- /dev/null
++++ b/apps/api/src/request-guard.ts
+@@ -0,0 +1,158 @@
++import { createHmac, randomBytes } from 'node:crypto';
++import { isIP } from 'node:net';
++
++export type RouteClass = 'health' | 'write' | 'search' | 'admin' | 'data' | 'page';
++export function routeClass(path: string, method: string): RouteClass {
++  if (path === '/healthz' || path === '/readyz') return 'health';
++  if (path === '/admin' || path.startsWith('/admin/')) return 'admin';
++  if (method === 'POST') return 'write';
++  if (path === '/search' || path === '/api/v1/search') return 'search';
++  if (path.startsWith('/data/')) return 'data';
++  return 'page';
++}
++function normalizedIp(raw: string): string {
++  const ip = raw.startsWith('::ffff:') && isIP(raw.slice(7)) === 4 ? raw.slice(7) : raw;
++  if (isIP(ip) === 4) return ip;
++  if (isIP(ip) !== 6) return 'unknown';
++  // Aggregate IPv6 clients to /64. This prevents rotating interface IDs from
++  // creating an unbounded limiter map. Addresses are never written to logs.
++  const [left = '', right = ''] = ip.toLowerCase().split('::');
++  const l = left ? left.split(':') : [];
++  const r = right ? right.split(':') : [];
++  const full = ip.includes('::')
++    ? [...l, ...Array<string>(8 - l.length - r.length).fill('0'), ...r]
++    : l;
++  return (
++    full
++      .slice(0, 4)
++      .map((part) => Number.parseInt(part, 16).toString(16))
++      .join(':') + '::/64'
++  );
++}
++export function clientAddress(
++  peer: string,
++  forwarded: string | undefined,
++  trusted: readonly string[],
++): string {
++  // Trust only one explicitly configured immediate proxy and one valid address.
++  // X-Forwarded-For is deliberately not interpreted as a client-provided chain.
++  const peerBare = peer.startsWith('::ffff:') ? peer.slice(7) : peer;
++  const candidate = forwarded?.trim();
++  return normalizedIp(
++    trusted.includes(peerBare) && candidate && isIP(candidate) ? candidate : peerBare,
++  );
++}
++interface Bucket {
++  tokens: number;
++  at: number;
++  expires: number;
++}
++export type Admission =
++  | { ok: true; release: () => void }
++  | { ok: false; status: 429 | 503; retryAfter: number; error: string };
++export class RequestGuard {
++  private readonly salt = randomBytes(32);
++  private readonly buckets = new Map<string, Bucket>();
++  private readonly active = new Map<string, number>();
++  private inFlight = 0;
++  private nextSweep = 0;
++  constructor(
++    private readonly maxConcurrent = 200,
++    private readonly capacity = 20000,
++    private readonly clock: () => number = Date.now,
++  ) {
++    if (
++      !Number.isSafeInteger(maxConcurrent) ||
++      maxConcurrent < 1 ||
++      !Number.isSafeInteger(capacity) ||
++      capacity < 1
++    )
++      throw new Error('Invalid request guard bounds');
++  }
++  get size(): number {
++    return this.buckets.size;
++  }
++  get activeRequests(): number {
++    return this.inFlight;
++  }
++  admit(address: string, family: RouteClass): Admission {
++    const now = this.clock();
++    if (now >= this.nextSweep) {
++      for (const [key, value] of this.buckets) if (value.expires <= now) this.buckets.delete(key);
++      this.nextSweep = now + 10000;
++    }
++    const key = createHmac('sha256', this.salt).update(address).digest('hex');
++    if (this.inFlight >= this.maxConcurrent || (this.active.get(key) ?? 0) >= 12)
++      return { ok: false, status: 503, retryAfter: 1, error: 'busy' };
++    const policy: Record<RouteClass, [number, number]> = {
++      health: [120, 120],
++      write: [6, 6],
++      search: [30, 30],
++      admin: [60, 60],
++      data: [120, 120],
++      page: [120, 120],
++    };
++    const [burst, perMinute] = policy[family];
++    const bucketKey = key + ':' + family;
++    let bucket = this.buckets.get(bucketKey);
++    if (!bucket) {
++      // Do not evict live buckets: churn would otherwise bypass existing limits.
++      if (this.buckets.size >= this.capacity)
++        return { ok: false, status: 503, retryAfter: 10, error: 'busy' };
++      bucket = { tokens: burst, at: now, expires: now + 120000 };
++      this.buckets.set(bucketKey, bucket);
++    }
++    bucket.tokens = Math.min(
++      burst,
++      bucket.tokens + (Math.max(0, now - bucket.at) * perMinute) / 60000,
++    );
++    bucket.at = now;
++    bucket.expires = now + 120000;
++    if (bucket.tokens < 1)
++      return {
++        ok: false,
++        status: 429,
++        retryAfter: Math.max(1, Math.ceil(((1 - bucket.tokens) * 60) / perMinute)),
++        error: 'rate_limited',
++      };
++    bucket.tokens -= 1;
++    this.inFlight += 1;
++    this.active.set(key, (this.active.get(key) ?? 0) + 1);
++    let released = false;
++    return {
++      ok: true,
++      release: () => {
++        if (released) return;
++        released = true;
++        this.inFlight -= 1;
++        const count = (this.active.get(key) ?? 1) - 1;
++        if (count > 0) this.active.set(key, count);
++        else this.active.delete(key);
++      },
++    };
++  }
++}
++export class RequestMetrics {
++  private readonly counts = new Map<string, number>();
++  private readonly latency = new Map<
++    RouteClass,
++    { count: number; totalMs: number; maxMs: number }
++  >();
++  observe(family: RouteClass, status: number, duration: number): void {
++    const key = family + ':' + Math.floor(status / 100) + 'xx';
++    this.counts.set(key, (this.counts.get(key) ?? 0) + 1);
++    const value = this.latency.get(family) ?? { count: 0, totalMs: 0, maxMs: 0 };
++    value.count += 1;
++    value.totalMs += duration;
++    value.maxMs = Math.max(value.maxMs, duration);
++    this.latency.set(family, value);
++  }
++  snapshot(inFlight: number) {
++    return {
++      scope: 'this-process',
++      inFlight,
++      requests: Object.fromEntries(this.counts),
++      latency: Object.fromEntries(this.latency),
++    };
++  }
++}
+diff --git a/apps/api/src/runtime.ts b/apps/api/src/runtime.ts
+index af96ffe..6599b49 100644
+--- a/apps/api/src/runtime.ts
++++ b/apps/api/src/runtime.ts
+@@ -1,3 +1,5 @@
++import { randomUUID } from 'node:crypto';
++import { RequestGuard, RequestMetrics, clientAddress, routeClass } from './request-guard.js';
+ import { Buffer } from 'node:buffer';
+ import { createHash, timingSafeEqual } from 'node:crypto';
+ import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+@@ -30,6 +32,8 @@ export interface NodeApiRuntimeOptions {
+   readonly adminActorId?: string;
+   readonly adminDatabaseUrl?: string;
+   readonly downloads?: Readonly<Record<string, string>>;
++  readonly trustedProxyAddresses?: readonly string[];
++  readonly publicOrigin?: string;
+ }
+ export interface RunningNodeApiRuntime {
+   readonly host: string;
+@@ -43,6 +47,7 @@ class HttpError extends Error {
+ }
+ function headers(response: ServerResponse, admin = false): void {
+   response.setHeader('x-content-type-options', 'nosniff');
++  response.setHeader('permissions-policy', 'camera=(), microphone=(), geolocation=()');
+   response.setHeader('referrer-policy', 'no-referrer');
+   response.setHeader(
+     'content-security-policy',
+@@ -51,7 +56,7 @@ function headers(response: ServerResponse, admin = false): void {
+   if (!admin) {
+     response.setHeader('access-control-allow-origin', '*');
+     response.setHeader('access-control-allow-methods', 'GET, HEAD, POST, OPTIONS');
+-    response.setHeader('access-control-allow-headers', 'content-type');
++    response.setHeader('access-control-allow-headers', 'content-type, if-none-match');
+   }
+ }
+ function send(
+@@ -88,6 +93,14 @@ async function body(request: IncomingMessage, limit: number): Promise<unknown> {
+   if (request.method === 'GET' || request.method === 'HEAD') return null;
+   const declared = Number(request.headers['content-length'] ?? 0);
+   if (declared > limit) throw new HttpError(413);
++  if (request.headers['content-encoding'] && request.headers['content-encoding'] !== 'identity')
++    throw new HttpError(415);
++  if (
++    !String(request.headers['content-type'] ?? '')
++      .toLowerCase()
++      .startsWith('application/json')
++  )
++    throw new HttpError(415);
+   const chunks: Buffer[] = [];
+   let size = 0;
+   for await (const chunk of request) {
+@@ -177,23 +190,42 @@ export async function startNodeApiRuntime(
+   const admin = adminDb
+     ? createAdminRouter({ db: adminDb, moderation: new PostgresModerationQueue(adminDb) })
+     : null;
+-  let submissionWindow = Date.now(),
+-    submissionCount = 0,
+-    inFlight = 0;
+-  const server = createServer((request, response) => {
+-    // Bound application work even if the reverse proxy/CDN is bypassed on a
+-    // private or development deployment. The edge remains responsible for
+-    // per-client rate limiting.
+-    if (inFlight >= 200) {
++  const guard = new RequestGuard(),
++    metrics = new RequestMetrics();
++  const publicOrigin = options.publicOrigin ?? 'https://isnotreal.click';
++  const server = createServer({ maxHeaderSize: 16384 }, (request, response) => {
++    const started = Date.now();
++    const raw = request.url ?? '/';
++    if (raw.length > 4096 || !raw.startsWith('/') || raw.startsWith('//')) {
+       headers(response);
+-      response.setHeader('retry-after', '1');
+-      json(response, request, 503, { error: 'busy' });
++      json(response, request, 414, { error: 'invalid_target' });
+       return;
+     }
+-    inFlight += 1;
+-    response.once('close', () => {
+-      inFlight = Math.max(0, inFlight - 1);
+-    });
++    const family = routeClass(raw.split('?')[0]!, request.method ?? 'GET');
++    response.setHeader('x-request-id', randomUUID());
++    const peer = clientAddress(
++      request.socket.remoteAddress ?? '',
++      typeof request.headers['x-real-ip'] === 'string' ? request.headers['x-real-ip'] : undefined,
++      options.trustedProxyAddresses ?? [],
++    );
++    const admission = guard.admit(peer, family);
++    if (!admission.ok) {
++      headers(response, family === 'admin');
++      response.setHeader('retry-after', String(admission.retryAfter));
++      json(response, request, admission.status, { error: admission.error });
++      metrics.observe(family, admission.status, Date.now() - started);
++      return;
++    }
++    let recorded = false;
++    const finish = () => {
++      admission.release();
++      if (!recorded) {
++        recorded = true;
++        metrics.observe(family, response.statusCode, Date.now() - started);
++      }
++    };
++    response.once('close', finish);
++    response.once('finish', finish);
+     void (async () => {
+       const url = new URL(request.url ?? '/', 'http://localhost');
+       const isAdmin = url.pathname === '/admin' || url.pathname.startsWith('/admin/');
+@@ -207,6 +239,21 @@ export async function startNodeApiRuntime(
+         json(response, request, 401, { error: 'unauthorized' });
+         return;
+       }
++      if (request.method === 'POST') {
++        response.removeHeader('access-control-allow-origin');
++        if (request.headers.origin && request.headers.origin !== publicOrigin) {
++          json(response, request, 403, { error: 'origin_not_allowed' });
++          return;
++        }
++      }
++      if (
++        isAdmin &&
++        url.pathname === '/admin/api/v1/metrics' &&
++        ['GET', 'HEAD'].includes(request.method ?? '')
++      ) {
++        json(response, request, 200, metrics.snapshot(guard.activeRequests));
++        return;
++      }
+       if (request.method === 'OPTIONS') {
+         response.statusCode = 204;
+         response.setHeader('cache-control', 'no-store');
+@@ -227,18 +274,12 @@ export async function startNodeApiRuntime(
+         }
+         return;
+       }
+-      if (url.pathname === '/api/v1/submissions' && request.method === 'POST') {
+-        if (Date.now() - submissionWindow > 60000) {
+-          submissionCount = 0;
+-          submissionWindow = Date.now();
+-        }
+-        if (++submissionCount > 60) {
+-          response.setHeader('retry-after', '60');
+-          throw new HttpError(429);
+-        }
+-      }
+       const query: Record<string, string> = {};
+-      for (const [key, value] of url.searchParams) query[key] = value;
++      if ([...url.searchParams].length > 20) throw new HttpError(400);
++      for (const [key, value] of url.searchParams) {
++        if (key.length > 64 || value.length > 2048) throw new HttpError(400);
++        query[key] = value;
++      }
+       const method = request.method === 'HEAD' ? 'GET' : (request.method ?? 'GET');
+       if (isAdmin) {
+         const result = await admin!({
+@@ -298,7 +339,9 @@ export async function startNodeApiRuntime(
+             result.status,
+             result.html,
+             'text/html; charset=utf-8',
+-            result.status === 200 ? 'public, max-age=60' : 'no-store',
++            result.status === 200 && !['/report', '/editor'].includes(url.pathname)
++              ? 'public, max-age=60'
++              : 'no-store',
+           );
+           return;
+         }
+@@ -343,6 +386,8 @@ export async function startNodeApiRuntime(
+   server.headersTimeout = 10000;
+   server.keepAliveTimeout = 5000;
+   server.maxHeadersCount = 100;
++  server.maxRequestsPerSocket = 100;
++  server.maxConnections = 1000;
+   try {
+     await new Promise<void>((resolve, reject) => {
+       server.once('error', reject);
+diff --git a/apps/api/src/serve.ts b/apps/api/src/serve.ts
+index ecbeafb..0ee621d 100644
+--- a/apps/api/src/serve.ts
++++ b/apps/api/src/serve.ts
+@@ -11,6 +11,11 @@ async function main(): Promise<void> {
+   const adminActorId = process.env.ADMIN_ACTOR_ID?.trim() || undefined;
+   const runtime = await startNodeApiRuntime({
+     databaseUrl,
++    trustedProxyAddresses: (process.env.TRUSTED_PROXY_ADDRESSES ?? '')
++      .split(',')
++      .map((value) => value.trim())
++      .filter(Boolean),
++    publicOrigin: process.env.PUBLIC_ORIGIN ?? 'https://isnotreal.click',
+     artifactRoot,
+     host: process.env.HOST ?? '0.0.0.0',
+     port,
+diff --git a/apps/web/src/index.ts b/apps/web/src/index.ts
+index 16480b0..11c8e5d 100644
+--- a/apps/web/src/index.ts
++++ b/apps/web/src/index.ts
+@@ -1,3 +1,5 @@
++import { feedbackBody, editorBody, helpBody } from './support.js';
++import { feedbackScript, editorScript, supportCss } from './support-assets.js';
+ import type {
+   AlternativeDirectory,
+   PublicEntityDirectory,
+@@ -74,7 +76,7 @@ const fallbackCauses: readonly Cause[] = [
+   },
+ ];
+ function layout(title: string, body: string, path = '/'): string {
+-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>${escape(title)} · isnotreal.click</title><meta name="description" content="Choose your filters. Inspect the evidence. A source-backed directory and browser extension."><link rel="canonical" href="https://isnotreal.click${escape(path)}"><link rel="stylesheet" href="/assets/site.css"><script src="/assets/site.js" defer></script></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="/">is<span>not</span>real.click</a><nav aria-label="Main"><a href="/search">Search</a><a href="/causes">Causes</a><a href="/download">Get the extension</a></nav></header><main id="main">${body}</main><footer><strong>Local choices. Public evidence.</strong><nav aria-label="Footer"><a href="/how-it-works">How it works</a><a href="/privacy">Privacy</a><a href="/report">Feedback & corrections</a></nav><small>Coverage depends on verified identifiers and the browser features available. No claim of wrongdoing follows from a document mention alone.</small></footer></body></html>`;
++  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>${escape(title)} · isnotreal.click</title><meta name="description" content="Choose your filters. Inspect the evidence. A source-backed directory and browser extension."><link rel="canonical" href="https://isnotreal.click${escape(path)}"><link rel="stylesheet" href="/assets/site.css"><script src="/assets/site.js" defer></script></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="/">is<span>not</span>real.click</a><nav aria-label="Main"><a href="/search">Search</a><a href="/causes">Causes</a><a href="/download">Get the extension</a><a href="/report">Feedback & corrections</a><a href="/help">Help</a></nav></header><main id="main">${body}</main><footer><strong>Local choices. Public evidence.</strong><nav aria-label="Footer"><a href="/how-it-works">How it works</a><a href="/privacy">Privacy</a><a href="/report">Feedback & corrections</a><a href="/help">Help</a></nav><small>Coverage depends on verified identifiers and the browser features available. No claim of wrongdoing follows from a document mention alone.</small></footer></body></html>`;
+ }
+ const html = (
+   title: string,
+@@ -119,8 +121,30 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
+     pathname: string,
+     query: Readonly<Record<string, string | undefined>> = {},
+   ): Promise<WebRouteResult | null> => {
++    if (pathname === '/assets/feedback.js')
++      return {
++        kind: 'asset',
++        status: 200,
++        body: feedbackScript,
++        contentType: 'text/javascript; charset=utf-8',
++      };
++    if (pathname === '/assets/editor.js')
++      return {
++        kind: 'asset',
++        status: 200,
++        body: editorScript,
++        contentType: 'text/javascript; charset=utf-8',
++      };
++    if (pathname === '/editor') return html('Editor workspace', editorBody(), pathname);
++    if (pathname === '/help') return html('Help', helpBody(), pathname);
++    if (pathname === '/feedback') return { kind: 'redirect', status: 302, location: '/report' };
+     if (pathname === '/assets/site.css')
+-      return { kind: 'asset', status: 200, body: css, contentType: 'text/css; charset=utf-8' };
++      return {
++        kind: 'asset',
++        status: 200,
++        body: css + supportCss,
++        contentType: 'text/css; charset=utf-8',
++      };
+     if (pathname === '/assets/site.js')
+       return {
+         kind: 'asset',
+@@ -208,29 +232,12 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
+         pathname,
+       );
+     }
+-    if (pathname === '/report') {
+-      const reasons = (await deps.reasons?.list()) ?? [];
+-      const id = /^[1-9]\d{0,19}$/.test(query.entity ?? '') ? query.entity! : '';
+-      const types = [
+-        'add-evidence',
+-        'incorrect-information',
+-        'changed-position',
+-        'wrong-identifier',
+-        'missing-identifier',
+-        'company-relationship',
+-        'suggest-alternative',
+-        'new-entity',
+-        'product-feedback',
+-        'bug-report',
+-        'accessibility-feedback',
+-        'abuse-report',
+-      ];
++    if (pathname === '/report')
+       return html(
+-        'Submit evidence or a correction',
+-        `<h1>Feedback, evidence & corrections.</h1><p>Use one review queue for factual corrections, missing context, identifiers, alternatives and general product feedback. Evidence claims should include an original or reliable source, not a crowd-sourced accusation.</p><form data-submission><label for="entity">Entity ID (optional)</label><input id="entity" name="entityPublicId" value="${id}" inputmode="numeric" pattern="[0-9]*"><label for="type">What are you submitting?</label><select id="type" name="submissionType">${types.map((t) => `<option value="${t}"${query.type === t ? ' selected' : ''}>${t.replaceAll('-', ' ')}</option>`).join('')}</select><label for="reason">Proposed reason (optional)</label><select id="reason" name="proposedReasonCode"><option value="">Let the editor classify it</option>${reasons.map((r) => `<option value="${escape(r.code)}">${escape(r.code + ' · ' + r.label)}</option>`).join('')}</select><label for="notes">What should we know?</label><textarea id="notes" name="narrative" minlength="3" maxlength="10000" rows="6" required></textarea><label for="sources">Source URLs, one per line</label><textarea id="sources" name="sources" rows="4" placeholder="https://…"></textarea><p class="muted">Do not include home addresses, private contacts, victims’ identities or information hidden by redactions.</p><button type="submit">Send for review</button><p id="form-status" role="status" aria-live="polite"></p><noscript>JavaScript is needed to submit this form. The evidence directory can be read without it.</noscript></form>`,
++        'Feedback & corrections',
++        feedbackBody(query, (await deps.reasons?.list()) ?? []),
+         pathname,
+       );
+-    }
+     if (pathname === '/privacy' || pathname === '/how-it-works') {
+       const privacy = pathname === '/privacy';
+       return html(
+diff --git a/apps/web/src/support-assets.ts b/apps/web/src/support-assets.ts
+new file mode 100644
+index 0000000..31e9baf
+--- /dev/null
++++ b/apps/web/src/support-assets.ts
+@@ -0,0 +1,201 @@
++export const feedbackScript = String.raw`(() => {
++  const form = document.querySelector('[data-feedback-form]');
++  if (!form) return;
++  const status = form.querySelector('[data-form-status]');
++  const type = form.elements.namedItem('submissionType');
++  const help = document.querySelector('#category-help');
++  let lastPayload = '', requestKey = null, sent = false;
++  const describe = () => { help.textContent = type.selectedOptions[0].dataset.help + ' Review destination: ' + type.selectedOptions[0].dataset.queue + ' inbox.'; };
++  type.addEventListener('change', describe); describe();
++  form.addEventListener('submit', async (event) => {
++    event.preventDefault();
++    if (sent || !form.reportValidity()) return;
++    const button = form.querySelector('button[type="submit"]');
++    const values = new FormData(form);
++    const rawSources = String(values.get('sources') || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
++    if (rawSources.length > 20) { status.textContent = 'Use no more than 20 source links.'; status.focus(); return; }
++    const sourceUrls = [];
++    for (const raw of rawSources) {
++      try {
++        const url = new URL(raw);
++        if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.href.length > 2048) throw Error('invalid');
++        sourceUrls.push(url.href);
++      } catch { status.textContent = 'One source link is not a valid HTTP(S) URL without credentials.'; status.focus(); return; }
++    }
++    const input = {
++      submissionType: values.get('submissionType'), entityPublicId: String(values.get('entityPublicId') || '').trim() || null,
++      proposedReasonCode: values.get('proposedReasonCode') || null, narrative: String(values.get('narrative') || '').trim(),
++      sourceUrls: [...new Set(sourceUrls)],
++    };
++    const serialized = JSON.stringify(input);
++    if (serialized !== lastPayload) { lastPayload = serialized; requestKey = crypto.randomUUID(); }
++    input.clientRequestId = requestKey;
++    sent = true; button.disabled = true; form.setAttribute('aria-busy', 'true'); status.textContent = 'Sending to the review inbox…';
++    try {
++      const response = await fetch('/api/v1/submissions', {
++        method: 'POST', credentials: 'omit', referrerPolicy: 'no-referrer', headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify(input), signal: AbortSignal.timeout(15000),
++      });
++      const body = await response.json().catch(() => ({}));
++      if (!response.ok) {
++        if (response.status === 429) throw Error('Too many submissions. Please wait ' + (response.headers.get('retry-after') || '60') + ' seconds, then retry. Your text is still here.');
++        if (response.status === 409) throw Error('The request reference was already used. Edit the report before retrying.');
++        if (response.status === 400) throw Error('Check the entity ID, reason and source links. Your text is still here.');
++        throw Error('The review service is unavailable. Retry with the same text to avoid creating a duplicate.');
++      }
++      if (typeof body.id !== 'string') throw Error('No receipt was returned. Retry with the same text to check the submission safely.');
++      const queue = type.selectedOptions[0].dataset.queue;
++      status.textContent = 'Saved to the ' + queue + ' review inbox. Reference: ' + body.id + '. A review is still required; nothing has been published.';
++      form.reset(); describe(); lastPayload = ''; requestKey = null; status.focus();
++    } catch (error) {
++      status.textContent = error.name === 'TimeoutError' ? 'The request timed out. Your text is still here; retrying the unchanged report will not duplicate it.' : error.message;
++      status.focus();
++    } finally { sent = false; button.disabled = false; form.removeAttribute('aria-busy'); }
++  });
++})();
++`;
++
++export const editorScript = String.raw`(() => {
++  const root = document.querySelector('[data-editor-root]'), status = document.querySelector('[data-editor-status]');
++  if (!root || !status) return;
++  let token = '', lastActivity = Date.now(), currentView = 'inbox', pageAfter = null, generation = 0;
++  const element = (tag, text = '', attributes = {}) => {
++    const node = document.createElement(tag); node.textContent = text;
++    for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, value);
++    return node;
++  };
++  const announce = (text, bad = false) => { status.textContent = text; status.setAttribute('role', bad ? 'alert' : 'status'); };
++  const action = (text, fn) => {
++    const button = element('button', text, { type: 'button' });
++    button.addEventListener('click', async () => { button.disabled = true; try { await fn(); } catch (error) { announce(error.message, true); } finally { button.disabled = false; } });
++    return button;
++  };
++  const link = (text, url) => {
++    try { const safe = new URL(url, location.origin); if (!['http:','https:'].includes(safe.protocol) || safe.username || safe.password) return element('span', 'Unavailable link');
++      return element('a', text, { href: safe.href, target: '_blank', rel: 'noopener noreferrer', referrerpolicy: 'no-referrer' });
++    } catch { return element('span', 'Unavailable link'); }
++  };
++  function lock(message = 'Workspace locked.') {
++    token = ''; generation++; root.replaceChildren(); pageAfter = null;
++    const form = element('form', '', { class: 'card', 'data-editor-login': '' });
++    const input = element('input', '', { id: 'editor-token', type: 'password', name: 'token', minlength: '32', autocomplete: 'off', required: '' });
++    form.append(element('label', 'Editor access token', { for: 'editor-token' }), input, element('button', 'Unlock workspace', { class: 'primary' }));
++    root.append(form); bindLogin(form); announce(message); input.focus();
++  }
++  async function request(path, method = 'GET', payload) {
++    if (!token) throw Error('Unlock the workspace first.');
++    const response = await fetch('/admin/api/v1/' + path, { method, cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer',
++      headers: { Authorization: 'Bearer ' + token, ...(payload === undefined ? {} : { 'Content-Type': 'application/json' }) },
++      ...(payload === undefined ? {} : { body: JSON.stringify(payload) }), signal: AbortSignal.timeout(15000) });
++    if (response.status === 401) { lock('Access expired or the token was not accepted.'); throw Error('Workspace locked.'); }
++    const value = await response.json().catch(() => ({}));
++    if (!response.ok) throw Error(response.status === 409 ? 'Another editor changed this report. Reload before deciding again.' : response.status === 429 ? 'The review service is rate limiting requests. Wait briefly and retry.' : value.message || 'The review request failed (' + response.status + ').');
++    return value;
++  }
++  function bindLogin(form) {
++    form.addEventListener('submit', async (event) => {
++      event.preventDefault(); if (!form.reportValidity()) return;
++      const input = form.elements.namedItem('token'), button = form.querySelector('button');
++      token = input.value.trim(); input.value = ''; button.disabled = true;
++      try { await request('feedback/counts'); lastActivity = Date.now(); await shell(); announce('Workspace unlocked. Token is held only in this tab.'); }
++      catch (error) { token = ''; announce(error.message, true); }
++      finally { button.disabled = false; }
++    });
++  }
++  const select = (id, label, options) => {
++    const wrap = element('div'), field = element('select', '', { id });
++    for (const [value, text] of options) field.append(element('option', text, { value }));
++    wrap.append(element('label', label, { for: id }), field); return { wrap, field };
++  };
++  let content, queue, state;
++  async function shell() {
++    root.replaceChildren();
++    const toolbar = element('nav', '', { 'aria-label': 'Editor sections', class: 'row' });
++    for (const [view, label] of [['inbox','Reports'],['imports','Imports'],['membership','Membership'],['issues','Publication checks']]) {
++      const button = action(label, async () => { currentView = view; pageAfter = null; await shell(); });
++      button.setAttribute('aria-pressed', String(currentView === view)); toolbar.append(button);
++    }
++    toolbar.append(action('Lock workspace', () => lock())); root.append(toolbar);
++    content = element('section', '', { 'aria-live': 'polite' }); root.append(content);
++    if (currentView === 'inbox') {
++      const controls = element('div', '', { class: 'grid' });
++      queue = select('inbox-queue', 'Review inbox', [['all','All inboxes'],['safety','Safety & privacy'],['product','Product & accessibility'],['evidence','Evidence & corrections']]);
++      state = select('inbox-state', 'Review state', [['open','Open reports'],['pending','Pending'],['triaged','In review'],['accepted','Accepted'],['rejected','Rejected'],['duplicate','Duplicates'],['spam','Spam'],['all','All states']]);
++      controls.append(queue.wrap, state.wrap, action('Reload reports', async () => { pageAfter = null; await inbox(); })); root.insertBefore(controls, content);
++      queue.field.addEventListener('change', async () => { pageAfter = null; await inbox().catch(e => announce(e.message,true)); });
++      state.field.addEventListener('change', async () => { pageAfter = null; await inbox().catch(e => announce(e.message,true)); });
++      await inbox();
++    } else if (currentView === 'imports') await imports();
++    else if (currentView === 'membership') await membership();
++    else await issues();
++  }
++  async function inbox() {
++    const version = ++generation;
++    const search = new URLSearchParams({ queue: queue.field.value, state: state.field.value, limit: '30' });
++    if (pageAfter) { search.set('afterId',pageAfter.id); search.set('afterDate',pageAfter.submittedAt); }
++    announce('Loading reports…');
++    const data = await request('feedback?' + search);
++    if (version !== generation || !token) return;
++    content.replaceChildren(element('h2','Report inbox'), element('p','Review decisions update the report only. They do not publish evidence or change anyone’s filters.'));
++    if (!data.reports.length) content.append(element('p','No reports match these filters.', { class: 'notice' }));
++    for (const report of data.reports) {
++      const card = element('article','',{ class:'card', 'data-report-id':report.id });
++      card.append(element('h3',report.type.replaceAll('-',' ')),element('p',report.queue + ' inbox · ' + report.state + ' · ' + new Date(report.submittedAt).toLocaleString(),{class:'muted'}),element('small','Reference: '+report.id),element('p',report.narrative,{class:'preserve-lines'}));
++      if (report.entityPublicId) card.append(link('Open entity evidence', '/' + report.entityPublicId));
++      const sources = element('ul'); for (const source of report.sourceUrls) { const li=element('li');li.append(link(source,source));sources.append(li); } card.append(sources);
++      if (report.note) card.append(element('p','Last review: '+report.note));
++      if (report.similarCount) card.append(action('Inspect '+report.similarCount+' exact-content matches',async()=>{
++        const matches=await request('feedback/'+report.id+'/duplicates'); const box=element('section');
++        box.append(element('h4','Possible duplicates'));
++        for(const item of matches.duplicates) box.append(element('p',item.id+' · '+item.state+' · '+new Date(item.submittedAt).toLocaleString()));
++        card.append(box);
++      }));
++      if (['pending','triaged'].includes(report.state)) {
++        const note=element('textarea','',{rows:'3',maxlength:'10000',id:'note-'+report.id});
++        const duplicate=element('input','',{id:'duplicate-'+report.id,placeholder:'Original report UUID',autocomplete:'off'});
++        card.append(element('label','Review note',{for:note.id}),note,element('label','Original report reference (only for duplicates)',{for:duplicate.id}),duplicate);
++        const row=element('div','',{class:'row'});
++        for(const [next,label] of [['triaged','Mark in review'],['accepted','Accept report'],['rejected','Reject'],['duplicate','Mark duplicate'],['spam','Mark spam']]) row.append(action(label,async()=>{
++          if(['rejected','duplicate','spam'].includes(next) && note.value.trim().length<3){note.focus();throw Error('Add a review note explaining this decision.');}
++          const result=await request('feedback/'+report.id+'/review','POST',{state:next,expectedRevision:report.revision,note:note.value,duplicateOf:next==='duplicate'?duplicate.value.trim():null});
++          card.replaceChildren(element('h3',report.type.replaceAll('-',' ')),element('p','Saved: '+result.state+' · reference '+report.id));announce('Review saved.');
++        })); card.append(row);
++      }
++      content.append(card);
++    }
++    if(data.next)content.append(action('Next page',async()=>{pageAfter=data.next;await inbox();}));
++    if(pageAfter)content.append(action('First page',async()=>{pageAfter=null;await inbox();}));
++    announce(data.reports.length+' reports loaded.');
++  }
++  async function imports() {
++    const data=await request('imports?limit=50'); content.replaceChildren(element('h2','Official-list imports'),element('p','Inspect identity exceptions before committing a trusted batch. A name match is not proof of account ownership.'));
++    for(const batch of data.batches){const card=element('article','',{class:'card'});card.append(element('h3',batch.sourceName),element('p',batch.state+' · '+batch.rowCount+' rows · '+batch.reasonCode),action('Review batch rows',async()=>{
++      const data=await request('imports/'+batch.id+'/rows?limit=100');const section=element('section');
++      for(const row of data.rows){const item=element('article','',{class:'card'});item.append(element('h4',row.rawName),element('p','Identity state: '+row.resolutionState));
++        for(const candidate of row.candidates){item.append(link(candidate.name,'/'+candidate.publicId));if(!['committed','rejected','skipped'].includes(row.resolutionState)) item.append(action('Confirm this identity',async()=>{await request('import-rows/'+row.id+'/approve','POST',{entityId:candidate.entityId,note:'Identity reviewed in editor workspace.'});item.append(element('p','Identity confirmed.'));}));}
++        section.append(item);
++      }
++      card.append(section,element('p','Showing up to 100 rows. Large imports require the full batch review/export tooling; no hidden rows are implicitly approved.'));
++    }));content.append(card);}
++    if(!data.batches.length)content.append(element('p','No staged imports.'));announce('Imports loaded.');
++  }
++  async function membership() {
++    const data=await request('membership-proposals?state=pending&limit=100');content.replaceChildren(element('h2','Membership proposals'));
++    for(const proposal of data.proposals){const card=element('article','',{class:'card'});const note=element('textarea','',{rows:'2',id:'proposal-'+proposal.id});card.append(element('h3',proposal.entityName+' · '+proposal.reasonCode),element('p',proposal.assertionSummary),link('Inspect evidence','/'+proposal.entityPublicId),element('label','Review note',{for:note.id}),note);
++      card.append(action('Approve supported proposal',async()=>{await request('membership-proposals/'+proposal.id+'/approve','POST',{note:note.value});card.replaceChildren(element('p','Proposal approved. Publication still requires the publisher.'));}),action('Reject proposal',async()=>{if(note.value.trim().length<3)throw Error('Explain why this proposal is rejected.');await request('membership-proposals/'+proposal.id+'/reject','POST',{note:note.value});card.replaceChildren(element('p','Proposal rejected.'));}));content.append(card);}
++    if(!data.proposals.length)content.append(element('p','No pending proposals.'));announce('Membership proposals loaded.');
++  }
++  async function issues() {
++    const data=await request('publication-issues?limit=100');content.replaceChildren(element('h2','Publication checks'));
++    for(const issue of data.issues){const card=element('article','',{class:'card'});card.append(element('h3',issue.entityName+' · '+issue.reasonCode),element('p',issue.assertionSummary),element('p',issue.issues.join(', ')),link('Inspect record','/'+issue.entityPublicId));content.append(card);}
++    if(!data.issues.length)content.append(element('p','No validation failures in the current query. This does not certify production deployment.'));announce('Publication checks loaded.');
++  }
++  bindLogin(root.querySelector('[data-editor-login]'));
++  for(const name of ['pointerdown','keydown'])document.addEventListener(name,()=>{lastActivity=Date.now();},{passive:true});
++  setInterval(()=>{if(token && Date.now()-lastActivity>10*60000)lock('Locked after ten minutes of inactivity.');},30000);
++  window.addEventListener('pagehide',()=>{token='';});
++})();
++`;
++
++export const supportCss = String.raw`:root{color-scheme:dark;--bg:#0b1017;--surface:#171e29;--text:#f4f6fb;--muted:#bcc6d5;--line:#465369;--accent:#ff8599;--focus:#ffd166;font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text)}main,header,footer{width:min(1152px,calc(100% - 40px));margin-inline:auto}header,footer{padding-block:24px;border-bottom:1px solid var(--line)}header{display:flex;gap:24px;align-items:center;justify-content:space-between}nav,.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}main{padding-block:40px}a{color:var(--accent);text-underline-offset:.2em}h1{font-size:clamp(2rem,5vw,4rem);line-height:1.08;letter-spacing:-.04em}h2{font-size:1.6rem}h3{font-size:1.2rem}.lede{font-size:1.12rem;color:var(--muted);max-width:75ch}.eyebrow{text-transform:uppercase;letter-spacing:.15em;color:var(--focus);font-size:.8rem;font-weight:750}.card{border:1px solid var(--line);border-radius:16px;padding:24px;background:var(--surface);margin-block:18px;min-width:0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}label{display:block;font-weight:650;margin-block:16px 6px}input,textarea,select,button,.button{font:inherit;color:inherit;border:1px solid var(--line);border-radius:9px;max-width:100%}input,textarea,select{background:var(--bg);padding:10px 12px;width:100%;min-height:44px}textarea{resize:vertical}button,.button{background:#253246;padding:10px 16px;cursor:pointer;min-height:44px;font-weight:650;text-decoration:none}button.primary,.button.primary{background:var(--accent);color:#111720;border-color:var(--accent)}button:disabled{opacity:.55;cursor:wait}[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}:focus-visible{outline:3px solid var(--focus);outline-offset:3px}.muted,small{color:var(--muted)}small{display:block}.notice{padding:16px;border-left:4px solid var(--focus);background:#212c3a;border-radius:6px}.preserve-lines{white-space:pre-wrap}p,li,a,small,code{overflow-wrap:anywhere}form button[type=submit]{margin-top:20px}.skip{position:absolute;left:12px;top:-100px;z-index:1000;background:var(--bg);padding:12px}.skip:focus{top:12px}[hidden]{display:none!important}@media(max-width:640px){.grid{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}.card{padding:18px}main,header,footer{width:calc(100% - 28px)}.row>button{flex:1 1 150px}h1{overflow-wrap:anywhere}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
++`;
+diff --git a/apps/web/src/support.ts b/apps/web/src/support.ts
+new file mode 100644
+index 0000000..d8fd729
+--- /dev/null
++++ b/apps/web/src/support.ts
+@@ -0,0 +1,34 @@
++import { submissionCatalog } from '@isnotreal/application';
++const escape = (text: string) =>
++  text.replace(
++    /[&<>"']/g,
++    (char) =>
++      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char,
++  );
++export function feedbackBody(
++  query: Readonly<Record<string, string | undefined>>,
++  reasons: readonly { code: string; label: string }[],
++): string {
++  const id = /^[1-9]\d{0,19}$/.test(query.entity ?? '') ? query.entity! : '';
++  const type = submissionCatalog.some((item) => item.code === query.type)
++    ? query.type!
++    : 'incorrect-information';
++  return `<p class="eyebrow">One place to be heard</p><h1>Feedback & corrections.</h1><p class="lede">Evidence corrections go to the evidence inbox, product issues to the product inbox, and abuse or privacy concerns to the safety inbox. Every submission receives a reference. Nothing publishes automatically.</p>
++  <form data-feedback-form class="card" aria-describedby="feedback-privacy">
++  <label for="report-type">What do you need help with?</label><select id="report-type" name="submissionType">${submissionCatalog.map((item) => `<option value="${item.code}" data-queue="${item.queue}" data-help="${escape(item.help)}"${item.code === type ? ' selected' : ''}>${escape(item.label)}</option>`).join('')}</select><p id="category-help" class="muted" aria-live="polite"></p>
++  <div class="grid"><div><label for="report-entity">Entity ID <span class="muted">(optional)</span></label><input id="report-entity" name="entityPublicId" inputmode="numeric" pattern="[1-9][0-9]{0,19}" maxlength="20" value="${id}" aria-describedby="entity-help"><small id="entity-help">Use the reference on an evidence page. Leave blank for general feedback.</small></div>
++  <div><label for="report-reason">Reason <span class="muted">(optional)</span></label><select id="report-reason" name="proposedReasonCode"><option value="">Let the editor classify it</option>${reasons.map((reason) => `<option value="${escape(reason.code)}">${escape(reason.code + ' · ' + reason.label)}</option>`).join('')}</select></div></div>
++  <label for="report-message">What should we know?</label><textarea id="report-message" name="narrative" minlength="3" maxlength="10000" rows="7" required aria-describedby="feedback-privacy"></textarea>
++  <label for="report-sources">Public source links <span class="muted">(optional, one per line)</span></label><textarea id="report-sources" name="sources" maxlength="45000" rows="4" placeholder="https://…" aria-describedby="sources-help"></textarea><small id="sources-help">Up to 20 HTTP(S) links. The form does not download or open these links.</small>
++  <p id="feedback-privacy" class="notice">Do not include passwords, API keys, private addresses, victims’ identities or material hidden by redactions. Reports are visible to authorized editors, not published as comments.</p>
++  <button type="submit" class="primary">Send for review</button><p data-form-status role="status" aria-live="polite" tabindex="-1"></p><noscript>JavaScript is required to send this form. Public evidence pages remain readable without it.</noscript>
++  </form><script src="/assets/feedback.js" defer></script>`;
++}
++export function editorBody(): string {
++  return `<p class="eyebrow">Authorized editors only</p><h1>Review workspace.</h1><p class="lede">Review reports, inspect import exceptions and check publication blockers. Your access token stays in this tab’s memory and is cleared when you lock, reload or leave.</p>
++  <section data-editor-root aria-label="Editor workspace"><form data-editor-login class="card"><label for="editor-token">Editor access token</label><input id="editor-token" name="token" type="password" minlength="32" autocomplete="off" spellcheck="false" required aria-describedby="editor-security"><p id="editor-security">Never paste database credentials or a publication signing key here. Use the scoped editor token configured on your server.</p><button class="primary">Unlock workspace</button></form></section>
++  <p data-editor-status role="status" aria-live="polite" tabindex="-1"></p><script src="/assets/editor.js" defer></script>`;
++}
++export function helpBody(): string {
++  return `<p class="eyebrow">Help</p><h1>Know what the extension is doing.</h1><div class="grid"><section class="card"><h2>Nothing is filtered</h2><p>Check that filtering, at least one cause, and specific reasons are enabled. Grant website permission and check the dataset’s last successful update. An empty or expired cache is not complete coverage.</p><a href="/download">Installation and updates</a></section><section class="card"><h2>A match is wrong</h2><p>Open the evidence page, then use Feedback & corrections. Include the public account or source only when relevant. A matching name alone is not reliable identity evidence.</p><a href="/report?type=wrong-identifier">Report an identity mismatch</a></section><section class="card"><h2>A website will not open</h2><p>The block page offers a temporary exact-site exception, a remembered exception, and reviewed alternatives. Remembered choices can be removed in extension settings.</p><a href="/report?type=bug-report">Report a technical issue</a></section><section class="card"><h2>Privacy or accessibility</h2><p>Use the same review form for private-information exposure, abuse or an accessibility barrier. Avoid repeating the sensitive information itself.</p><a href="/report?type=abuse-report">Contact the safety inbox</a><br><a href="/report?type=accessibility-feedback">Report an accessibility barrier</a></section></div>`;
++}
+diff --git a/db/migrations/0100_feedback_inbox.sql b/db/migrations/0100_feedback_inbox.sql
+new file mode 100644
+index 0000000..58fc2b7
+--- /dev/null
++++ b/db/migrations/0100_feedback_inbox.sql
+@@ -0,0 +1,29 @@
++BEGIN;
++
++-- Additive migration: deployed migration checksums remain unchanged.
++ALTER TABLE community_submissions DROP CONSTRAINT community_submissions_submission_type_check;
++ALTER TABLE community_submissions ADD CONSTRAINT community_submissions_submission_type_check CHECK (submission_type IN (
++  'add-evidence', 'incorrect-information', 'changed-position', 'wrong-identifier',
++  'missing-identifier', 'company-relationship', 'suggest-alternative', 'new-entity',
++  'product-feedback', 'bug-report', 'accessibility-feedback', 'abuse-report'
++));
++ALTER TABLE community_submissions DROP CONSTRAINT community_submissions_state_check;
++ALTER TABLE community_submissions ADD CONSTRAINT community_submissions_state_check CHECK (state IN (
++  'pending', 'triaged', 'accepted', 'rejected', 'duplicate', 'spam'
++));
++ALTER TABLE community_submissions
++  ADD COLUMN client_request_id uuid NULL,
++  ADD COLUMN content_fingerprint text NULL CHECK (content_fingerprint IS NULL OR content_fingerprint ~ '^[a-f0-9]{64}$'),
++  ADD COLUMN revision integer NOT NULL DEFAULT 0 CHECK (revision >= 0),
++  ADD COLUMN duplicate_of uuid NULL REFERENCES community_submissions(id) ON DELETE SET NULL,
++  ADD COLUMN queue text GENERATED ALWAYS AS (CASE
++    WHEN submission_type = 'abuse-report' THEN 'safety'
++    WHEN submission_type IN ('product-feedback', 'bug-report', 'accessibility-feedback') THEN 'product'
++    ELSE 'evidence' END) STORED,
++  ADD CONSTRAINT community_submissions_not_self_duplicate CHECK (duplicate_of IS NULL OR duplicate_of <> id),
++  ADD CONSTRAINT community_submissions_client_request_uq UNIQUE (client_request_id);
++CREATE INDEX community_submissions_inbox_idx ON community_submissions(queue, state, submitted_at, id);
++CREATE INDEX community_submissions_fingerprint_idx ON community_submissions(content_fingerprint, submitted_at) WHERE content_fingerprint IS NOT NULL;
++COMMENT ON COLUMN community_submissions.client_request_id IS 'Random per-form idempotency key, never a persistent user/device identifier.';
++COMMENT ON COLUMN community_submissions.content_fingerprint IS 'Exact-content duplicate hint for reviewers, not grounds for automatic rejection.';
++COMMIT;
+diff --git a/ops/nginx-isnotreal.conf.example b/ops/nginx-isnotreal.conf.example
+index c3cbf17..9a49d23 100644
+--- a/ops/nginx-isnotreal.conf.example
++++ b/ops/nginx-isnotreal.conf.example
+@@ -32,6 +32,7 @@ server {
+         proxy_pass http://127.0.0.1:3000;
+         proxy_http_version 1.1;
+         proxy_set_header Host $host;
++        proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-Proto $scheme;
+         proxy_connect_timeout 3s;
+         proxy_read_timeout 15s;
+@@ -43,6 +44,7 @@ server {
+         proxy_pass http://127.0.0.1:3000;
+         proxy_http_version 1.1;
+         proxy_set_header Host $host;
++        proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-Proto $scheme;
+         proxy_connect_timeout 3s;
+         proxy_read_timeout 15s;
+@@ -55,6 +57,7 @@ server {
+         proxy_pass http://127.0.0.1:3000;
+         proxy_http_version 1.1;
+         proxy_set_header Host $host;
++        proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-Proto $scheme;
+         proxy_connect_timeout 3s;
+         proxy_read_timeout 15s;
+@@ -67,6 +70,7 @@ server {
+         proxy_pass http://127.0.0.1:3000;
+         proxy_http_version 1.1;
+         proxy_set_header Host $host;
++        proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-Proto $scheme;
+         proxy_connect_timeout 3s;
+         proxy_read_timeout 15s;
+diff --git a/package-lock.json b/package-lock.json
+index 21b7aad..2bbb12e 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -13,6 +13,7 @@
+       ],
+       "devDependencies": {
+         "@eslint/js": "10.0.1",
++        "@playwright/test": "1.63.0",
+         "@types/node": "24.13.4",
+         "@types/pg": "8.23.1",
+         "eslint": "10.10.0",
+@@ -313,6 +314,22 @@
+       "dev": true,
+       "license": "MIT"
+     },
++    "node_modules/@playwright/test": {
++      "version": "1.63.0",
++      "resolved": "https://registry.npmjs.org/@playwright/test/-/test-1.63.0.tgz",
++      "integrity": "sha512-oxMK4vllB9RK5NQ2l1pq1IfOf2AvnEuj/vYGDj0H2nMtmtZpKtCwt/l00GEO6xjGfpBNAvjovvYdCm50dRQkpQ==",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "playwright": "1.63.0"
++      },
++      "bin": {
++        "playwright": "cli.js"
++      },
++      "engines": {
++        "node": ">=20"
++      }
++    },
+     "node_modules/@types/esrecurse": {
+       "version": "4.3.1",
+       "resolved": "https://registry.npmjs.org/@types/esrecurse/-/esrecurse-4.3.1.tgz",
+@@ -1295,6 +1312,35 @@
+         "url": "https://github.com/sponsors/jonschlinkert"
+       }
+     },
++    "node_modules/playwright": {
++      "version": "1.63.0",
++      "resolved": "https://registry.npmjs.org/playwright/-/playwright-1.63.0.tgz",
++      "integrity": "sha512-+7ziBLidS4NaNCdt57SUDT+wYmmd5fmiQejUic/kb+YsYSCPyOOE9sebzMjNmQrsnNpDJqd4WHvV/8lfKfUDUg==",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "playwright-core": "1.63.0"
++      },
++      "bin": {
++        "playwright": "cli.js"
++      },
++      "engines": {
++        "node": ">=20"
++      }
++    },
++    "node_modules/playwright-core": {
++      "version": "1.63.0",
++      "resolved": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.63.0.tgz",
++      "integrity": "sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==",
++      "dev": true,
++      "license": "Apache-2.0",
++      "bin": {
++        "playwright-core": "cli.js"
++      },
++      "engines": {
++        "node": ">=20"
++      }
++    },
+     "node_modules/postgres-array": {
+       "version": "2.0.0",
+       "resolved": "https://registry.npmjs.org/postgres-array/-/postgres-array-2.0.0.tgz",
+diff --git a/package.json b/package.json
+index 8a31399..50b4427 100644
+--- a/package.json
++++ b/package.json
+@@ -27,7 +27,8 @@
+     "db:shell": "bash ops/db-shell.sh",
+     "db:backup": "bash ops/backup-db.sh",
+     "start": "node apps/api/dist/serve.js",
+-    "start:local": "npm run build && npm run start"
++    "start:local": "npm run build && npm run start",
++    "test:browser": "npm run build && playwright test"
+   },
+   "devDependencies": {
+     "@eslint/js": "10.0.1",
+@@ -36,6 +37,7 @@
+     "eslint": "10.10.0",
+     "prettier": "3.9.6",
+     "typescript": "5.9.3",
+-    "typescript-eslint": "8.70.0"
++    "typescript-eslint": "8.70.0",
++    "@playwright/test": "1.63.0"
+   }
+ }
+diff --git a/packages/application/src/feedback.ts b/packages/application/src/feedback.ts
+new file mode 100644
+index 0000000..29afcd1
+--- /dev/null
++++ b/packages/application/src/feedback.ts
+@@ -0,0 +1,100 @@
++/** One catalog drives public forms, request validation and the private inbox. */
++export const submissionCatalog = [
++  {
++    code: 'add-evidence',
++    label: 'Add evidence',
++    queue: 'evidence',
++    help: 'Explain what the source establishes, with a link to the original record.',
++  },
++  {
++    code: 'incorrect-information',
++    label: 'Correct a fact',
++    queue: 'evidence',
++    help: 'Identify the incorrect statement and the supporting correction.',
++  },
++  {
++    code: 'changed-position',
++    label: 'A position changed',
++    queue: 'evidence',
++    help: 'Link the later statement or action. Historical facts are not erased.',
++  },
++  {
++    code: 'wrong-identifier',
++    label: 'The wrong account or website',
++    queue: 'evidence',
++    help: 'Explain the identity mismatch. Do not include private account information.',
++  },
++  {
++    code: 'missing-identifier',
++    label: 'Add a public account or website',
++    queue: 'evidence',
++    help: 'Link the public profile and explain who controls it.',
++  },
++  {
++    code: 'company-relationship',
++    label: 'A company relationship',
++    queue: 'evidence',
++    help: 'Describe the specific ownership or operating relationship, not an inferred position.',
++  },
++  {
++    code: 'suggest-alternative',
++    label: 'Suggest an alternative',
++    queue: 'evidence',
++    help: 'Describe what it replaces and link the service or creator.',
++  },
++  {
++    code: 'new-entity',
++    label: 'Add a person or organization',
++    queue: 'evidence',
++    help: 'Identify the public subject and the specific sourced action.',
++  },
++  {
++    code: 'product-feedback',
++    label: 'Product feedback',
++    queue: 'product',
++    help: 'Tell us what would make this work better. No evidence URL is required.',
++  },
++  {
++    code: 'bug-report',
++    label: 'Something is broken',
++    queue: 'product',
++    help: 'Describe the steps, what happened, and what you expected. Do not paste access tokens or private browsing history.',
++  },
++  {
++    code: 'accessibility-feedback',
++    label: 'Accessibility issue',
++    queue: 'product',
++    help: 'Describe the barrier and the assistive technology involved, only if relevant.',
++  },
++  {
++    code: 'abuse-report',
++    label: 'Abuse or privacy concern',
++    queue: 'safety',
++    help: 'Identify the public record or behavior without reposting private or harmful information.',
++  },
++] as const;
++export type SubmissionType = (typeof submissionCatalog)[number]['code'];
++export type FeedbackQueue = (typeof submissionCatalog)[number]['queue'];
++export const feedbackStates = [
++  'pending',
++  'triaged',
++  'accepted',
++  'rejected',
++  'duplicate',
++  'spam',
++] as const;
++export type FeedbackState = (typeof feedbackStates)[number];
++export const feedbackQueue = (type: string): FeedbackQueue =>
++  submissionCatalog.find((item) => item.code === type)?.queue ?? 'evidence';
++export class SubmissionConflictError extends Error {
++  constructor() {
++    super('This request identifier was already used for different content');
++    this.name = 'SubmissionConflictError';
++  }
++}
++export class SubmissionTargetNotFoundError extends Error {
++  constructor() {
++    super('The selected entity no longer exists');
++    this.name = 'SubmissionTargetNotFoundError';
++  }
++}
+diff --git a/packages/application/src/index.ts b/packages/application/src/index.ts
+index c2a6d3e..ee00833 100644
+--- a/packages/application/src/index.ts
++++ b/packages/application/src/index.ts
+@@ -1,3 +1,5 @@
++import type { SubmissionType, FeedbackState } from './feedback.js';
++export * from './feedback.js';
+ import type { EntityKind } from '@isnotreal/domain';
+ export { PROTOCOL_SCHEMA_VERSION } from '@isnotreal/protocol';
+ export type { ListKind, PublicationChannel, PublicEntityId } from '@isnotreal/protocol';
+@@ -132,19 +134,8 @@ export interface SubmissionInput {
+   readonly entityPublicId: PublicEntityId | null;
+   readonly identifierKind: string | null;
+   readonly identifierValue: string | null;
+-  readonly submissionType:
+-    | 'add-evidence'
+-    | 'incorrect-information'
+-    | 'changed-position'
+-    | 'wrong-identifier'
+-    | 'missing-identifier'
+-    | 'company-relationship'
+-    | 'suggest-alternative'
+-    | 'new-entity'
+-    | 'product-feedback'
+-    | 'bug-report'
+-    | 'accessibility-feedback'
+-    | 'abuse-report';
++  readonly submissionType: SubmissionType;
++  readonly clientRequestId?: string | null;
+   readonly proposedList: ListKind | null;
+   readonly proposedReasonCode: ReasonCode | null;
+   readonly narrative: string;
+@@ -155,7 +146,7 @@ export interface SubmissionInput {
+ export interface SubmissionReceipt {
+   readonly id: string;
+   readonly submittedAt: string;
+-  readonly state: 'pending';
++  readonly state: FeedbackState;
+ }
+ 
+ export interface PublicEntityDirectory {
+diff --git a/packages/persistence/package.json b/packages/persistence/package.json
+index 419dfc6..d08a81f 100644
+--- a/packages/persistence/package.json
++++ b/packages/persistence/package.json
+@@ -35,6 +35,10 @@
+     "./causes": {
+       "types": "./dist/causes.d.ts",
+       "import": "./dist/causes.js"
++    },
++    "./feedback-inbox": {
++      "types": "./dist/feedback-inbox.d.ts",
++      "import": "./dist/feedback-inbox.js"
+     }
+   },
+   "files": [
+diff --git a/packages/persistence/src/feedback-inbox.ts b/packages/persistence/src/feedback-inbox.ts
+new file mode 100644
+index 0000000..f529749
+--- /dev/null
++++ b/packages/persistence/src/feedback-inbox.ts
+@@ -0,0 +1,172 @@
++import { feedbackStates, type FeedbackQueue, type FeedbackState } from '@isnotreal/application';
++import type { SqlExecutor } from './index.js';
++
++export class FeedbackRevisionError extends Error {
++  constructor() {
++    super('The report changed. Reload it before reviewing.');
++    this.name = 'FeedbackRevisionError';
++  }
++}
++export class FeedbackValidationError extends Error {
++  constructor(message: string) {
++    super(message);
++    this.name = 'FeedbackValidationError';
++  }
++}
++interface InboxRow {
++  id: string;
++  entity_public_id: string | null;
++  submission_type: string;
++  queue: FeedbackQueue;
++  state: FeedbackState;
++  narrative: string;
++  proposed_reason_code: string | null;
++  submitted_at: string;
++  reviewed_at: string | null;
++  reviewed_by: string | null;
++  review_note: string;
++  revision: number;
++  duplicate_of: string | null;
++  source_urls: string[];
++  similar_count: number;
++}
++export interface InboxQuery {
++  queue?: FeedbackQueue | null;
++  state?: FeedbackState | 'open' | null;
++  limit?: number;
++  after?: { submittedAt: string; id: string } | null;
++}
++export class PostgresFeedbackInbox {
++  constructor(private readonly db: SqlExecutor) {}
++  async list(input: InboxQuery = {}) {
++    const limit = input.limit ?? 50;
++    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100)
++      throw new FeedbackValidationError('Invalid page size');
++    const result = await this.db.query<InboxRow>(
++      `SELECT s.id::text, e.public_id::text AS entity_public_id,
++        s.submission_type, s.queue, s.state, s.narrative, s.proposed_reason_code,
++        s.submitted_at::text, s.reviewed_at::text, s.reviewed_by, s.review_note,
++        s.revision, s.duplicate_of::text,
++        ARRAY(SELECT url FROM submission_sources WHERE submission_id=s.id ORDER BY created_at,id) AS source_urls,
++        (SELECT count(*)::integer FROM community_submissions d WHERE d.content_fingerprint=s.content_fingerprint AND d.id<>s.id) AS similar_count
++       FROM community_submissions s LEFT JOIN entities e ON e.id=s.entity_id
++       WHERE ($1::text IS NULL OR s.queue=$1)
++         AND ($2::text IS NULL OR ($2='open' AND s.state IN ('pending','triaged')) OR s.state=$2)
++         AND ($3::timestamptz IS NULL OR (s.submitted_at,s.id)>($3::timestamptz,$4::uuid))
++       ORDER BY s.submitted_at,s.id LIMIT $5`,
++      [
++        input.queue ?? null,
++        input.state === undefined ? 'open' : input.state,
++        input.after?.submittedAt ?? null,
++        input.after?.id ?? null,
++        limit + 1,
++      ],
++    );
++    const rows = result.rows.slice(0, limit);
++    const last = rows.at(-1);
++    return {
++      reports: rows.map((row) => ({
++        id: row.id,
++        entityPublicId: row.entity_public_id,
++        type: row.submission_type,
++        queue: row.queue,
++        state: row.state,
++        narrative: row.narrative,
++        reasonCode: row.proposed_reason_code,
++        submittedAt: row.submitted_at,
++        reviewedAt: row.reviewed_at,
++        reviewedBy: row.reviewed_by,
++        note: row.review_note,
++        revision: row.revision,
++        duplicateOf: row.duplicate_of,
++        sourceUrls: row.source_urls,
++        similarCount: row.similar_count,
++      })),
++      next:
++        result.rows.length > limit && last ? { submittedAt: last.submitted_at, id: last.id } : null,
++    };
++  }
++  async counts() {
++    const result = await this.db.query<{ queue: string; state: string; count: number }>(
++      'SELECT queue,state,count(*)::integer AS count FROM community_submissions GROUP BY queue,state ORDER BY queue,state',
++    );
++    return result.rows;
++  }
++  async duplicates(id: string) {
++    const result = await this.db.query<{
++      id: string;
++      state: string;
++      submitted_at: string;
++      duplicate_of: string | null;
++    }>(
++      `SELECT d.id::text,d.state,d.submitted_at::text,d.duplicate_of::text
++       FROM community_submissions s JOIN community_submissions d ON d.content_fingerprint=s.content_fingerprint AND d.id<>s.id
++       WHERE s.id=$1 ORDER BY d.submitted_at,d.id LIMIT 20`,
++      [id],
++    );
++    return result.rows.map((row) => ({
++      id: row.id,
++      state: row.state,
++      submittedAt: row.submitted_at,
++      duplicateOf: row.duplicate_of,
++    }));
++  }
++  async review(
++    id: string,
++    input: {
++      state: FeedbackState;
++      expectedRevision: number;
++      note: string;
++      duplicateOf?: string | null;
++    },
++    actor: string,
++  ) {
++    const note = input.note.trim();
++    if (!feedbackStates.includes(input.state) || input.state === 'pending')
++      throw new FeedbackValidationError('Invalid review state');
++    if (!Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 0)
++      throw new FeedbackValidationError('Expected revision is required');
++    if (!actor.trim() || note.length > 10000)
++      throw new FeedbackValidationError('Invalid reviewer or note');
++    if (['rejected', 'duplicate', 'spam'].includes(input.state) && note.length < 3)
++      throw new FeedbackValidationError('Explain this review decision');
++    return this.db.transaction(async (tx) => {
++      let duplicateOf = null;
++      if (input.state === 'duplicate') {
++        if (!input.duplicateOf || input.duplicateOf === id)
++          throw new FeedbackValidationError('Choose a different original report');
++        const original = await tx.query<{ id: string }>(
++          'SELECT id::text FROM community_submissions WHERE id=$1 AND duplicate_of IS NULL',
++          [input.duplicateOf],
++        );
++        if (!original.rows[0])
++          throw new FeedbackValidationError(
++            'The original report is unavailable or itself a duplicate',
++          );
++        duplicateOf = original.rows[0].id;
++      }
++      const result = await tx.query<{ id: string; revision: number }>(
++        `UPDATE community_submissions SET state=$2, reviewed_by=$3, reviewed_at=now(),review_note=$4,duplicate_of=$5,revision=revision+1
++         WHERE id=$1 AND revision=$6 AND state IN ('pending','triaged') RETURNING id::text,revision`,
++        [id, input.state, actor, note, duplicateOf, input.expectedRevision],
++      );
++      const row = result.rows[0];
++      if (!row) throw new FeedbackRevisionError();
++      await tx.query(
++        `INSERT INTO review_events(subject_type,subject_id,action,reviewer_id,rationale)
++         VALUES('community-submission',$1,$2,$3,$4)`,
++        [
++          id,
++          input.state === 'accepted'
++            ? 'approved'
++            : input.state === 'triaged'
++              ? 'submitted'
++              : 'rejected',
++          actor,
++          JSON.stringify({ state: input.state, note, duplicateOf, revision: row.revision }),
++        ],
++      );
++      return { ok: true, id: row.id, revision: row.revision, state: input.state };
++    });
++  }
++}
+diff --git a/packages/persistence/src/index.ts b/packages/persistence/src/index.ts
+index e51133d..d6ec7a6 100644
+--- a/packages/persistence/src/index.ts
++++ b/packages/persistence/src/index.ts
+@@ -1,3 +1,5 @@
++import { createHash } from 'node:crypto';
++import { SubmissionConflictError, SubmissionTargetNotFoundError } from '@isnotreal/application';
+ import type {
+   AlternativeDirectory,
+   AlternativeOption,
+@@ -106,7 +108,12 @@ type AlternativeRow = {
+   destination_channel: string | null;
+ };
+ 
+-type SubmissionRow = { id: string; submitted_at: string };
++type SubmissionRow = {
++  id: string;
++  submitted_at: string;
++  state: SubmissionReceipt['state'];
++  content_fingerprint: string;
++};
+ 
+ type CandidateRow = {
+   cause_slug: string;
+@@ -531,27 +538,41 @@ export class PostgresAlternativeDirectory implements AlternativeDirectory {
+ 
+ export class PostgresSubmissionWriter implements SubmissionWriter {
+   constructor(private readonly db: SqlExecutor) {}
+-
+   async create(input: SubmissionInput): Promise<SubmissionReceipt> {
++    const fingerprint = createHash('sha256')
++      .update(
++        JSON.stringify([
++          input.entityPublicId,
++          input.identifierKind,
++          input.identifierValue,
++          input.submissionType,
++          input.proposedList,
++          input.proposedReasonCode,
++          input.narrative,
++          [...new Set(input.sourceUrls)].sort(),
++          input.submitterContactRef,
++        ]),
++      )
++      .digest('hex');
+     return this.db.transaction(async (tx) => {
++      let entityId: string | null = null;
++      if (input.entityPublicId !== null) {
++        const target = await tx.query<{ id: string }>(
++          'SELECT id::text FROM entities WHERE public_id=$1',
++          [input.entityPublicId],
++        );
++        if (!target.rows[0]) throw new SubmissionTargetNotFoundError();
++        entityId = target.rows[0].id;
++      }
+       const inserted = await tx.query<SubmissionRow>(
+         `INSERT INTO community_submissions (
+-           entity_id,
+-           identifier_kind,
+-           identifier_value,
+-           submission_type,
+-           proposed_list,
+-           proposed_reason_code,
+-           narrative,
+-           submitter_contact_ref
+-         )
+-         VALUES (
+-           (SELECT id FROM entities WHERE public_id = $1),
+-           $2, $3, $4, $5, $6, $7, $8
+-         )
+-         RETURNING id::text, submitted_at::text`,
++          entity_id,identifier_kind,identifier_value,submission_type,proposed_list,
++          proposed_reason_code,narrative,submitter_contact_ref,client_request_id,content_fingerprint
++         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
++         ON CONFLICT (client_request_id) DO NOTHING
++         RETURNING id::text,submitted_at::text,state,content_fingerprint`,
+         [
+-          input.entityPublicId,
++          entityId,
+           input.identifierKind,
+           input.identifierValue,
+           input.submissionType,
+@@ -559,19 +580,26 @@ export class PostgresSubmissionWriter implements SubmissionWriter {
+           input.proposedReasonCode,
+           input.narrative,
+           input.submitterContactRef,
++          input.clientRequestId ?? null,
++          fingerprint,
+         ],
+       );
+-      const row = inserted.rows[0];
+-      if (!row) throw new Error('submission insert did not return a row');
+-
+-      for (const url of input.sourceUrls) {
+-        await tx.query(`INSERT INTO submission_sources (submission_id, url) VALUES ($1, $2)`, [
+-          row.id,
+-          url,
+-        ]);
++      let row = inserted.rows[0];
++      if (!row) {
++        const existing = await tx.query<SubmissionRow>(
++          'SELECT id::text,submitted_at::text,state,content_fingerprint FROM community_submissions WHERE client_request_id=$1',
++          [input.clientRequestId],
++        );
++        row = existing.rows[0];
++        if (!row || row.content_fingerprint !== fingerprint) throw new SubmissionConflictError();
++      } else {
++        for (const url of new Set(input.sourceUrls))
++          await tx.query('INSERT INTO submission_sources(submission_id,url) VALUES($1,$2)', [
++            row.id,
++            url,
++          ]);
+       }
+-
+-      return { id: row.id, submittedAt: row.submitted_at, state: 'pending' };
++      return { id: row.id, submittedAt: row.submitted_at, state: row.state };
+     });
+   }
+ }
+diff --git a/playwright.config.mjs b/playwright.config.mjs
+new file mode 100644
+index 0000000..26a143a
+--- /dev/null
++++ b/playwright.config.mjs
+@@ -0,0 +1,8 @@
++import { defineConfig } from '@playwright/test';
++export default defineConfig({
++  testDir: './tests/browser',
++  timeout: 45000,
++  expect: { timeout: 10000 },
++  workers: 1,
++  use: { headless: true, screenshot: 'only-on-failure', trace: 'retain-on-failure' },
++});
+diff --git a/tests/browser/support.spec.mjs b/tests/browser/support.spec.mjs
+new file mode 100644
+index 0000000..b95eb98
+--- /dev/null
++++ b/tests/browser/support.spec.mjs
+@@ -0,0 +1,172 @@
++import { test, expect } from '@playwright/test';
++import { createServer } from 'node:http';
++import { randomUUID } from 'node:crypto';
++import { createPublicWebsite } from '../../apps/web/dist/index.js';
++let server,
++  origin,
++  reports = [],
++  limited = false;
++const receiptKeys = new Map();
++const web = createPublicWebsite({
++  entities: { search: async () => [], byPublicId: async () => null, bySlug: async () => null },
++  alternatives: { list: async () => [], preferred: async () => null },
++  reasons: { list: async () => [], version: async () => 1, byCode: async () => null },
++});
++test.beforeAll(async () => {
++  server = createServer(async (request, response) => {
++    const url = new URL(request.url, 'http://localhost');
++    response.setHeader(
++      'content-security-policy',
++      "default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; frame-ancestors 'none'",
++    );
++    if (request.method === 'GET' && !url.pathname.startsWith('/admin/')) {
++      const result = await web(url.pathname, Object.fromEntries(url.searchParams));
++      if (result?.kind === 'html') {
++        response.setHeader('Content-Type', 'text/html');
++        response.end(result.html);
++        return;
++      }
++      if (result?.kind === 'asset') {
++        response.setHeader('Content-Type', result.contentType);
++        response.end(result.body);
++        return;
++      }
++    }
++    const chunks = [];
++    for await (const chunk of request) chunks.push(chunk);
++    const body = chunks.length ? JSON.parse(Buffer.concat(chunks)) : {};
++    response.setHeader('Content-Type', 'application/json');
++    if (url.pathname === '/api/v1/submissions') {
++      if (limited) {
++        response.statusCode = 429;
++        response.setHeader('Retry-After', '10');
++        response.end('{"error":"rate_limited"}');
++        return;
++      }
++      if (receiptKeys.has(body.clientRequestId)) {
++        response.statusCode = 202;
++        response.end(JSON.stringify(receiptKeys.get(body.clientRequestId)));
++        return;
++      }
++      const id = randomUUID();
++      reports.push({
++        id,
++        revision: 0,
++        type: body.submissionType,
++        queue: 'product',
++        state: 'pending',
++        narrative: body.narrative,
++        sourceUrls: body.sourceUrls,
++        submittedAt: new Date().toISOString(),
++        similarCount: 0,
++      });
++      const receipt = { id, state: 'pending' };
++      receiptKeys.set(body.clientRequestId, receipt);
++      response.statusCode = 202;
++      response.end(JSON.stringify(receipt));
++      return;
++    }
++    if (url.pathname.startsWith('/admin/')) {
++      if (request.headers.authorization !== 'Bearer ' + 'a'.repeat(40)) {
++        response.statusCode = 401;
++        response.end('{}');
++        return;
++      }
++      if (url.pathname.endsWith('/counts')) {
++        response.end('{"counts":[]}');
++        return;
++      }
++      if (url.pathname === '/admin/api/v1/feedback') {
++        response.end(JSON.stringify({ reports, next: null }));
++        return;
++      }
++      if (url.pathname.endsWith('/review')) {
++        const record = reports.find((item) => item.id === url.pathname.split('/').at(-2));
++        if (!record || body.expectedRevision !== record.revision) {
++          response.statusCode = 409;
++          response.end('{}');
++          return;
++        }
++        record.revision++;
++        record.state = body.state;
++        response.end(JSON.stringify(record));
++        return;
++      }
++      if (url.pathname.endsWith('/imports')) {
++        response.end('{"batches":[]}');
++        return;
++      }
++      if (url.pathname.endsWith('/membership-proposals')) {
++        response.end('{"proposals":[]}');
++        return;
++      }
++      if (url.pathname.endsWith('/publication-issues')) {
++        response.end('{"issues":[]}');
++        return;
++      }
++    }
++    response.statusCode = 404;
++    response.end('{}');
++  });
++  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
++  origin = 'http://127.0.0.1:' + server.address().port;
++});
++test.afterAll(async () => {
++  server.closeAllConnections();
++  await new Promise((resolve) => server.close(resolve));
++});
++test('feedback receipts, retry errors, literal untrusted text, editor review and lock', async ({
++  page,
++}, info) => {
++  const errors = [];
++  page.on('pageerror', (error) => errors.push(error.message));
++  await page.goto(origin + '/report?type=bug-report');
++  await expect(page.locator('#report-type option')).toHaveCount(12);
++  await page
++    .locator('#report-message')
++    .fill('Synthetic bug <img src=x onerror="window.injection=true">');
++  await page.getByRole('button', { name: 'Send for review' }).click();
++  await expect(page.locator('[data-form-status]')).toContainText(
++    'Saved to the product review inbox',
++  );
++  limited = true;
++  await page.locator('#report-message').fill('Another synthetic report.');
++  await page.getByRole('button', { name: 'Send for review' }).click();
++  await expect(page.locator('[data-form-status]')).toContainText('10 seconds');
++  await expect(page.locator('#report-message')).toHaveValue('Another synthetic report.');
++  limited = false;
++  await page.goto(origin + '/editor');
++  await page.getByLabel('Editor access token').fill('a'.repeat(40));
++  await page.getByRole('button', { name: 'Unlock workspace' }).click();
++  await expect(page.getByRole('heading', { name: 'Report inbox' })).toBeVisible();
++  expect(await page.evaluate(() => globalThis.injection)).toBeUndefined();
++  expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0);
++  await page.getByRole('button', { name: 'Reject', exact: true }).click();
++  await expect(page.locator('[data-editor-status]')).toContainText('review note');
++  await page.getByLabel('Review note', { exact: true }).fill('Synthetic issue under review.');
++  await page.getByRole('button', { name: 'Mark in review' }).click();
++  await expect(page.locator('article')).toContainText('Saved: triaged');
++  for (const name of ['Imports', 'Membership', 'Publication checks'])
++    await page.getByRole('button', { name, exact: true }).click();
++  await page.screenshot({ path: info.outputPath('editor-unlocked.png'), fullPage: true });
++  await page.getByRole('button', { name: 'Lock workspace' }).click();
++  await expect(page.getByLabel('Editor access token')).toBeVisible();
++  expect(errors).toEqual([]);
++});
++for (const width of [375, 768, 1280])
++  test('support layouts and keyboard navigation at ' + width + 'px', async ({ page }, info) => {
++    await page.setViewportSize({ width, height: 900 });
++    for (const path of ['/', '/report', '/help', '/editor', '/download', '/causes']) {
++      await page.goto(origin + path);
++      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
++        true,
++      );
++      await page.screenshot({
++        path: info.outputPath((path === '/' ? 'home' : path.slice(1)) + '-' + width + '.png'),
++        fullPage: true,
++      });
++    }
++    await page.goto(origin + '/report');
++    await page.keyboard.press('Tab');
++    await expect(page.locator(':focus')).toHaveText('Skip to content');
++  });
+diff --git a/tests/feedback-checks.mjs b/tests/feedback-checks.mjs
+new file mode 100644
+index 0000000..890b5fe
+--- /dev/null
++++ b/tests/feedback-checks.mjs
+@@ -0,0 +1,136 @@
++import assert from 'node:assert/strict';
++import { randomUUID } from 'node:crypto';
++import { PostgresSubmissionWriter } from '../packages/persistence/dist/index.js';
++import { PostgresFeedbackInbox } from '../packages/persistence/dist/feedback-inbox.js';
++import { submissionCatalog } from '../packages/application/dist/index.js';
++import { startNodeApiRuntime } from '../apps/api/dist/runtime.js';
++
++export async function runFeedbackChecks({ db, databaseUrl, artifactRoot }) {
++  const writer = new PostgresSubmissionWriter(db),
++    inbox = new PostgresFeedbackInbox(db);
++  const base = {
++    entityPublicId: null,
++    identifierKind: null,
++    identifierValue: null,
++    proposedList: null,
++    proposedReasonCode: null,
++    narrative: 'Synthetic quality-pass report.',
++    sourceUrls: [],
++    submitterContactRef: null,
++  };
++  for (const category of submissionCatalog) {
++    const receipt = await writer.create({
++      ...base,
++      submissionType: category.code,
++      clientRequestId: randomUUID(),
++    });
++    const row = (
++      await db.query('SELECT queue FROM community_submissions WHERE id=$1', [receipt.id])
++    ).rows[0];
++    assert.equal(row.queue, category.queue);
++  }
++  const input = {
++    ...base,
++    submissionType: 'bug-report',
++    clientRequestId: randomUUID(),
++    sourceUrls: ['https://example.com/test'],
++  };
++  const [first, retry] = await Promise.all([writer.create(input), writer.create(input)]);
++  assert.equal(first.id, retry.id);
++  assert.equal(
++    (
++      await db.query(
++        'SELECT count(*)::integer AS count FROM submission_sources WHERE submission_id=$1',
++        [first.id],
++      )
++    ).rows[0].count,
++    1,
++  );
++  await assert.rejects(
++    writer.create({ ...input, narrative: 'Different content with reused key.' }),
++    /different content/,
++  );
++  await assert.rejects(
++    writer.create({ ...base, submissionType: 'bug-report', entityPublicId: '9223372036854775807' }),
++    /no longer exists/,
++  );
++  const page = await inbox.list({ queue: 'product', limit: 2, state: 'open' });
++  assert.equal(page.reports.length, 2);
++  assert.ok(page.next);
++  const second = await inbox.list({ queue: 'product', limit: 2, state: 'open', after: page.next });
++  assert.ok(second.reports.every((row) => !page.reports.some((prior) => prior.id === row.id)));
++  const reviewed = await inbox.review(
++    first.id,
++    { state: 'triaged', expectedRevision: 0, note: 'Investigating.' },
++    'quality-editor',
++  );
++  assert.equal(reviewed.revision, 1);
++  await assert.rejects(
++    inbox.review(
++      first.id,
++      { state: 'accepted', expectedRevision: 0, note: 'Stale decision.' },
++      'other-editor',
++    ),
++    /changed/,
++  );
++  await assert.rejects(
++    inbox.review(first.id, { state: 'spam', expectedRevision: 1, note: '' }, 'quality-editor'),
++    /Explain/,
++  );
++  await inbox.review(
++    first.id,
++    { state: 'accepted', expectedRevision: 1, note: 'Confirmed product issue.' },
++    'quality-editor',
++  );
++  const duplicate = await writer.create({ ...input, clientRequestId: randomUUID() });
++  assert.ok((await inbox.duplicates(duplicate.id)).some((row) => row.id === first.id));
++  await inbox.review(
++    duplicate.id,
++    {
++      state: 'duplicate',
++      expectedRevision: 0,
++      note: 'Same report content.',
++      duplicateOf: first.id,
++    },
++    'quality-editor',
++  );
++  const runtime = await startNodeApiRuntime({ databaseUrl, artifactRoot, port: 0 });
++  const origin = 'http://127.0.0.1:' + runtime.port;
++  try {
++    for (const path of [
++      '/report',
++      '/editor',
++      '/help',
++      '/assets/feedback.js',
++      '/assets/editor.js',
++    ]) {
++      const response = await fetch(origin + path);
++      assert.equal(response.status, 200, path);
++      if (path === '/editor' || path === '/report')
++        assert.equal(response.headers.get('cache-control'), 'no-store');
++    }
++    const response = await fetch(origin + '/api/v1/submissions', {
++      method: 'POST',
++      headers: { 'Content-Type': 'application/json' },
++      body: JSON.stringify(input),
++    });
++    assert.equal(response.status, 202);
++    assert.equal((await response.json()).id, first.id);
++    const bad = await fetch(origin + '/api/v1/submissions', {
++      method: 'POST',
++      headers: { 'Content-Type': 'application/json' },
++      body: JSON.stringify({ ...input, sourceUrls: ['https://user:password@example.com'] }),
++    });
++    assert.equal(bad.status, 400);
++    const cross = await fetch(origin + '/api/v1/submissions', {
++      method: 'POST',
++      headers: { 'Content-Type': 'application/json', Origin: 'https://untrusted.example' },
++      body: JSON.stringify(input),
++    });
++    assert.equal(cross.status, 403);
++    const metrics = await fetch(origin + '/admin/api/v1/metrics');
++    assert.equal(metrics.status, 404);
++  } finally {
++    await runtime.close();
++  }
++}
+diff --git a/tests/postgres.integration.test.mjs b/tests/postgres.integration.test.mjs
+index c2c473c..0c4cb71 100644
+--- a/tests/postgres.integration.test.mjs
++++ b/tests/postgres.integration.test.mjs
+@@ -1,3 +1,4 @@
++import { runFeedbackChecks } from './feedback-checks.mjs';
+ import { generateKeyPairSync } from 'node:crypto';
+ import { readdir } from 'node:fs/promises';
+ import { runDeliveryChecks } from './delivery-checks.mjs';
+@@ -491,6 +492,7 @@ test(
+         policyRevisionId: policyRevision.rows[0].id,
+       });
+ 
++      await runFeedbackChecks({ db, databaseUrl, artifactRoot });
+       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
+       assert.deepEqual(secondMigration.applied, []);
+       assert.equal(secondMigration.alreadyApplied.length, firstMigration.applied.length);
+diff --git a/tests/request-guard.test.mjs b/tests/request-guard.test.mjs
+new file mode 100644
+index 0000000..6bff93d
+--- /dev/null
++++ b/tests/request-guard.test.mjs
+@@ -0,0 +1,65 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import {
++  RequestGuard,
++  RequestMetrics,
++  clientAddress,
++  routeClass,
++} from '../apps/api/dist/request-guard.js';
++
++test('write throttling is per client and releases are idempotent', () => {
++  let now = 1000;
++  const guard = new RequestGuard(100, 100, () => now);
++  for (let n = 0; n < 6; n++) {
++    const result = guard.admit('192.0.2.1', 'write');
++    assert.equal(result.ok, true);
++    result.release();
++    result.release();
++  }
++  assert.equal(guard.activeRequests, 0);
++  assert.deepEqual(guard.admit('192.0.2.1', 'write'), {
++    ok: false,
++    status: 429,
++    retryAfter: 10,
++    error: 'rate_limited',
++  });
++  const other = guard.admit('192.0.2.2', 'write');
++  assert.equal(other.ok, true);
++  other.release();
++  now += 10000;
++  const refill = guard.admit('192.0.2.1', 'write');
++  assert.equal(refill.ok, true);
++  refill.release();
++});
++test('concurrency and map sizes remain bounded under client churn', () => {
++  let now = 0;
++  const guard = new RequestGuard(2, 2, () => now);
++  const first = guard.admit('one', 'page');
++  const second = guard.admit('two', 'page');
++  assert.equal(guard.admit('three', 'page').status, 503);
++  first.release();
++  second.release();
++  assert.equal(guard.admit('three', 'page').status, 503);
++  assert.equal(guard.size, 2);
++  now = 130000;
++  const third = guard.admit('three', 'page');
++  assert.equal(third.ok, true);
++  third.release();
++  assert.equal(guard.size, 1);
++});
++test('proxy headers are ignored unless immediate proxy is explicitly trusted', () => {
++  assert.equal(clientAddress('192.0.2.1', '198.51.100.3', []), '192.0.2.1');
++  assert.equal(clientAddress('::ffff:127.0.0.1', '198.51.100.3', ['127.0.0.1']), '198.51.100.3');
++  assert.equal(clientAddress('127.0.0.1', '198.51.100.3, 10.0.0.1', ['127.0.0.1']), '127.0.0.1');
++  assert.equal(
++    clientAddress('2001:db8:42:5::1', undefined, []),
++    clientAddress('2001:db8:42:5:ffff::12', undefined, []),
++  );
++});
++test('metrics use bounded route families without user paths or identifiers', () => {
++  const metrics = new RequestMetrics();
++  metrics.observe(routeClass('/api/v1/search', 'GET'), 200, 4);
++  metrics.observe(routeClass('/someone-private', 'GET'), 404, 2);
++  assert.equal(JSON.stringify(metrics.snapshot(0)).includes('someone-private'), false);
++  assert.equal(metrics.snapshot(0).requests['search:2xx'], 1);
++});
+-- 
+2.55.0
+
+
+From e416a79e33664ad2e9a76295919c498124f4e080 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Mon, 21 Sep 2026 22:15:06 -0600
+Subject: [PATCH 3/8] test: exercise complete feedback workflow after explicit
+ test environment imports
+
+---
+ .github/workflows/quality-verify.yml | 63 ++++++++++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
+ create mode 100644 .github/workflows/quality-verify.yml
+
+diff --git a/.github/workflows/quality-verify.yml b/.github/workflows/quality-verify.yml
+new file mode 100644
+index 0000000..1c60ae0
+--- /dev/null
++++ b/.github/workflows/quality-verify.yml
+@@ -0,0 +1,63 @@
++name: Feedback workflow regression gate
++on:
++  push:
++    branches: [quality/ui-feedback-20260922]
++permissions:
++  contents: write
++jobs:
++  verify:
++    runs-on: ubuntu-latest
++    timeout-minutes: 20
++    env:
++      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/isnotreal_test
++      RUN_DB_INTEGRATION: '1'
++    services:
++      postgres:
++        image: postgres:17-alpine
++        env:
++          POSTGRES_USER: postgres
++          POSTGRES_PASSWORD: postgres
++          POSTGRES_DB: isnotreal_test
++        ports: ['5432:5432']
++        options: >-
++          --health-cmd "pg_isready -U postgres -d isnotreal_test"
++          --health-interval 5s --health-timeout 5s --health-retries 10
++    steps:
++      - uses: actions/checkout@v6
++      - uses: actions/setup-node@v6
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - name: Explicit Node and browser test globals
++        run: |
++          python3 - <<'PY'
++          from pathlib import Path
++          p=Path('tests/browser/support.spec.mjs');s=p.read_text()
++          if "from 'node:buffer'" not in s:s="import { Buffer } from 'node:buffer';\nimport { URL } from 'node:url';\n"+s
++          s=s.replace('Object.keys(localStorage)', 'Object.keys(globalThis.localStorage)').replace('Object.keys(sessionStorage)', 'Object.keys(globalThis.sessionStorage)')
++          s=s.replace('document.documentElement','globalThis.document.documentElement').replace('<= innerWidth','<= globalThis.innerWidth')
++          p.write_text(s)
++          p=Path('tests/feedback-checks.mjs');s=p.read_text()
++          if 'const { fetch } = globalThis;' not in s:s='const { fetch } = globalThis;\n'+s
++          p.write_text(s)
++          PY
++      - run: bash ops/ci-postgres-client.sh
++      - run: npm ci
++      - run: npx prettier --write .
++      - name: Commit verified-environment fixes
++        run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add tests apps packages docs
++          git diff --cached --quiet || git commit -m "test: declare execution environments for feedback browser coverage"
++          git push origin HEAD:quality/ui-feedback-20260922
++      - run: npm run check
++      - run: npx playwright install --with-deps chromium
++      - run: npm run test:browser
++      - uses: actions/upload-artifact@v4
++        if: always()
++        with:
++          name: feedback-ui-browser-evidence
++          path: test-results/
++          if-no-files-found: ignore
++          retention-days: 7
+-- 
+2.55.0
+
+
+From 954032ac4b1384d656506d86bdf31b9b54262d20 Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Tue, 22 Sep 2026 04:15:55 +0000
+Subject: [PATCH 4/8] test: declare execution environments for feedback browser
+ coverage
+
+---
+ docs/THREAT_MODEL.md           |  7 +++++++
+ tests/browser/support.spec.mjs | 10 +++++++---
+ tests/feedback-checks.mjs      |  1 +
+ 3 files changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/docs/THREAT_MODEL.md b/docs/THREAT_MODEL.md
+index c3c8d9b..b82a378 100644
+--- a/docs/THREAT_MODEL.md
++++ b/docs/THREAT_MODEL.md
+@@ -25,26 +25,33 @@ This document is an operational release gate, not a claim that an Internet servi
+ ## Abuse cases
+ 
+ ### Submission spam / coordinated reports
++
+ Edge write throttling, bounded bodies, application backpressure and a moderation queue prevent direct publication. Moderators can reject/cluster abusive reports. Add provider-level bot/WAF challenges only if measured abuse requires them.
+ 
+ ### DDoS / resource exhaustion
++
+ The application is not the DDoS perimeter. CDN/WAF, origin isolation, Nginx limits, bounded request bodies/timeouts and the in-process concurrency ceiling are layered controls. Load-test before changing limits.
+ 
+ ### Cache poisoning
++
+ Immutable publication paths are content/version scoped. Do not cache authenticated admin responses or public write responses. Preserve canonical Host/TLS handling at the edge.
+ 
+ ### Source-fetch SSRF / DNS rebinding
++
+ Only curated source documents may be fetched. Production egress must restrict destination networks at the network/proxy layer as well as application validation so DNS cannot change between validation and connection.
+ 
+ ### Malicious evidence / defamation
++
+ A mention, allegation and adjudicated finding are distinct facts. Public submissions never publish directly. Protected/private people and victims require additional review/exclusion rules.
+ 
+ ### Extension dataset compromise
++
+ Clients verify signed manifests and artifact hashes, enforce replay watermarks, stage before activation and retain the previous verified dataset on failure. Executable extension code updates only through reviewed browser packages/store mechanisms.
+ 
+ ## Release drill
+ 
+ Before production launch:
++
+ 1. Restore the newest DB backup into a disposable database and run readiness plus integrity checks.
+ 2. Simulate a failed/corrupt publication and verify clients retain the previous dataset.
+ 3. Verify origin cannot be reached outside the intended edge/operator network.
+diff --git a/tests/browser/support.spec.mjs b/tests/browser/support.spec.mjs
+index b95eb98..094add5 100644
+--- a/tests/browser/support.spec.mjs
++++ b/tests/browser/support.spec.mjs
+@@ -1,3 +1,5 @@
++import { Buffer } from 'node:buffer';
++import { URL } from 'node:url';
+ import { test, expect } from '@playwright/test';
+ import { createServer } from 'node:http';
+ import { randomUUID } from 'node:crypto';
+@@ -158,9 +160,11 @@ for (const width of [375, 768, 1280])
+     await page.setViewportSize({ width, height: 900 });
+     for (const path of ['/', '/report', '/help', '/editor', '/download', '/causes']) {
+       await page.goto(origin + path);
+-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+-        true,
+-      );
++      expect(
++        await page.evaluate(
++          () => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth,
++        ),
++      ).toBe(true);
+       await page.screenshot({
+         path: info.outputPath((path === '/' ? 'home' : path.slice(1)) + '-' + width + '.png'),
+         fullPage: true,
+diff --git a/tests/feedback-checks.mjs b/tests/feedback-checks.mjs
+index 890b5fe..aa9cd2d 100644
+--- a/tests/feedback-checks.mjs
++++ b/tests/feedback-checks.mjs
+@@ -1,3 +1,4 @@
++const { fetch } = globalThis;
+ import assert from 'node:assert/strict';
+ import { randomUUID } from 'node:crypto';
+ import { PostgresSubmissionWriter } from '../packages/persistence/dist/index.js';
+-- 
+2.55.0
+
+
+From 17b95aff81157d7c633868cdcadce90624a462d0 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Mon, 21 Sep 2026 22:23:59 -0600
+Subject: [PATCH 5/8] test: complete browser storage environment declarations
+
+---
+ .github/workflows/quality-verify.yml | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
+
+diff --git a/.github/workflows/quality-verify.yml b/.github/workflows/quality-verify.yml
+index 1c60ae0..299023b 100644
+--- a/.github/workflows/quality-verify.yml
++++ b/.github/workflows/quality-verify.yml
+@@ -28,27 +28,22 @@ jobs:
+         with:
+           node-version-file: .nvmrc
+           cache: npm
+-      - name: Explicit Node and browser test globals
++      - name: Explicit browser test globals
+         run: |
+           python3 - <<'PY'
+           from pathlib import Path
+           p=Path('tests/browser/support.spec.mjs');s=p.read_text()
+-          if "from 'node:buffer'" not in s:s="import { Buffer } from 'node:buffer';\nimport { URL } from 'node:url';\n"+s
+-          s=s.replace('Object.keys(localStorage)', 'Object.keys(globalThis.localStorage)').replace('Object.keys(sessionStorage)', 'Object.keys(globalThis.sessionStorage)')
+-          s=s.replace('document.documentElement','globalThis.document.documentElement').replace('<= innerWidth','<= globalThis.innerWidth')
+-          p.write_text(s)
+-          p=Path('tests/feedback-checks.mjs');s=p.read_text()
+-          if 'const { fetch } = globalThis;' not in s:s='const { fetch } = globalThis;\n'+s
++          s=s.replace('() => localStorage.length + sessionStorage.length', '() => globalThis.localStorage.length + globalThis.sessionStorage.length')
+           p.write_text(s)
+           PY
+       - run: bash ops/ci-postgres-client.sh
+       - run: npm ci
+       - run: npx prettier --write .
+-      - name: Commit verified-environment fixes
++      - name: Preserve formatted regression changes
+         run: |
+           git config user.name "github-actions[bot]"
+           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+-          git add tests apps packages docs
++          git add tests apps packages docs .github
+           git diff --cached --quiet || git commit -m "test: declare execution environments for feedback browser coverage"
+           git push origin HEAD:quality/ui-feedback-20260922
+       - run: npm run check
+-- 
+2.55.0
+
+
+From 2357fe0f9a350e7c16b7a4d452c472299c96eb46 Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Tue, 22 Sep 2026 04:24:41 +0000
+Subject: [PATCH 6/8] test: declare execution environments for feedback browser
+ coverage
+
+---
+ tests/browser/support.spec.mjs | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/tests/browser/support.spec.mjs b/tests/browser/support.spec.mjs
+index 094add5..f18e5cd 100644
+--- a/tests/browser/support.spec.mjs
++++ b/tests/browser/support.spec.mjs
+@@ -142,7 +142,9 @@ test('feedback receipts, retry errors, literal untrusted text, editor review and
+   await page.getByRole('button', { name: 'Unlock workspace' }).click();
+   await expect(page.getByRole('heading', { name: 'Report inbox' })).toBeVisible();
+   expect(await page.evaluate(() => globalThis.injection)).toBeUndefined();
+-  expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0);
++  expect(
++    await page.evaluate(() => globalThis.localStorage.length + globalThis.sessionStorage.length),
++  ).toBe(0);
+   await page.getByRole('button', { name: 'Reject', exact: true }).click();
+   await expect(page.locator('[data-editor-status]')).toContainText('review note');
+   await page.getByLabel('Review note', { exact: true }).fill('Synthetic issue under review.');
+-- 
+2.55.0
+
+
+From 51e6e7c89b28e693d7ed1d7662647818d5134205 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Mon, 21 Sep 2026 22:27:50 -0600
+Subject: [PATCH 7/8] test: assert unified feedback form and editor asset
+ routes
+
+---
+ tests/web-routing.test.mjs | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/tests/web-routing.test.mjs b/tests/web-routing.test.mjs
+index 1657929..aed5756 100644
+--- a/tests/web-routing.test.mjs
++++ b/tests/web-routing.test.mjs
+@@ -63,6 +63,8 @@ test('real public pages and static assets render without fabricated downloads',
+     '/causes',
+     '/search',
+     '/report',
++    '/help',
++    '/editor',
+   ]) {
+     const r = await web(path);
+     assert.equal(r.kind, 'html', path);
+@@ -70,7 +72,9 @@ test('real public pages and static assets render without fabricated downloads',
+   }
+   assert.match((await web('/download')).html, /Store release not yet published/);
+   assert.equal((await web('/assets/site.css')).contentType, 'text/css; charset=utf-8');
+-  assert.match((await web('/report')).html, /data-submission/);
++  assert.match((await web('/report')).html, /data-feedback-form/);
++  assert.match((await web('/report')).html, /\/assets\/feedback\.js/);
++  assert.equal((await web('/assets/editor.js')).contentType, 'text/javascript; charset=utf-8');
+ });
+ test('canonical numeric URLs and no-alternative state remain usable', async () => {
+   assert.deepEqual(await web('/42'), { kind: 'redirect', status: 308, location: '/example' });
+-- 
+2.55.0
+
+
+From 40d6dfef79b1b8751fd50381495ad7757d76b951 Mon Sep 17 00:00:00 2001
+From: Clickabl <tech@clickabl.co>
+Date: Mon, 21 Sep 2026 22:44:10 -0600
+Subject: [PATCH 8/8] ci: retain browser UI gate and document the actual
+ feedback architecture
+
+---
+ .github/workflows/ci.yml    | 30 +++++++++++++++++----
+ apps/api/README.md          |  8 ++++--
+ apps/web/README.md          |  6 +++--
+ docs/FEEDBACK_OPERATIONS.md | 31 ++++++++++++++++++++++
+ docs/architecture.md        | 53 +++++++++++++++++--------------------
+ tests/README.md             |  8 +++---
+ 6 files changed, 96 insertions(+), 40 deletions(-)
+ create mode 100644 docs/FEEDBACK_OPERATIONS.md
+
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index e0e88f1..99a791e 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -23,13 +23,10 @@ jobs:
+           POSTGRES_USER: postgres
+           POSTGRES_PASSWORD: postgres
+           POSTGRES_DB: isnotreal_test
+-        ports:
+-          - 5432:5432
++        ports: ['5432:5432']
+         options: >-
+           --health-cmd "pg_isready -U postgres -d isnotreal_test"
+-          --health-interval 5s
+-          --health-timeout 5s
+-          --health-retries 10
++          --health-interval 5s --health-timeout 5s --health-retries 10
+     steps:
+       - uses: actions/checkout@v6
+         with:
+@@ -41,3 +38,26 @@ jobs:
+       - run: bash ops/ci-postgres-client.sh
+       - run: npm ci
+       - run: npm run check
++  browser:
++    needs: foundations
++    runs-on: ubuntu-latest
++    timeout-minutes: 15
++    steps:
++      - uses: actions/checkout@v6
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v6
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - run: npm ci
++      - run: npm run build
++      - run: npx playwright install --with-deps chromium
++      - run: npm run test:browser
++      - uses: actions/upload-artifact@v4
++        if: always()
++        with:
++          name: website-feedback-editor-evidence
++          path: test-results/
++          if-no-files-found: ignore
++          retention-days: 7
+diff --git a/apps/api/README.md b/apps/api/README.md
+index 8b84963..31c352c 100644
+--- a/apps/api/README.md
++++ b/apps/api/README.md
+@@ -1,3 +1,7 @@
+-# API composition root
++# API and HTTP runtime
+ 
+-Reserved for HTTP routing, dependency wiring, runtime validation and explicit public projections. No HTTP framework, listening server, handlers or database calls exist. Planned public API is documented in ../../docs/protocol.md. Authentication, reviewer authorization, rate limits and idempotent publication belong in the implementation pass.
++`src/index.ts` owns public JSON routing and validated report intake. `src/runtime.ts` mounts public HTML/assets, signed publications, the public API and the separately authenticated editor API. `src/request-guard.ts` provides bounded request admission and private coarse metrics. `src/feedback-admin.ts` supplies the inbox/duplicate/revision-safe review routes.
++
++Use `DATABASE_URL` with the restricted public runtime role. Admin requires a separate `ADMIN_DATABASE_URL` and strong bearer token; signing private keys belong only in the publication CLI. Test liveness at `/healthz` and readiness at `/readyz`. `/editor` is a locked shell, not public access to the admin data.
++
++`npm run check` and the real PostgreSQL delivery checks are required before deployment. Browser UI checks run separately through `npm run test:browser` and CI.
+diff --git a/apps/web/README.md b/apps/web/README.md
+index 4e08c4c..4c724f1 100644
+--- a/apps/web/README.md
++++ b/apps/web/README.md
+@@ -1,3 +1,5 @@
+-# Public site composition root
++# Public website and review UI
+ 
+-Reserved for https://isnotreal.click and public /why/:platform/:accountId pages. No web framework, pages, deployment or evidence renderer exists. Why pages eventually show specific claims, sources, evidence dates, review status and correction/dispute pathways. Public projections must exclude private contact details and internal reviewer identifiers. No tracking or automatic link prefetch for Why navigation.
++`src/index.ts` renders the shared public layout, search, download availability, causes/reasons, evidence profiles and alternatives. `src/support.ts` and `src/support-assets.ts` implement the unified report/help/editor workflow. The API runtime mounts these routes and assets with CSP and appropriate cache controls.
++
++Public reports route to authenticated evidence/product/safety inboxes. Editor credentials stay only in tab memory. Browser tests cover receipts, error recovery, review actions, safe rendering, mobile widths and keyboard navigation. Store availability is configured rather than fabricated.
+diff --git a/docs/FEEDBACK_OPERATIONS.md b/docs/FEEDBACK_OPERATIONS.md
+new file mode 100644
+index 0000000..9595ccf
+--- /dev/null
++++ b/docs/FEEDBACK_OPERATIONS.md
+@@ -0,0 +1,31 @@
++# Feedback intake and editor operations
++
++## User entry points
++
++Website navigation, entity correction links and extension help links converge on `/report`. `/feedback` redirects there. `/help` explains how evidence corrections differ from software feedback. A report does not become a public comment.
++
++The category catalog is `packages/application/src/feedback.ts`. Do not duplicate category enums in a form and forget the database. Migration `0100_feedback_inbox.sql` adds the matching database categories, queue, fingerprint, idempotency and revision fields.
++
++Public receipts include a reference and receipt state, not access to another user's report. The form retains text on a failed request. An uncertain retry reuses its request UUID to avoid multiple rows. Changing the content starts a new request. No contact details or browsing history are collected automatically.
++
++## Editor setup
++
++Run schema migrations as the owner and apply the restricted role grants. Configure `ADMIN_DATABASE_URL`, a random `ADMIN_BEARER_TOKEN` of at least 32 characters, and `ADMIN_ACTOR_ID`. The public runtime must not receive schema-owner credentials or publication signing keys.
++
++Open `/editor` over HTTPS from the protected operator network and unlock with the token. It remains only in the current tab's closure, not localStorage, sessionStorage, a URL, cookie or telemetry. Lock, reload and page exit clear it. Server routes still authorize every request. The UI is not a password manager.
++
++## Reports
++
++Choose evidence/product/safety and state filters. Inspect the literal report text and source URLs, then triage, accept, reject, mark spam or mark a verified duplicate. Rejection/spam/duplicate actions require rationale. Two editors cannot silently overwrite one another: each update carries the version read by that editor and stale updates return 409.
++
++Accepting a report means the report was accepted for follow-up. It does not automatically publish the user's claims or silently change a person's membership. Review evidence using the relevant authoring/import workflow.
++
++## Other workspace tabs
++
++Imports exposes batches and identity exceptions with approved/skipped/rejected row actions and ready/commit controls. Membership exposes pending proposals. Publication checks exposes current validation failures. Empty results are empty query results, not a certification of complete coverage or deployed infrastructure.
++
++## Abuse and privacy
++
++Limit public writes at the managed edge and reverse proxy, then keep Node request limits enabled. Configure trusted immediate proxy addresses explicitly; never enable trust for all forwarded headers. Watch private coarse metrics and report queue volume. Do not place submitted source URLs, narratives, access tokens or source identity data in general access logs.
++
++Spam classification is an editorial action, not an automatic adverse reason about the subject. Source links are not fetched by the report form or intake endpoint. Hostile content must be reviewed as data, never executed.
+diff --git a/docs/architecture.md b/docs/architecture.md
+index 7b108cd..f7db1ea 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -1,40 +1,37 @@
+-# Server architecture
++# Architecture
+ 
+-PostgreSQL is the canonical source of truth. API/application reads are separated from immutable extension publication delivery so editorial activity never becomes a per-scroll server dependency.
++The product has two repositories: this PostgreSQL-backed public website/API and the companion browser extension. The server is not the extension, and a build is not a deployed service.
+ 
+-## Boundaries
++## Canonical data and publication
+ 
+-- `packages/domain`: facts, identity, evidence, policy and moderation concepts. No HTTP/database imports.
+-- `packages/application`: public projections, use-case ports and deterministic publication compiler.
+-- `packages/persistence`: PostgreSQL queries behind a tiny `SqlExecutor` interface. The eventual driver can be `pg`, a managed Postgres adapter or another compatible executor without changing domain/application code.
+-- `apps/api`: transport-neutral route handling. A later HTTP/runtime adapter should translate real requests into `ApiRequest` and serialize `ApiResponse`.
+-- `apps/web`: canonical entity and preferred-alternative route resolution. Framework/CDN/edge implementation is deployment detail.
+-- `db/migrations`: authoritative schema.
++PostgreSQL holds entities, stable public IDs, verified platform/domain identifiers, evidence, sources/captures, reason catalogs, causes, membership decisions, alternatives and reports. Reasons describe specific documented actions, never inferred identity or ideology. A reason has one owning cause; an entity may match multiple independent causes.
+ 
+-## Privacy invariant
++The publisher uses a consistent database snapshot and the evidence-validation projection to compile reusable cause/channel/list partitions. Protocol v5 envelopes carry the cause, dataset and reason-catalog versions, expiry and signed artifact descriptors. Individual entries remain `[identifier, publicEntityId, reasonCodes]`. Full snapshots, deltas and dictionaries are immutable. The isolated publisher uses an Ed25519 private key; browser packages contain only trusted public keys.
+ 
+-Passive browsing never sends encountered account/domain IDs to isnotreal.click. The extension matches locally against compiled publications. A server request happens only for normal publication synchronization or an explicit online feature such as opening an entity page or requesting an alternative.
++`/api/v1/causes/{cause}/lists/{channel}/{filter|highlight}/{manifest|full|delta}` is the synchronization route. `/data/publications/...` serves versioned bytes with immutable caching. Publication and extension software updates are separate systems. Schema migrations are operator-controlled and forward-only.
+ 
+-## Public routing
++## Public UI
+ 
+-`/{publicEntityId}` resolves permanently to `/{canonical-slug}`. Public IDs are never recycled. Merged entities keep resolving to the surviving canonical entity.
++`apps/web` renders homepage, download availability, search, cause/reason explanations, entity/evidence pages, alternatives, help, privacy and the shared feedback form. `apps/api/src/runtime.ts` mounts the renderer and JSON APIs in the same HTTP service. Numeric entity URLs and `/go-to-alt/{id}` resolve through PostgreSQL, not a per-entity Apache rewrite file. Nginx/Apache templates forward those routes to the application.
+ 
+-`/go-to-alt/{publicEntityId}` is a temporary redirect because preferred alternatives can change. Alternative selection excludes currently filtered entities and should later enforce loop detection at the routing layer.
++Public HTML uses shared styles and packaged, same-origin scripts. Text and source links are validated/escaped. Public reports and the editor shell are not cached. Downloads are enabled only for configured official store links; unpublished releases are not fabricated.
+ 
+-## Publication
++## Feedback and review
+ 
+-The database projection is:
++`packages/application/src/feedback.ts` is the single category catalog consumed by validation and UI. Evidence corrections route to the evidence inbox, product/bug/accessibility issues to product, and abuse/privacy reports to safety. A public submission cannot publish evidence or change a filter.
+ 
+-```text
+-verified identifier assignment
+-+ active include membership decision
+-+ published supporting assertion
+-+ active reason code
+--> publication_candidates
+--> deterministic compiler
+--> immutable artifact
+--> object storage/CDN
+--> extension local index
+-```
++The writer validates entity references, deduplicates source URLs and provides UUID-based idempotency. Retrying the same request returns its receipt; reusing the UUID for different content conflicts. The inbox uses bounded pagination, duplicate candidates, revision-checked review updates and audit events. Spam/rejected reports remain distinguishable from accepted evidence.
+ 
+-Production publishing still needs object storage, staged activation, full/delta retention, TUF-style signing/key rotation, rollback protection and randomized client update scheduling.
++`/editor` is a locked, non-sensitive shell. Its access token stays in memory, expires on inactivity and is cleared on lock/page exit. The authenticated API uses a separate editor database connection. Server-side authorization is the boundary; hiding UI is not authorization. Deploy the admin API behind a private network/access gateway as well.
++
++## Request safety
++
++The Node runtime enforces body, URI, method, type, origin, timeout and concurrency limits. Bounded per-client buckets key clients through an in-memory HMAC; untrusted forwarding headers are ignored. Only explicitly configured immediate proxies may supply the client address. Metrics use coarse fixed route families, not visited URLs, entity IDs or filter preferences.
++
++The checked-in Nginx limits are a backstop, not a complete distributed-denial-of-service perimeter. Production requires managed edge protection, origin isolation and measured limits. The database runtime role is read-mostly with only the submission write path; schema ownership and editing are separate.
++
++## Verification
++
++`npm run check` runs formatting, lint, TypeScript/build and tests. CI sets `RUN_DB_INTEGRATION=1` for real migrations, publication/evidence/feedback transactions and restricted-role checks. `npm run test:browser` exercises the public form and locked editor, safe text rendering, error/retry behavior and responsive keyboard-accessible layouts. Browser checks are a required CI job.
++
++`docs/PRODUCT_DELIVERY_PLAN.md` is the single delivery ledger. It distinguishes implemented/tested code from unprovisioned infrastructure, unpopulated datasets and unpublished browser-store releases.
+diff --git a/tests/README.md b/tests/README.md
+index c337a73..544914d 100644
+--- a/tests/README.md
++++ b/tests/README.md
+@@ -1,5 +1,7 @@
+-# Verification boundaries
++# Verification
+ 
+-Node's built-in test runner validates scaffold integrity without adding a test framework. TypeScript project references validate module contracts; ESLint and Prettier run in CI. These checks do not validate filtering, runtime wire validation, browser compatibility, or deployed services.
++Run `npm run check` for formatting, lint, build/typecheck and Node tests. Set `RUN_DB_INTEGRATION=1` and a disposable `DATABASE_URL` to exercise all migrations, evidence/publication isolation, feedback idempotency, review races and restricted runtime grants. Integration setup deliberately destroys its test schema; never point it at production.
+ 
+-During implementation add focused unit tests beside the owning package, protocol/serialization tests at the API boundary, and browser or service integration tests under tests/integration. Avoid real political data and personal browsing history in fixtures.
++Run `npx playwright install chromium` then `npm run test:browser` for real report/editor rendering and interaction. The browser suite checks retries, literal untrusted text, memory-only editor tokens, review actions, keyboard navigation and 375/768/1280-pixel layouts. CI retains screenshots and traces under test-results.
++
++Unit/fixture success is not a load test, production deployment, live source verification or browser-store release. Keep those acceptance gates distinct.
+-- 
+2.55.0
+
