@@ -38,7 +38,7 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO $EDITOR_ROLE;
 -- Publisher: read canonical state and write only publication metadata/artifacts.
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO $PUBLISHER_ROLE;
 GRANT INSERT, UPDATE ON publications TO $PUBLISHER_ROLE;
-GRANT INSERT ON publication_artifacts, publication_policy_revisions TO $PUBLISHER_ROLE;
+GRANT INSERT ON publication_artifacts, publication_policy_revisions, publication_artifact_payloads TO $PUBLISHER_ROLE;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO $PUBLISHER_ROLE;
 
 -- Future owner-created objects default to read-only for the runtime and DML for editors.

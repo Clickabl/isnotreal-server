@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import {
   FileArtifactStore,
+  PostgresArtifactStore,
   PgSqlExecutor,
   publishCurrentState,
 } from '@isnotreal/persistence/runtime';
@@ -19,6 +20,8 @@ async function main(): Promise<void> {
   if (!Number.isFinite(ttl) || ttl <= 0 || ttl > 720)
     throw new Error('invalid PUBLICATION_TTL_HOURS');
   const privateKeyPem = await readFile(keyPath, 'utf8');
+  const storage = process.env.PUBLICATION_STORAGE ?? 'postgres';
+  if (storage !== 'files' && storage !== 'postgres') throw new Error('invalid PUBLICATION_STORAGE');
   const db = PgSqlExecutor.create({
     connectionString: url,
     maxConnections: 4,
@@ -36,7 +39,9 @@ async function main(): Promise<void> {
     for (const slug of causes) {
       const result = await publishCurrentState(
         db,
-        new FileArtifactStore(resolve(process.env.PUBLICATION_ROOT ?? '.local/publications')),
+        storage === 'files'
+          ? new FileArtifactStore(resolve(process.env.PUBLICATION_ROOT ?? '.local/publications'))
+          : new PostgresArtifactStore(db),
         {
           cause: slug,
           compilerVersion: process.env.COMPILER_VERSION ?? 'dev',

@@ -1,5 +1,6 @@
 import { generateKeyPairSync } from 'node:crypto';
-import { readdir } from 'node:fs/promises';
+import { Buffer } from 'node:buffer';
+import { readdir, mkdir, writeFile, readFile } from 'node:fs/promises';
 import { runDeliveryChecks } from './delivery-checks.mjs';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -7,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import process from 'node:process';
 import test from 'node:test';
+import { migratePublicationFiles } from '../packages/persistence/dist/publicationFileMigration.js';
 import {
   PostgresPublicEntityDirectory,
   PostgresReasonCatalogReader,
@@ -23,7 +25,7 @@ import {
 import { listMembershipProposals } from '../packages/persistence/dist/membership-review.js';
 import { publishReasonCatalogVersion } from '../packages/persistence/dist/reason-catalog.js';
 import {
-  FileArtifactStore,
+  PostgresArtifactStore,
   PgSqlExecutor,
   PostgresPublishedArtifactReader,
   applySqlMigrations,
@@ -203,7 +205,7 @@ test(
       assert.equal(invalidReason.rows[0].valid_for_publication, false);
       assert.ok(invalidReason.rows[0].issues.includes('insufficient-sources'));
 
-      const store = new FileArtifactStore(artifactRoot);
+      const store = new PostgresArtifactStore(db);
       const firstPublication = await publishCurrentState(db, store, {
         compilerVersion: 'integration-test',
         signing,
@@ -213,6 +215,19 @@ test(
       assert.equal(firstPublication.activated, true);
       assert.equal(firstPublication.fullArtifactCount, 12);
       assert.equal(firstPublication.deltaArtifactCount, 0);
+
+      const countBefore = await db.query('SELECT count(*)::text AS n FROM publications');
+      const unchanged = await publishCurrentState(db, store, {
+        compilerVersion: 'integration-test',
+        signing,
+        sourceRevision: 'first',
+        expiresInMs: 60 * 60 * 1_000,
+      });
+      assert.equal(unchanged.skipped, true);
+      assert.equal(unchanged.version, firstPublication.version);
+      assert.equal(unchanged.fullArtifactCount, 0);
+      assert.deepEqual(await db.query('SELECT count(*)::text AS n FROM publications'), countBefore);
+      assert.deepEqual(await readdir(artifactRoot), []);
 
       const published = new PostgresPublishedArtifactReader(db, store);
       const firstFull = await published.full('israel-palestine', 'domain-subdomains', 'filter');
@@ -538,6 +553,71 @@ test(
         assertionId,
         policyRevisionId: policyRevision.rows[0].id,
       });
+
+      // Renewal and key rotation still publish even when candidate data is unchanged.
+      const renewalOptions = {
+        cause: 'epstein-records',
+        compilerVersion: 'capacity-test',
+        sourceRevision: 'capacity-test',
+        signing,
+        expiresInMs: 3600000,
+      };
+      const renewalStart = await publishCurrentState(db, store, renewalOptions);
+      assert.equal((await publishCurrentState(db, store, renewalOptions)).skipped, true);
+      await db.query("UPDATE publications SET expires_at=now()+interval '1 second' WHERE id=$1", [
+        renewalStart.publicationId,
+      ]);
+      const renewed = await publishCurrentState(db, store, renewalOptions);
+      assert.notEqual(renewed.version, renewalStart.version);
+      const rotatedPair = generateKeyPairSync('ed25519');
+      const rotatedOptions = {
+        ...renewalOptions,
+        signing: {
+          ...signing,
+          privateKeyPem: rotatedPair.privateKey.export({ type: 'pkcs8', format: 'pem' }),
+        },
+      };
+      const rotated = await publishCurrentState(db, store, rotatedOptions);
+      assert.notEqual(rotated.version, renewed.version);
+      // A broken active artifact must be repaired, never accepted as an unchanged skip.
+      const broken = (
+        await new PostgresPublishedArtifactReader(db, store).manifest(
+          'epstein-records',
+          'x',
+          'filter',
+        )
+      ).full.url.slice(6);
+      await db.query('DELETE FROM publication_artifact_payloads WHERE storage_key=$1', [broken]);
+      const repaired = await publishCurrentState(db, store, rotatedOptions);
+      assert.notEqual(repaired.version, rotated.version);
+      assert.equal((await publishCurrentState(db, store, rotatedOptions)).skipped, true);
+
+      const legacyRoot = join(artifactRoot, 'legacy');
+      const legacyKey = 'publications/test-migration/999/dictionary.json';
+      const legacyPath = join(legacyRoot, legacyKey);
+      await mkdir(join(legacyRoot, 'publications/test-migration/999'), { recursive: true });
+      const legacyBytes = Buffer.from('{"fixture":"exact historical signed bytes"}\n');
+      await writeFile(legacyPath, legacyBytes);
+      await assert.rejects(migratePublicationFiles(db, legacyRoot, 'remove-files'), /unavailable/);
+      assert.deepEqual(await readFile(legacyPath), legacyBytes);
+      const imported = await migratePublicationFiles(db, legacyRoot, 'import');
+      assert.equal(imported.files, 1);
+      assert.equal(imported.removed, 0);
+      await migratePublicationFiles(db, legacyRoot, 'import'); // restart/idempotent import
+      assert.deepEqual(await store.get(legacyKey), legacyBytes);
+      await assert.rejects(store.put(legacyKey, Buffer.from('different')), /immutable/);
+      await writeFile(legacyPath, 'corrupt legacy bytes');
+      await assert.rejects(migratePublicationFiles(db, legacyRoot, 'remove-files'), /verification/);
+      await writeFile(legacyPath, legacyBytes);
+      assert.equal((await migratePublicationFiles(db, legacyRoot, 'remove-files')).removed, 1);
+      assert.deepEqual(await readdir(legacyRoot), []);
+      assert.deepEqual(await store.get(legacyKey), legacyBytes); // historical URL survives removal
+      await assert.rejects(store.get('publications/../private'), /invalid/);
+      await db.query(
+        "UPDATE publication_artifact_payloads SET sha256=repeat('0',64) WHERE storage_key=$1",
+        [legacyKey],
+      );
+      await assert.rejects(store.get(legacyKey), /integrity/);
 
       const secondMigration = await applySqlMigrations(db, resolve('db/migrations'));
       assert.deepEqual(secondMigration.applied, []);

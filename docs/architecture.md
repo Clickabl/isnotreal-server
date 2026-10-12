@@ -38,3 +38,33 @@ verified identifier assignment
 ```
 
 Production publishing still needs object storage, staged activation, full/delta retention, TUF-style signing/key rotation, rollback protection and randomized client update scheduling.
+
+## Publication storage on shared hosting
+
+The default runtime and publisher use `PostgresArtifactStore`. Migration 0033 adds
+`publication_artifact_payloads`, keyed by the existing immutable download path.
+Exact signed bytes are gzip-compressed in PostgreSQL and checked against their
+SHA-256 and original size on reads. Runtime credentials can read these payloads;
+publisher credentials can insert them, but cannot replace existing bytes.
+Canonical entities, evidence, policy and publication metadata remain in PostgreSQL.
+`PUBLICATION_STORAGE=files` is an explicit legacy adapter setting.
+
+The publisher hashes cause-scoped candidate data, dictionary labels, policy
+revisions, protocol/compiler/source identity, TTL and signing public key. It reuses
+a matching active version only while more than half its TTL remains and every
+active full snapshot, dictionary and signed manifest verifies. Changed content,
+key rotation, renewal or broken serving artifacts cause a fresh publication.
+The cPanel publication cron serializes overlapping runs with `flock`.
+
+Legacy file migration has separate import, verification and removal modes. All
+files must match their metadata receipts and round-trip byte-for-byte through the
+database before any removal. Import is idempotent and leaves serving files intact.
+The deployment script imports before selecting the new runtime; removal is a
+separate operation after public download verification and a recoverable backup.
+Historical immutable download URLs continue to resolve through the database.
+Database backups now include the generated payload history as well as metadata.
+
+A manual rollback to code predating database payload storage requires restoring
+the legacy file backup first, or explicitly retaining its file representation.
+Automatic rollback during the initial deployment happens before file removal;
+subsequent deployments roll back to the database-backed runtime.

@@ -1,4 +1,4 @@
-import { createHash, createPrivateKey, sign } from 'node:crypto';
+import { createHash, createPrivateKey, createPublicKey, sign, verify } from 'node:crypto';
 import {
   PROTOCOL_SCHEMA_VERSION,
   canonicalJson,
@@ -167,6 +167,7 @@ export interface PublishCurrentStateResult {
   readonly fullArtifactCount: number;
   readonly deltaArtifactCount: number;
   readonly warnings: readonly string[];
+  readonly skipped?: boolean;
 }
 interface PublicationRow {
   id: string;
@@ -205,10 +206,97 @@ export async function publishCurrentState(
     );
     const catalogVersion = catalog.rows[0]?.version;
     if (!catalogVersion) throw new Error('no active reason catalog');
+    const reasons = await tx.query<{ code: string; label: string }>(
+      `SELECT e.reason_code AS code,e.label
+      FROM reason_catalog_entries e JOIN reason_catalog_versions v ON v.id=e.catalog_version_id
+      JOIN reason_causes rc ON rc.reason_code=e.reason_code
+      WHERE v.version=$1 AND rc.cause_id=$2 ORDER BY e.reason_code`,
+      [catalogVersion, causeId],
+    );
+    const labels = reasons.rows.map((r) => [r.code, r.label]);
+    const policies = await tx.query<{ id: string }>(
+      `SELECT DISTINCT policy_revision_id::text AS id
+      FROM membership_decisions WHERE cause_id=$1 AND state='active' ORDER BY id`,
+      [causeId],
+    );
+    const reader = new PostgresPublicationCandidateReader(tx);
+    const inputs = [];
+    for (const channel of channels)
+      for (const list of lists)
+        inputs.push({ channel, list, candidates: await reader.candidates(cause, channel, list) });
+    const publicKey = key ? createPublicKey(key) : null;
+    const contentHash = digest(
+      encode({
+        cause,
+        protocol: PROTOCOL_SCHEMA_VERSION,
+        catalogVersion,
+        labels,
+        policies: policies.rows,
+        compiler: options.compilerVersion,
+        source: options.sourceRevision,
+        ttl,
+        signing: publicKey
+          ? {
+              keyId: options.signing!.keyId,
+              publicKey: publicKey.export({ type: 'spki', format: 'der' }).toString('base64'),
+            }
+          : null,
+        inputs: inputs.map((input) => ({
+          ...input,
+          candidates: [...input.candidates].sort((a, b) =>
+            canonicalJson(a) < canonicalJson(b) ? -1 : canonicalJson(a) > canonicalJson(b) ? 1 : 0,
+          ),
+        })),
+      }),
+    );
+    const active = await tx.query<PublicationRow & { content_sha256: string | null }>(
+      `SELECT id::text,sequence::text,generated_at::text,expires_at::text,content_sha256
+       FROM publications WHERE cause_id=$1 AND state='active' AND protocol_version=$2
+       ORDER BY sequence DESC LIMIT 1`,
+      [causeId, PROTOCOL_SCHEMA_VERSION],
+    );
+    const current = active.rows[0];
+    if (
+      current?.content_sha256 === contentHash &&
+      Date.parse(current.expires_at) > Date.now() + ttl / 2
+    ) {
+      // A metadata match alone must not preserve missing/corrupt signed artifacts.
+      const previous = new PostgresPublishedArtifactReader(tx, store);
+      try {
+        for (const input of inputs) {
+          const full = await previous.full(cause, input.channel, input.list);
+          const manifest = await previous.manifest(cause, input.channel, input.list);
+          const { signature, ...unsigned } = manifest;
+          if (
+            full.version !== current.sequence ||
+            manifest.version !== current.sequence ||
+            !manifest.full ||
+            !manifest.dictionary ||
+            digest(await store.get(manifest.full.url.slice(6))) !== manifest.full.sha256 ||
+            digest(await store.get(manifest.dictionary.url.slice(6))) !==
+              manifest.dictionary.sha256 ||
+            (publicKey
+              ? !signature ||
+                signature.keyId !== options.signing!.keyId ||
+                !verify(
+                  null,
+                  Buffer.from(canonicalJson(unsigned)),
+                  publicKey,
+                  Buffer.from(signature.value, 'base64'),
+                )
+              : signature !== null)
+          )
+            throw new Error('active publication failed integrity validation');
+        }
+        return { reused: current, causeId };
+      } catch {
+        /* Rebuild the same canonical state when its serving artifacts need repair. */
+      }
+    }
     const publication = await tx.query<PublicationRow>(
       `INSERT INTO publications
-      (cause_id, protocol_version, reason_catalog_version, compiler_version, source_revision, state, expires_at)
-      VALUES ($1,$2,$3,$4,$5,'building',$6)
+      (cause_id, protocol_version, reason_catalog_version, compiler_version, source_revision, state, expires_at, content_sha256)
+      VALUES ($1,$2,$3,$4,$5,'building',$6,$7)
       RETURNING id::text, sequence::text, generated_at::text, expires_at::text`,
       [
         causeId,
@@ -217,39 +305,26 @@ export async function publishCurrentState(
         options.compilerVersion,
         options.sourceRevision,
         new Date(Date.now() + ttl).toISOString(),
+        contentHash,
       ],
     );
     const p = publication.rows[0];
     if (!p) throw new Error('publication creation failed');
-    const reasons = await tx.query<{ code: string; label: string }>(
-      `SELECT e.reason_code AS code,e.label
-      FROM reason_catalog_entries e JOIN reason_catalog_versions v ON v.id=e.catalog_version_id
-      JOIN reason_causes rc ON rc.reason_code=e.reason_code
-      WHERE v.version=$1 AND rc.cause_id=$2 ORDER BY e.reason_code`,
-      [catalogVersion, causeId],
-    );
-    const reader = new PostgresPublicationCandidateReader(tx);
     const payloads: FullPublication[] = [];
-    for (const channel of channels)
-      for (const list of lists) {
-        payloads.push(
-          compileFullPublication({
-            cause,
-            channel,
-            list,
-            version: p.sequence,
-            reasonCatalogVersion: catalogVersion,
-            generatedAt: new Date(p.generated_at).toISOString(),
-            expiresAt: new Date(p.expires_at).toISOString(),
-            candidates: await reader.candidates(cause, channel, list),
-          }),
-        );
-      }
-    const policies = await tx.query<{ id: string }>(
-      `SELECT DISTINCT policy_revision_id::text AS id
-      FROM membership_decisions WHERE cause_id=$1 AND state='active'`,
-      [causeId],
-    );
+    for (const { channel, list, candidates } of inputs) {
+      payloads.push(
+        compileFullPublication({
+          cause,
+          channel,
+          list,
+          version: p.sequence,
+          reasonCatalogVersion: catalogVersion,
+          generatedAt: new Date(p.generated_at).toISOString(),
+          expiresAt: new Date(p.expires_at).toISOString(),
+          candidates,
+        }),
+      );
+    }
     for (const policy of policies.rows)
       await tx.query(
         `INSERT INTO publication_policy_revisions (publication_id,policy_revision_id) VALUES ($1,$2)`,
@@ -260,9 +335,20 @@ export async function publishCurrentState(
       causeId,
       catalogVersion,
       payloads,
-      labels: reasons.rows.map((r) => [r.code, r.label]),
+      labels,
     };
   });
+  if ('reused' in snapshot && snapshot.reused)
+    return {
+      cause,
+      publicationId: snapshot.reused.id,
+      version: snapshot.reused.sequence,
+      activated: true,
+      skipped: true,
+      fullArtifactCount: 0,
+      deltaArtifactCount: 0,
+      warnings: [],
+    };
   const { p, causeId, catalogVersion, payloads, labels } = snapshot;
   const warnings: string[] = [];
   let deltaArtifactCount = 0;

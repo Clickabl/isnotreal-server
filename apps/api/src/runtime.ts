@@ -11,6 +11,7 @@ import { PostgresModerationQueue } from '@isnotreal/persistence/moderation';
 import { PostgresCauseCatalogReader } from '@isnotreal/persistence/causes';
 import {
   FileArtifactStore,
+  PostgresArtifactStore,
   PgSqlExecutor,
   PostgresPublishedArtifactReader,
   PublicationUnavailableError,
@@ -23,6 +24,7 @@ import { firefoxUpdateManifest, readExtensionReleases } from './extension-releas
 export interface NodeApiRuntimeOptions {
   readonly databaseUrl: string;
   readonly artifactRoot: string;
+  readonly artifactStorage?: 'files' | 'postgres';
   readonly host?: string;
   readonly port?: number;
   readonly maxBodyBytes?: number;
@@ -157,7 +159,10 @@ export async function startNodeApiRuntime(
     await adminDb?.close();
     throw error;
   }
-  const store = new FileArtifactStore(options.artifactRoot);
+  const store =
+    options.artifactStorage === 'files'
+      ? new FileArtifactStore(options.artifactRoot)
+      : new PostgresArtifactStore(db);
   const entities = new PostgresPublicEntityDirectory(db),
     alternatives = new PostgresAlternativeDirectory(db),
     causes = new PostgresCauseCatalogReader(db),

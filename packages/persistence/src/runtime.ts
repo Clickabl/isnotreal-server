@@ -1,5 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
+import { promisify } from 'node:util';
+import { gzip, gunzip } from 'node:zlib';
 import { dirname, resolve, sep } from 'node:path';
 import { Pool, type PoolClient, type PoolConfig } from 'pg';
 import type { SqlExecutor, SqlQueryResult } from './index.js';
@@ -157,6 +159,61 @@ export interface ArtifactStore {
   get(key: string): Promise<Uint8Array>;
 }
 
+const compress = promisify(gzip);
+const decompress = promisify(gunzip);
+const MAX_ARTIFACT_BYTES = 64 * 1024 * 1024;
+
+/** Immutable signed bytes, compressed in PostgreSQL rather than loose host files. */
+export class PostgresArtifactStore implements ArtifactStore {
+  constructor(private readonly db: SqlExecutor) {}
+
+  async put(key: string, bytes: Uint8Array): Promise<void> {
+    validatePublicationKey(key);
+    if (bytes.length > MAX_ARTIFACT_BYTES) throw new Error('publication exceeds size budget');
+    const hash = sha256(bytes);
+    const compressed = await compress(bytes);
+    const inserted = await this.db.query<{ storage_key: string }>(
+      `INSERT INTO publication_artifact_payloads (storage_key,compressed_payload,sha256,byte_size)
+       VALUES ($1,$2,$3,$4) ON CONFLICT (storage_key) DO NOTHING RETURNING storage_key`,
+      [key, compressed, hash, bytes.length],
+    );
+    if (!inserted.rows.length) {
+      const existing = await this.get(key);
+      if (sha256(existing) !== hash || existing.length !== bytes.length)
+        throw new Error('immutable publication payload collision');
+    }
+  }
+
+  async get(key: string): Promise<Uint8Array> {
+    validatePublicationKey(key);
+    const result = await this.db.query<{
+      compressed_payload: Buffer;
+      sha256: string;
+      byte_size: number;
+    }>(
+      'SELECT compressed_payload,sha256,byte_size FROM publication_artifact_payloads WHERE storage_key=$1',
+      [key],
+    );
+    const row = result.rows[0];
+    if (!row) throw Object.assign(new Error('Publication payload unavailable'), { code: 'ENOENT' });
+    if (row.byte_size < 0 || row.byte_size > MAX_ARTIFACT_BYTES)
+      throw new Error('publication payload size invalid');
+    const bytes = await decompress(row.compressed_payload, { maxOutputLength: MAX_ARTIFACT_BYTES });
+    if (bytes.length !== row.byte_size || sha256(bytes) !== row.sha256)
+      throw new Error('publication payload integrity failure');
+    return bytes;
+  }
+}
+
+export function validatePublicationKey(key: string): void {
+  if (
+    !/^publications\/[a-z0-9]+(?:-[a-z0-9]+)*\/[1-9]\d*\/(?:dictionary\.json|(?:x|tiktok|instagram|youtube|domain|domain-subdomains)\/(?:filter|highlight)\/(?:full|manifest|from-[1-9]\d*\.delta)\.json)$/.test(
+      key,
+    )
+  )
+    throw new Error('invalid publication payload key');
+}
+
 export class FileArtifactStore implements ArtifactStore {
   private readonly root: string;
 
@@ -168,8 +225,12 @@ export class FileArtifactStore implements ArtifactStore {
     const target = this.pathForKey(key);
     await mkdir(dirname(target), { recursive: true });
     const temporary = `${target}.${process.pid}.${randomUUID()}.tmp`;
-    await writeFile(temporary, bytes, { flag: 'wx' });
-    await rename(temporary, target);
+    try {
+      await writeFile(temporary, bytes, { flag: 'wx' });
+      await rename(temporary, target);
+    } finally {
+      await rm(temporary, { force: true });
+    }
   }
 
   async get(key: string): Promise<Uint8Array> {

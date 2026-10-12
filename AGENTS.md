@@ -14,8 +14,9 @@ sign-in fixes sat unmerged while builds shipped without them, and ~100 branches 
 CI experiments) had to be reconciled by hand.
 
 **How to work without branches**
+
 1. `git pull --rebase` before you start and again before you push.
-2. Make small, complete commits on `main`. Run this repo's checks locally *before* pushing
+2. Make small, complete commits on `main`. Run this repo's checks locally _before_ pushing
    (GitHub Actions minutes are limited; validate locally). Never bypass a required test,
    content-approval, trust, rights or production gate: fix it, on `main`, before pushing more.
    Push right away so other agents see it.

@@ -21,6 +21,8 @@ log="$HOME_DIR/logs/${1:-unknown}.log"
   printf '%s start %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${1:-}"
   case "${1:-}" in
     publish)
+      exec 9>"$HOME_DIR/publish.lock"
+      flock -n 9 || exit 0
       node ops/run-with-config.mjs "$C/db-pub.json,$C/publisher.json" -- node apps/api/dist/publish.js
       ;;
     source-watch)

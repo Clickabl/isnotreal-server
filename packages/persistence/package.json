@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./publication-file-migration": {
+      "types": "./dist/publicationFileMigration.d.ts",
+      "import": "./dist/publicationFileMigration.js"
+    },
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"

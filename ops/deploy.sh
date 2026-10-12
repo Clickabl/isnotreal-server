@@ -120,6 +120,13 @@ else
   log "no $CONFIG/db-owner.json; skipping backup and migrations"
 fi
 
+# Preserve legacy signed bytes before the new database-backed runtime is selected.
+# A failed import leaves the existing runtime and loose files selected and intact.
+if [[ -d "$HOME_DIR/data/publications/publications" ]]; then
+  log "importing and verifying legacy publication payloads"
+  (cd "$new_release" && node ops/run-with-config.mjs "$CONFIG/db-pub.json,$CONFIG/publisher.json" -- node apps/api/dist/migrate-publication-files.js import)
+fi
+
 # 4. Switch, restart, verify; roll back to the previous release if unhealthy.
 point "$new_release" current
 activated=1

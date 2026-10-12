@@ -5,6 +5,9 @@ import { startNodeApiRuntime } from './runtime.js';
 async function main(): Promise<void> {
   const databaseUrl = requiredEnv('DATABASE_URL');
   const artifactRoot = resolve(process.env.PUBLICATION_ROOT ?? '.local/publications');
+  const artifactStorage = process.env.PUBLICATION_STORAGE ?? 'postgres';
+  if (artifactStorage !== 'files' && artifactStorage !== 'postgres')
+    throw new Error('invalid PUBLICATION_STORAGE');
   const port = parsePositiveInteger(process.env.PORT, 3_000, 65_535, true);
   const maxDatabaseConnections = parsePositiveInteger(process.env.DB_POOL_MAX, 20, 500, false);
   const adminToken = process.env.ADMIN_BEARER_TOKEN?.trim() || undefined;
@@ -12,6 +15,7 @@ async function main(): Promise<void> {
   const runtime = await startNodeApiRuntime({
     databaseUrl,
     artifactRoot,
+    artifactStorage,
     host: process.env.HOST ?? '0.0.0.0',
     port,
     maxDatabaseConnections,

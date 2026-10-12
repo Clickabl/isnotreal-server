@@ -100,6 +100,22 @@ Do not import unrelated sensitive personal records as an extension dataset. The 
 
 ## Next-session instruction
 
+### Migrating legacy publication files
+
+Migration 0033 and the updated grants must be applied before selecting the new
+database-backed runtime. Pause only publication generation during the initial
+backfill and keep public/API traffic running. Back up the legacy publication tree
+and verify recovery first. The ordinary deployment script imports every legacy
+payload and verifies its digest before switching the runtime. After checking
+active manifests, full snapshots, dictionaries, deltas and historical URLs over
+HTTP, use the publisher's protected configuration with
+`PUBLICATION_STORAGE=postgres` to run
+`node apps/api/dist/migrate-publication-files.js remove-files`.
+Removal performs a complete verification pass before unlinking any files. Resume
+the original publication cron and run it twice: the second unchanged run must
+report `skipped:true` with zero new payloads and unchanged version counts.
+Preserve the old file archive for manual rollback to older file-based code.
+
 Read AGENTS.md, docs/PRODUCT_DELIVERY_PLAN.md and this handoff. Inspect the host and current commits first. Validate and fix the deployment helpers and privileges on disposable PostgreSQL before production. Align the extension/server contracts and the cause-scoped data model rather than continuing the outdated single-global-list design. Provision the real database and API using protected credentials, with verified backups and health checks. Implement one trusted-batch CCFP import as I02 without redundant approval stages, preserving exact source context and identity exceptions. Keep schema/code in Git and factual data in PostgreSQL. Then demonstrate the product's install/settings/block/evidence/alternative/update integration milestone. Report what is implemented, tested, deployed and publicly available separately; do not call the whole product done from a backend CI pass.
 
 ## Backup client compatibility

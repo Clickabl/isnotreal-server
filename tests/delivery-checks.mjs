@@ -11,6 +11,7 @@ import { spawnSync } from 'node:child_process';
 import { canonicalJson } from '../packages/protocol/dist/index.js';
 import {
   PgSqlExecutor,
+  PostgresArtifactStore,
   applySqlMigrations,
   PostgresPublishedArtifactReader,
   publishCurrentState,
@@ -300,7 +301,7 @@ async function checkOps(databaseUrl) {
     return result.stdout.trim();
   };
   const admin = PgSqlExecutor.create({ connectionString: databaseUrl });
-  let ownerDb, appDb;
+  let ownerDb, appDb, publisherDb;
   const target = new URL(databaseUrl);
   target.pathname = '/' + dbName;
   try {
@@ -316,6 +317,19 @@ async function checkOps(databaseUrl) {
     appUrl.username = app;
     appUrl.password = passwords[1];
     appDb = PgSqlExecutor.create({ connectionString: appUrl.href });
+    const publisherUrl = new URL(target);
+    publisherUrl.username = publisher;
+    publisherUrl.password = passwords[3];
+    publisherDb = PgSqlExecutor.create({ connectionString: publisherUrl.href });
+    const payloadKey = 'publications/role-test/1/dictionary.json';
+    const payload = Buffer.from('{"role":"publisher"}\n');
+    await new PostgresArtifactStore(publisherDb).put(payloadKey, payload);
+    await new PostgresArtifactStore(publisherDb).put(payloadKey, payload);
+    assert.deepEqual(await new PostgresArtifactStore(appDb).get(payloadKey), payload);
+    await assert.rejects(
+      new PostgresArtifactStore(appDb).put('publications/role-test/2/dictionary.json', payload),
+      /permission denied/,
+    );
     await appDb.query('SELECT count(*) FROM entities');
     await assert.rejects(
       appDb.query("UPDATE reason_definitions SET label='Not allowed' WHERE code='P03'"),
@@ -335,6 +349,7 @@ async function checkOps(databaseUrl) {
       await rm(backupDir, { recursive: true, force: true });
     }
   } finally {
+    await publisherDb?.close();
     await appDb?.close();
     await ownerDb?.close();
     // DROP DATABASE ... WITH (FORCE) needs PostgreSQL 13; production runs 10.
