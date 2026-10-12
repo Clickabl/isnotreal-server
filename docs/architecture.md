@@ -68,3 +68,29 @@ A manual rollback to code predating database payload storage requires restoring
 the legacy file backup first, or explicitly retaining its file representation.
 Automatic rollback during the initial deployment happens before file removal;
 subsequent deployments roll back to the database-backed runtime.
+
+### Live verification — 2026-10-12
+
+Commit `394e6cf140c0eece682f6a39289f2de876ebb4c2` is deployed on isnotreal.click.
+All 125,875 legacy files (48,384,203 bytes) were imported and read back with exact
+digest/size verification. Their 190,549 loose file/directory entries were then
+removed. Historical signed payloads remain in PostgreSQL, and a verified archive
+is retained on Tim's Mac under
+`Clickabl/Backups/server-capacity-20261012/`. The pre-migration database backup
+restored successfully into a separate local PostgreSQL database (3,435 publication
+rows and 122,424 artifact metadata rows).
+
+Public checks passed for all 48 active manifests, their full snapshots and
+dictionaries, plus sampled historical immutable URLs. Configured-key signature
+verification passed for all 48 active manifests. The first database-backed publish
+created versions 3436–3439; its immediate repeat skipped all four causes, keeping
+the same 3,439 publication rows and 126,023 payload rows. No loose publication
+files were regenerated. The original half-hour publication cron was restored;
+other account jobs were preserved.
+
+The shared account reported 326,536 of 600,000 file entries after cleanup. The
+four WordPress sites checked during the incident remained HTTP 200. Local
+formatting, lint, typechecking and all 24 tests passed with real disposable
+PostgreSQL, including migration recovery, immutable payloads, runtime/publisher
+permissions, unchanged publication reuse, renewal, signing-key rotation and
+corrupt/missing-artifact recovery.
