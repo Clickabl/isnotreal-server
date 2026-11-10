@@ -75,8 +75,7 @@ Commit `394e6cf140c0eece682f6a39289f2de876ebb4c2` is deployed on isnotreal.click
 All 125,875 legacy files (48,384,203 bytes) were imported and read back with exact
 digest/size verification. Their 190,549 loose file/directory entries were then
 removed. Historical signed payloads remain in PostgreSQL, and a verified archive
-is retained on Tim's Mac under
-`Clickabl/Backups/server-capacity-20261012/`. The pre-migration database backup
+is retained offline by the operator (`server-capacity-20261012`). The pre-migration database backup
 restored successfully into a separate local PostgreSQL database (3,435 publication
 rows and 122,424 artifact metadata rows).
 

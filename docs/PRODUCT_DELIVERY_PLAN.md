@@ -2,7 +2,7 @@
 
 Status: open implementation backlog, not a release announcement.
 Audit date: 2026-09-20.
-Repositories: Clickabl/isnotreal-server and Clickabl/isnotreal.
+Repositories: isnotreal-server (this repository) and the isnotreal browser extension.
 
 The product is a searchable, source-backed website plus an installable browser extension with user-selected causes. A passing backend test suite does not establish a working website, extension, update system, or production deployment.
 

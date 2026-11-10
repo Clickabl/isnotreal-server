@@ -1,7 +1,7 @@
 # isnotreal-server
 
 Backend, public website, moderation/import tooling and signed publication service for **https://isnotreal.click**.
-Companion extension repository: https://github.com/Clickabl/isnotreal.
+Companion repository: the isnotreal browser extension.
 
 ## Current status
 
