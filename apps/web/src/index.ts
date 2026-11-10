@@ -15,6 +15,7 @@ interface Cause {
     channels: readonly string[];
     generatedAt: string | null;
     expiresAt: string | null;
+    listedIdentifiers?: number;
   };
 }
 export interface PublicWebDependencies {
@@ -38,6 +39,21 @@ const escape = (value: string) =>
     /[&<>"']/g,
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
   );
+const plural = (n: number, one: string, many: string) =>
+  `${n.toLocaleString('en-US')} ${n === 1 ? one : many}`;
+// An empty but valid publication is not coverage: never present zero records as "published".
+function coverageLabel(c: Cause): string {
+  const definitions = plural(c.reasons.length, 'reason definition', 'reason definitions');
+  if (c.coverage?.state !== 'available')
+    return c.reasons.length
+      ? `${definitions} · coverage unavailable`
+      : 'Definitions being prepared';
+  const listed = c.coverage.listedIdentifiers;
+  if (listed === undefined) return `${definitions} · published coverage`;
+  return listed > 0
+    ? `${definitions} · ${plural(listed, 'listed account or site', 'listed accounts and sites')}`
+    : `${definitions} · no records published yet`;
+}
 function safeUrl(value: string | null | undefined): string | null {
   if (!value) return null;
   try {
@@ -80,7 +96,7 @@ const fallbackCauses: readonly Cause[] = [
   },
 ];
 function layout(title: string, body: string, path = '/'): string {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>${escape(title)} · isnotreal.click</title><meta name="description" content="Some people are not real. At least not in your feed. A browser extension that makes them disappear, with receipts."><link rel="canonical" href="https://isnotreal.click${escape(path)}"><link rel="stylesheet" href="/assets/site.css"><script src="/assets/site.js" defer></script></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="/">is<span>not</span>real.click</a><nav aria-label="Main"><a href="/search">Search</a><a href="/causes">Causes</a><a href="/download">Get the extension</a></nav></header><main id="main">${body}</main><footer><strong>Local choices. Public evidence.</strong><nav aria-label="Footer"><a href="/how-it-works">How it works</a><a href="/privacy">Privacy</a><a href="/report">Feedback & corrections</a></nav><small>Coverage depends on verified identifiers and the browser features available. No claim of wrongdoing follows from a document mention alone.</small></footer></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>${escape(title)} · isnotreal.click</title><meta name="description" content="Some people are not real. At least not in your feed. A browser extension that makes them disappear, with receipts."><link rel="canonical" href="https://isnotreal.click${escape(path)}"><link rel="stylesheet" href="/assets/site.css"><script src="/assets/site.js" defer></script></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="/">is<span>not</span>real.click</a><nav aria-label="Main"><a href="/search">Search</a><a href="/causes">Causes</a><a href="/download">Get the extension</a></nav></header><main id="main">${body}</main><footer><strong>Local choices. Public evidence.</strong><nav aria-label="Footer"><a href="/how-it-works">How it works</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/report">Feedback & corrections</a></nav><small>Coverage depends on verified identifiers and the browser features available. No claim of wrongdoing follows from a document mention alone.</small></footer></body></html>`;
 }
 const html = (
   title: string,
@@ -145,9 +161,28 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
       return {
         kind: 'asset',
         status: 200,
-        body: 'User-agent: *\nDisallow: /admin/\nDisallow: /admin-console\nDisallow: /api/\nDisallow: /report\n',
+        body: 'User-agent: *\nDisallow: /admin/\nDisallow: /admin-console\nDisallow: /api/\nDisallow: /report\nSitemap: https://isnotreal.click/sitemap.xml\n',
         contentType: 'text/plain; charset=utf-8',
       };
+    if (pathname === '/sitemap.xml') {
+      const causes = deps.causes ? await deps.causes.list() : fallbackCauses;
+      const paths = [
+        '/',
+        '/causes',
+        '/download',
+        '/how-it-works',
+        '/privacy',
+        '/terms',
+        '/search',
+        ...causes.map((c) => `/causes/${encodeURIComponent(c.slug)}`),
+      ];
+      return {
+        kind: 'asset',
+        status: 200,
+        body: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${paths.map((path) => `<url><loc>https://isnotreal.click${escape(path)}</loc></url>`).join('')}</urlset>\n`,
+        contentType: 'application/xml; charset=utf-8',
+      };
+    }
     if (pathname === '/admin-console') {
       return html(
         'Editor console',
@@ -159,7 +194,7 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
       const causes = deps.causes ? await deps.causes.list() : fallbackCauses;
       return html(
         'Some people are not real.',
-        `<section class="hero"><p class="eyebrow">Out of feed, out of mind</p><h1>Some people<br><span>are not real.</span></h1><p class="lede">At least, not anymore. Not in your feed, not in your tabs, not getting your clicks. Pick who you’re done with, and isnotreal makes them vanish from your browser. Poof.</p><div class="row"><a class="button primary" href="/download">Make them not real</a><a class="button" href="/how-it-works">How it works</a></div></section>${searchForm()}<section><div class="section-title"><h2>Pick your dealbreakers.</h2><a href="/causes">All causes →</a></div><div class="grid">${causes.map((c) => `<a class="card cause" href="/causes/${escape(c.slug)}"><small>Off until you say so</small><h3>${escape(c.name)}</h3><p>${escape(c.description)}</p><span>${c.coverage?.state === 'available' ? `${c.reasons.length} reason definitions · published coverage` : c.reasons.length ? `${c.reasons.length} definitions · coverage unavailable` : 'Definitions being prepared'}</span></a>`).join('')}</div></section><section class="card"><h2>We bring receipts.</h2><p>Whenever someone gets blocked, click their block box to see exactly why, with links to the proof.</p><p><strong>Are we missing someone?</strong> <a href="/report?type=new-entity">Spill the tea →</a></p></section>`,
+        `<section class="hero"><p class="eyebrow">Out of feed, out of mind</p><h1>Some people<br><span>are not real.</span></h1><p class="lede">At least, not anymore. Not in your feed, not in your tabs, not getting your clicks. Pick who you’re done with, and isnotreal makes them vanish from your browser. Poof.</p><div class="row"><a class="button primary" href="/download">Make them not real</a><a class="button" href="/how-it-works">How it works</a></div></section>${searchForm()}<section><div class="section-title"><h2>Pick your dealbreakers.</h2><a href="/causes">All causes →</a></div><div class="grid">${causes.map((c) => `<a class="card cause" href="/causes/${escape(c.slug)}"><small>Off until you say so</small><h3>${escape(c.name)}</h3><p>${escape(c.description)}</p><span>${escape(coverageLabel(c))}</span></a>`).join('')}</div></section><section class="card"><h2>We bring receipts.</h2><p>Whenever someone gets blocked, click their block box to see exactly why, with links to the proof.</p><p><strong>Are we missing someone?</strong> <a href="/report?type=new-entity">Spill the tea →</a></p></section>`,
       );
     }
     if (pathname === '/download') {
@@ -178,7 +213,7 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
           })
           .join(
             '',
-          )}</div><section class="card"><h2>Developer installation</h2><p>Build the companion repository with <code>npm run package</code>, then load <code>build/chromium</code> from the browser’s extension developer page. A publisher trust key must be included for real data synchronization.</p><p>Domain blocking needs website permissions. Safari only covers Safari webpages, not native TikTok, Instagram or other apps. Browser-store distribution and Safari’s signed Apple wrapper remain separate release gates.</p></section>`,
+          )}</div><section class="card"><h2>What it can reach</h2><p>Blocking websites needs permission to read the sites you visit, which you grant from the extension. Feed matching covers the web versions of X, TikTok, Instagram and YouTube. Safari covers Safari webpages, not the native TikTok, Instagram or other apps.</p></section>`,
         pathname,
       );
     }
@@ -207,7 +242,7 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
       if (!c) return missing();
       return html(
         c.name,
-        `<p class="eyebrow">Optional cause</p><h1>${escape(c.name)}</h1><p class="lede">${escape(c.description)}</p><p class="${c.coverage?.state === 'available' ? 'muted' : 'notice'}">${c.coverage?.state === 'available' ? `Published channels: ${escape(c.coverage.channels.join(', ') || 'none')}` : 'Coverage is not currently published. An empty result must not be read as comprehensive.'}</p>${c.reasons.length ? c.reasons.map((r) => `<article class="card"><span class="tag">${escape(r.code)}</span><h2><a href="/reasons/${escape(r.code)}">${escape(r.label)}</a></h2><p>${escape(r.description)}</p></article>`).join('') : '<p class="notice">No published reason definitions are available yet. This is not comprehensive coverage.</p>'}`,
+        `<p class="eyebrow">Optional cause</p><h1>${escape(c.name)}</h1><p class="lede">${escape(c.description)}</p>${c.coverage?.state === 'available' && c.coverage.listedIdentifiers === 0 ? '<p class="notice">No records are published for this cause yet, so turning it on will not hide or highlight anything for now.</p>' : ''}<p class="${c.coverage?.state === 'available' ? 'muted' : 'notice'}">${c.coverage?.state === 'available' ? `${escape(coverageLabel(c))}. Published channels: ${escape(c.coverage.channels.join(', ') || 'none')}` : 'Coverage is not currently published. An empty result must not be read as comprehensive.'}</p>${c.reasons.length ? c.reasons.map((r) => `<article class="card"><span class="tag">${escape(r.code)}</span><h2><a href="/reasons/${escape(r.code)}">${escape(r.label)}</a></h2><p>${escape(r.description)}</p></article>`).join('') : '<p class="notice">No published reason definitions are available yet. This is not comprehensive coverage.</p>'}`,
         pathname,
       );
     }
@@ -266,12 +301,19 @@ export function createPublicWebsite(deps: PublicWebDependencies) {
         pathname,
       );
     }
+    if (pathname === '/terms') {
+      return html(
+        'Terms',
+        `<p class="eyebrow">Terms</p><h1>The fine print.</h1><section class="card"><h2>What this is</h2><p>isnotreal.click publishes source-linked records about public people, companies and websites, and a browser extension that hides, highlights or skips the ones you choose. Nothing is on until you turn it on, and you can change your mind any time.</p><h2>What a listing means</h2><p>Each listing points to a specific documented fact and where it came from. A listing is not an accusation, a finding of wrongdoing or a judgment of anyone’s character, unless the source is itself an official or court finding and the record says so. A mention in a document is only a mention.</p><h2>Corrections</h2><p>If something is wrong, out of date or missing context, <a href="/report?type=incorrect-information">tell us</a>. We review every report, and corrections reach the extension in its next data update.</p><h2>Sending reports</h2><p>Send only information that is public or that you have the right to share. No home addresses, phone numbers, private photos or other personal details, no harassment and no knowingly false reports. We review tips before anything is published and may decline or remove any submission.</p><h2>Using the site and extension</h2><p>Both are free to use. Don’t use them to harass anyone, overload or attack the service, or get around its security.</p><h2>No warranty</h2><p>The site, data and extension are provided as is. Records can be incomplete or out of date, and coverage depends on verified accounts and what your browser allows. To the extent the law allows, we are not liable for decisions you make using them.</p><h2>Changes</h2><p>We may update these terms. This version is dated November 10, 2026.</p></section>`,
+        pathname,
+      );
+    }
     if (pathname === '/privacy' || pathname === '/how-it-works') {
       const privacy = pathname === '/privacy';
       return html(
         privacy ? 'Privacy' : 'How it works',
         privacy
-          ? `<p class="eyebrow">Privacy</p><h1>Your choices stay local by default.</h1><section class="card"><h2>Ordinary matching</h2><p>Matching uses downloaded identifiers in the browser. It does not require uploading each encountered account or page.</p><h2>Requests you choose</h2><p>Opening evidence, using online alternatives and submitting a report contact this service. Cause-specific downloads can reveal which dataset you requested. Your IP address is necessarily visible to the server/network delivering it.</p><h2>No invented anonymity promises</h2><p>This application adds no advertising analytics. Hosting/proxy access logs depend on the deployment configuration and need a retention policy before public launch. Local overrides are not sent as telemetry.</p></section>`
+          ? `<p class="eyebrow">Privacy</p><h1>Your choices stay local by default.</h1><section class="card"><h2>Ordinary matching</h2><p>Matching uses downloaded identifiers in the browser. It does not require uploading each encountered account or page.</p><h2>Requests you choose</h2><p>Opening evidence, using online alternatives and submitting a report contact this service. Cause-specific downloads can reveal which dataset you requested. Your IP address is necessarily visible to the server/network delivering it.</p><h2>Reports you send</h2><p>Text and links you submit through the feedback form are stored so we can review them. Don’t include personal details you don’t want kept. Reports marked as spam or duplicates are redacted after 90 days.</p><h2>Logs, analytics and cookies</h2><p>This site uses no advertising, analytics or tracking scripts and sets no cookies. Like any website, our hosting provider and network keep standard access logs (IP address, time and the address requested) for security and operations under their own retention settings. Your cause choices and local exceptions stay in your browser and are not sent as telemetry.</p><h2>Questions</h2><p>Use the <a href="/report?type=product-feedback">feedback form</a> for privacy questions or requests.</p></section>`
           : `<p class="eyebrow">How it works</p><h1>Small local lists.<br>Full public receipts.</h1><div class="grid"><article class="card"><h2>1. Choose causes</h2><p>Select causes and individual criteria. Disabled causes have no local filtering effect.</p></article><article class="card"><h2>2. Match identifiers</h2><p>Known account IDs and exact or subtree domains resolve locally. Unknown identities are not guessed.</p></article><article class="card"><h2>3. Choose an action</h2><p>Website rules can stop requests before loading the target. Supported X, TikTok, Instagram and YouTube web feeds are matched locally after you grant website access. You control hide/replace behavior, exceptions and alternatives.</p></article><article class="card"><h2>4. Check the evidence</h2><p>The directory exposes the reason, date and source. A new signed dataset delivers corrections without reinstalling extension code.</p></article></div>`,
         pathname,
       );

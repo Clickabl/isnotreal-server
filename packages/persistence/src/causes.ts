@@ -14,6 +14,8 @@ export interface PublicCauseCoverage {
   readonly channels: readonly string[];
   readonly generatedAt: string | null;
   readonly expiresAt: string | null;
+  /** Identifiers (accounts and sites) across the cause's current full lists; 0 means none yet. */
+  readonly listedIdentifiers: number;
 }
 
 export interface PublicCause {
@@ -37,6 +39,7 @@ interface CauseRow {
   readonly coverage_channels: string[];
   readonly coverage_generated_at: string | null;
   readonly coverage_expires_at: string | null;
+  readonly coverage_listed_identifiers: string;
 }
 
 export class PostgresCauseCatalogReader {
@@ -80,7 +83,17 @@ export class PostgresCauseCatalogReader {
            FROM publications publication
            JOIN causes cause ON cause.id = publication.cause_id
            WHERE cause.slug = catalog.slug AND publication.state = 'active'
-         ) AS coverage_expires_at
+         ) AS coverage_expires_at,
+         (
+           SELECT COALESCE(sum(artifact.entry_count), 0)::text
+           FROM publications publication
+           JOIN causes cause ON cause.id = publication.cause_id
+           JOIN publication_artifacts artifact ON artifact.publication_id = publication.id
+           WHERE cause.slug = catalog.slug
+             AND publication.state = 'active'
+             AND publication.expires_at > now()
+             AND artifact.artifact_kind = 'full'
+         ) AS coverage_listed_identifiers
        FROM public_cause_catalog catalog
        ORDER BY sort_order, slug`,
     );
@@ -96,6 +109,7 @@ export class PostgresCauseCatalogReader {
         channels: row.coverage_channels,
         generatedAt: row.coverage_generated_at,
         expiresAt: row.coverage_expires_at,
+        listedIdentifiers: Number(row.coverage_listed_identifiers),
       },
     }));
   }
@@ -138,7 +152,17 @@ export class PostgresCauseCatalogReader {
            FROM publications publication
            JOIN causes cause ON cause.id = publication.cause_id
            WHERE cause.slug = catalog.slug AND publication.state = 'active'
-         ) AS coverage_expires_at
+         ) AS coverage_expires_at,
+         (
+           SELECT COALESCE(sum(artifact.entry_count), 0)::text
+           FROM publications publication
+           JOIN causes cause ON cause.id = publication.cause_id
+           JOIN publication_artifacts artifact ON artifact.publication_id = publication.id
+           WHERE cause.slug = catalog.slug
+             AND publication.state = 'active'
+             AND publication.expires_at > now()
+             AND artifact.artifact_kind = 'full'
+         ) AS coverage_listed_identifiers
        FROM public_cause_catalog catalog
        WHERE slug = $1`,
       [slug],
@@ -157,6 +181,7 @@ export class PostgresCauseCatalogReader {
             channels: row.coverage_channels,
             generatedAt: row.coverage_generated_at,
             expiresAt: row.coverage_expires_at,
+            listedIdentifiers: Number(row.coverage_listed_identifiers),
           },
         }
       : null;

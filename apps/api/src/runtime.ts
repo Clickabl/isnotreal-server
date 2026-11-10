@@ -17,6 +17,7 @@ import {
   PublicationUnavailableError,
 } from '@isnotreal/persistence/runtime';
 import { createPublicWebsite } from '@isnotreal/web';
+import { PRODUCTION_ORIGIN } from '@isnotreal/config';
 import { createAdminRouter } from './admin.js';
 import { createApiRouter } from './index.js';
 import { firefoxUpdateManifest, readExtensionReleases } from './extension-releases.js';
@@ -49,6 +50,8 @@ class HttpError extends Error {
 function headers(response: ServerResponse, admin = false): void {
   response.setHeader('x-content-type-options', 'nosniff');
   response.setHeader('referrer-policy', 'no-referrer');
+  // Browsers ignore this over plain HTTP, so local development is unaffected.
+  response.setHeader('strict-transport-security', 'max-age=15552000');
   response.setHeader(
     'content-security-policy',
     "default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
@@ -206,6 +209,17 @@ export async function startNodeApiRuntime(
       const url = new URL(request.url ?? '/', 'http://localhost');
       const isAdmin = url.pathname === '/admin' || url.pathname.startsWith('/admin/');
       headers(response, isAdmin);
+      // One canonical host: www answers with a permanent redirect to the apex origin.
+      if (
+        String(request.headers.host ?? '').toLowerCase() ===
+        `www.${new URL(PRODUCTION_ORIGIN).host}`
+      ) {
+        response.statusCode = 301;
+        response.setHeader('location', `${PRODUCTION_ORIGIN}${url.pathname}${url.search}`);
+        response.setHeader('cache-control', 'public, max-age=86400');
+        response.end();
+        return;
+      }
       if (isAdmin && (!admin || !options.adminToken)) {
         json(response, request, 404, { error: 'not_found' });
         return;

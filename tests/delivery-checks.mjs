@@ -7,6 +7,7 @@ import { verify, createHash, randomBytes } from 'node:crypto';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import http from 'node:http';
 import { spawnSync } from 'node:child_process';
 import { canonicalJson } from '../packages/protocol/dist/index.js';
 import {
@@ -219,6 +220,27 @@ export async function runDeliveryChecks({
     );
     const head = await fetch(origin + '/', { method: 'HEAD' });
     assert.equal(head.status, 200);
+    assert.equal(head.headers.get('strict-transport-security'), 'max-age=15552000');
+    const www = await new Promise((resolve, reject) => {
+      const url = new URL(origin + '/causes?ref=www');
+      http
+        .request(
+          {
+            host: url.hostname,
+            port: url.port,
+            path: url.pathname + url.search,
+            headers: { host: 'www.isnotreal.click' },
+          },
+          (response) => {
+            response.resume();
+            resolve(response);
+          },
+        )
+        .on('error', reject)
+        .end();
+    });
+    assert.equal(www.statusCode, 301);
+    assert.equal(www.headers.location, 'https://isnotreal.click/causes?ref=www');
     assert.equal(await head.text(), '');
     assert.doesNotMatch(head.headers.get('content-security-policy'), /unsafe-inline/);
     const admin = await fetch(origin + '/admin/api/v1/submissions');
